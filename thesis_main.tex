@@ -1,0 +1,31 @@
+% Hint: "include" did not work for me using:
+% This is pdfTeX, Version 3.1415926-2.4-1.40.13 (TeX Live 2012/Debian)
+% Replaced "include" with "input" to make it work.
+
+\input{stuff/header}
+
+\begin{document}
+
+\pagenumbering{Roman}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\include{stuff/titlepage}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\tableofcontents
+\listoffigures
+\lstlistoflistings
+\cleardoublepage
+
+\pagenumbering{arabic}
+
+\include{chapter/introduction}
+\include{chapter/future_work}
+\include{chapter/bibliography}
+
+\include{stuff/footer}
+
+\end{document}

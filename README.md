@@ -1,13 +1,7 @@
-thesis-template
+thesis-master
 ===============
 
-LaTeX-Vorlage für Bachelor/Master-Thesis an der FH-Wedel
-(Betreuer Ulrich Hoffmann)
-
-PDF erzeugen:
+create pdf:
 
     % cd Thesis
-    % pdflatex thesis_main.tex  # several times
-
-fork & enjoy
-
+    % make
