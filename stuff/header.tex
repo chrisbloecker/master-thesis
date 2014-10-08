@@ -15,7 +15,7 @@
 % Packages
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \usepackage{scrhack}
-
+\usepackage[top=3cm,bottom=3cm]{geometry}
  
 \usepackage{ifpdf}
 \ifpdf
@@ -38,6 +38,8 @@
 \usepackage[printonlyused]{acronym} % list of acronyms and abbreviations
 \usepackage{subfig}                 % allow sub figures
 \usepackage{tabularx}              % Tabellen mit fester Breite
+\usepackage{csquotes}
+\usepackage{natbib}
 
 % Layout
 \pagestyle{scrheadings}
@@ -52,11 +54,11 @@
 
 %% Document properties %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newcommand{\projname}{Der Projektname}
-\newcommand{\titel}{Der Titel}
+\newcommand{\titel}{Hive}
 \newcommand{\authorname}{Christopher Blöcker}
 \newcommand{\thesisname}{Master Thesis}
-\newcommand{\untertitel}{}
-\newcommand{\Datum}{\today}
+\newcommand{\untertitel}{A process algebra for distributed programming in Haskell}
+\newcommand{\Datum}{January 31, 2015}
 
 \ifpdf
   \usepackage{hyperref}

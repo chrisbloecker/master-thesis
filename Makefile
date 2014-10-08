@@ -23,8 +23,8 @@ all:
 
 compile:
 	@$(LATEX) $(FILE)$(TEXEXT)
-#	@$(BIBTEX) $(FILE)
-#	@$(LATEX) $(FILE)$(TEXEXT)
+	@$(BIBTEX) $(FILE)
+	@$(LATEX) $(FILE)$(TEXEXT)
 	@$(LATEX) $(FILE)$(TEXEXT)
 
 view:
