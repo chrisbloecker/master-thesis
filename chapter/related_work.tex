@@ -7,11 +7,13 @@ Process calculi are formalisms that can be used to describe processes and their 
 \subsection{Communicating Sequential Processes}
 Communicating Sequential Processes, or short CSP, was the first process algebra in the history of computer science. It has been developed by Tony Hoare and was published in 1985 \cite{Hoare:1985:CSP:3921}. We are going to introduce a subset of CSP and show how to build processes using CSP, however we will not go too deep into detail and don't claim to provide a complete description.
 
-In CSP, processes are composed of two types of primitives: sequential processes $\mathcal{P}$ and events $\mathcal{E}$. A process $P \in \mathcal{P}$ can observe an event $e \in \mathcal{E}$ and react to it. It cannot take influence on events or manipulate them as they are indivisible. In the following, let $P, Q \in \mathcal{P}$ be processes and $a,b \in \mathcal{E}$ be events.
+In CSP, processes are composed of two types of primitives: sequential processes $\mathcal{P}$ and events $\mathcal{E}$. A process $P \in \mathcal{P}$ can observe an event $e \in \mathcal{E}$ and react to it. It cannot take influence on events or manipulate them as they are indivisible. In the following, let $P, Q, R \in \mathcal{P}$ be processes and $a,b \in \mathcal{E}$ be events.
 
 The prefix combinator \enquote{$\to$} takes an event $a$ and a process $P$. $\left( a \to P \right)$ creates a new process that waits until it observes $a$ and then behaves like $P$. A process that repeatedly waits to observe $a$ and then behaves like $P$ can be described using recursion: $P = \left( a \to P \right)$.
 
-With the choice operator \enquote{$|$} we can construct a process that allows two flows of control. The process $\left( a \to P \,|\, b \to Q \right)$ will wait until it either observes $a$ and then behave like $P$ or it will wait until it observes $b$ and then behave like $Q$. Note that the prefix operator binds stronger than the choice operator.
+With the choice operator \enquote{$|$} we can construct a process that allows two flows of control. The process $\left( a \to P \,|\, b \to Q \right)$ will wait until it either observes $a$ and then behave like $P$ or it will wait until it observes $b$ and then behave like $Q$. Note that the prefix operator binds stronger than the choice operator and that the choice operator is commutative.
+
+The parallel operator \enquote{$||$} allows us to put processes together such that they run parallel. The process obtained by $R = \left( P \,||\, Q \right)$ will wait for an event that both $P$ and $Q$ can observe and then behave like $P$ and $Q$ concurrently\footnote{Note the difference between concurrency and nondeterminism.}.
 
 \subsection{$\pi$ calculus}
 
