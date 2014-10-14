@@ -1,8 +1,8 @@
 \chapter{Related Work}
-We will give an overview on related work that has been done in this field. First, we briefly introduce two process calculi, i.e. formalisms that allow to describe the behaviour of processes. After that we will have a look at an algebraic model that generalises the concepts that can be found in the introduced process calculi as well as others. In the end of this chapter, we will explore how the explained concepts are implemented in some current programming languages.
+We will give an overview on related work that has been done in this field. First, we briefly introduce two process calculi, i.e. formalisms that allow to describe the behaviour of processes. After that, we will discuss how these formal concepts can be used in programming.
 
 \section{Process calculi}
-Process calculi are formalisms that can be used to describe processes and their behaviour in a concurrent system on a high level. The description is done in a mathematical way, comparable to algebraic structures, and independently from an implementation \cite{}. Usually process calculi operate on abstract processes and provide a set of operators and combinators which can be used to compose processes. By introducing this kind of formalism, process calculi make it possible to reason about processes and perform (equivalence) transformations on them, e.g. to obtain a more optimised\footnote{Optimised according to a defined criterion.} representation \cite{}.
+Process calculi are formalisms that can be used to describe processes and their behaviour in a concurrent system on a high level. The description is done in a mathematical way, comparable to algebraic structures, and independently from an implementation \cite{}. Usually process calculi operate on abstract processes and provide a set of operators and combinators which can be used to compose processes. By introducing this kind of formalism, process calculi make it possible to reason about processes and perform (equivalence) transformations on them, e.g. to obtain a more optimised\footnote{Optimised according to a defined criterion.} representation \cite{}. In \cite{Hoare:2012:LPU:2368298.2368301}, an algebraic model, which can be used to derive different process calculi, has been introduced. The common, generalised model for various process calculi shows that these calculi are essentially equivalent and can be used to express the same thing.
 
 \subsection{Calculus of Communicating Systems}
 The Calculus of Communicating Systems, short \textsc{CCS}, is a process algebra introduced by Robin Milner in 1982 \cite{Milner:1982:CCS:539036}. \textsc{CCS} was one of the first process calculi in the history of computer science. It comprises a relatively small set of combinators which are used to describe process behaviour. We will give an overview over most of them and illustrate how to use them. Note that our introduction to \textsc{CCS} will not be complete and we only want to give a general idea.
@@ -42,13 +42,9 @@ We have now seen some basic combinators of \textsc{CSP} and how to use them in o
 
 %Unfortunately in \textsc{CSP} there exists communication between processes that is implicitly represented as events. Since we want to eliminate explicit communication between processes, \textsc{CSP} is unsuitable for our purposes.
 
-\section{A general algebraic model}
-Both \textsc{CCS} and \textsc{CSP} contain syntactic constructs to describe sequential composition, parallel composition, choice between processes and some others more. In fact they are equivalent in their expressiveness \cite{} and can be generalised in an algebraic model, similar to the work done in \cite{Hoare:2012:LPU:2368298.2368301}.
+\section{Application in programming}
+Current programming languages usually have tools for parallel and concurrent programming included. These tools might be realised using a runtime system, a virtual machine or could be found in a library. Syntactically, sequential and parallel composition as well as the choice between processes will look differently in different languages, yet the underlying semantics are the same\footnote{Of course only the semantics concerning process composition. Not so the semantics regarding program evaluation.}. This is why we will not dive into the concrete syntax of a particular programming language, but rather describe how to apply the general idea.
 
-\section{Programming languages}
+Two processes can be combined sequentially by running one of the processes first, waiting for its termination and then running the other one. Parallel composition can be done by simply starting processes at the same time. A choice between processes can be made using the conventional choice operator from sequential programming. Descriptions made in, e.g. \textsc{CCS} can be resembled using this approach.
 
-\subsection{Java}
-
-\subsection{Erlang}
-
-\subsection{Haskell}
+However, in either case it is neccessary to explicitly write the desired composition down. There is usually no direct way of composing processes and (re-)using them as first class values. This unfortunately results in lengthy, unmodular code. We would rather wish for a compact method, similar to the syntax of \textsc{CCS} and \textsc{CSP}, of performing process composition.
