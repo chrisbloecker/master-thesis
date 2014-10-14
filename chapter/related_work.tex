@@ -11,14 +11,19 @@ In \textsc{CCS}, processes are composed of actions $\mathcal{A}$ and processes $
 
 Processes in \textsc{CCS} are defined inductively. The empty process $\emptyset$ is the process that does nothing. Processes can be prefixed with an action to obtain a new process. $a.P$ describes a process that can execute action $a$ before it continues as process $P$. We can use the empty process $\emptyset$ together with the prefixing of actions \enquote{.} to build a process that consists of an arbitrary long but finite sequence of actions.
 
-The composition of two processes can be made with the choice operator \enquote{+} and the parallel operator \enquote{|}. $P + Q$ describes a process that will proceed as either $P$ or $Q$. With $P | Q$ we can describe that processes $P$ and $Q$ exist and the same time and execute concurrently. Both for \enquote{+} and \enquote{|} the laws of associativity and commutativity hold, thus the following equations hold:
-
+The composition of two processes can be made with the choice operator \enquote{+} and the parallel operator \enquote{|}. $P + Q$ describes a process that will proceed as either $P$ or $Q$. With $P \,|\, Q$ we can describe that processes $P$ and $Q$ exist and the same time and execute concurrently. Both for \enquote{+} and \enquote{|} the laws of associativity and commutativity hold as shown in the following equations:
 \begin{eqnarray*}
   P + \left( Q + R \right) & = & \left( P + Q \right) + R \\
   P \,|\, \left( Q \,|\, R \right) & = & \left( P \,|\, Q \right) \,|\, R \\
   P + Q & = & Q + P \\
-  P \,|\, Q & = & Q \,|\, P \\
+  P \,|\, Q & = & Q \,|\, P.
 \end{eqnarray*}
+Furthermore, \enquote{$|$} distributes over \enquote{$+$}:
+\begin{eqnarray*}
+  P \,|\, \left( Q + R \right) & = & \left( P \,|\, Q \right) + \left( P \,|\, R \right).
+\end{eqnarray*}
+
+\textsc{CCS} contains more than we have seen here, e.g. aliasing of processes and thereby introducing recursion. Sequential and parallel composition using the shown combinators as well as choice between processes is straight forward and intuitive.
 
 \subsection{Communicating Sequential Processes}
 Communicating Sequential Processes, or short \textsc{CSP}, was developed by Tony Hoare and published in 1985 \cite{Hoare:1985:CSP:3921}. It arose around the same time as \textsc{CCS} and belongs to the circle of the first process calculi. We will introduce a subset of \textsc{CSP} and show how to build processes using \textsc{CSP}, however we will not go too deep into detail and don't claim to provide a complete description.
@@ -38,7 +43,7 @@ We have now seen some basic combinators of \textsc{CSP} and how to use them in o
 %Unfortunately in \textsc{CSP} there exists communication between processes that is implicitly represented as events. Since we want to eliminate explicit communication between processes, \textsc{CSP} is unsuitable for our purposes.
 
 \section{A general algebraic model}
-\cite{Hoare:2012:LPU:2368298.2368301}
+Both \textsc{CCS} and \textsc{CSP} contain syntactic constructs to describe sequential composition, parallel composition, choice between processes and some others more. In fact they are equivalent in their expressiveness \cite{} and can be generalised in an algebraic model, similar to the work done in \cite{Hoare:2012:LPU:2368298.2368301}.
 
 \section{Programming languages}
 
