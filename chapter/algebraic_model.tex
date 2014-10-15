@@ -1,0 +1,10 @@
+\chapter{An algebraic model}
+In the previous chapter we have seen two examples of process calculi and how they work. Before we start to define our own calculus for distributed programming, we will develop a yet more abstract algebraic model, similar to the one presented in \cite{Hoare:2012:LPU:2368298.2368301}. We will use it to define the semantics of our calculus, which will implement the algebraic model.
+
+First, let us define what we mean by \textit{process}: a process is (a piece of) a computer program. It can run concurrently with other processes. A process receives an input and produces an output. Essentially, a process can be seen as a function. % ToDo?
+
+For now we are not interested in \textbf{what} a process does and \textbf{how} it does that. We will treat processes as black boxes that receive an input, perform an action and eventually produce an output. Our point of interest is the composability of processes and the algebraic structure we can define on them.
+
+Let $\mathcal{P}$ be the set of processes and let $P, Q \in \mathcal{P}$ be processes. Furthermore, let $Id \in \mathcal{P}$ be the identity process, i.e. the process that maps an input to itself, and $Err \in \mathcal{P}$ the error process, i.e. the process that always fails. Let $\mathcal{T}$ be the set of types and let $t_0, t_1, \ldots \in \mathcal{T}$ be types. Let $\rho \colon \mathcal{P} \to \mathcal{T} \times \mathcal{T}$ be the function that assigns a type signature to every process.
+
+Let $\circ \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the sequential composition of two processes. $P \circ Q$ means: first, execute $Q$, then, execute $P$. Clearly, $\mathcal{P}$ is closed under $\circ$ since the result is a process again and lies in $\mathcal{P}$.
