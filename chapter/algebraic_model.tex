@@ -27,14 +27,16 @@ Let $\vee \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the choice b
   \rho \left( P \right) & = & \left( t_i, t_j \right) \\
   \rho \left( Q \right) & = & \left( t_k, t_l \right).
 \end{eqnarray*}
-Then $P \vee Q$ yields a valid process iff $t_i = t_k \wedge t_j = t_l$ and $Err$ otherwise.
+Then $P \vee Q$ yields a valid process with $\rho \left( P \vee Q \right) = \left( t_i, t_j \right)$ iff $t_i = t_k \wedge t_j = t_l$ and $Err$ otherwise.
 
 Let $\circ \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the sequential composition of two processes. $Q \circ P$ means: first, execute $P$, then, execute $Q$. Clearly, $\mathcal{P}$ is closed under $\circ$ since the result is a process that lies in $\mathcal{P}$ by definition. Note that in order to compose processes with $\circ$, their type signatures have to match. Suppose we want to compose processes $P$ and $Q$ using $\circ$, i.e. $Q \circ P$ and
 \begin{eqnarray*}
   \rho \left( P \right) & = & \left( t_0, t_i \right) \\
   \rho \left( Q \right) & = & \left( t_j, t_1 \right).
 \end{eqnarray*}
-Then the composition $Q \circ P$ yields a valid process iff $t_i = t_j$, and results in $Err$ otherwise. 
+Then the composition $Q \circ P$ yields a valid process with $\rho \left( Q \circ P \right) = \left( t_0, t_1 \right)$ iff $t_i = t_j$, and results in $Err$ otherwise. 
+
+Let $| \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the parallel composition of processes, i.e. running processes $P$ and $Q$ concurrently.
 
 \section{Laws}
 Let $Id \in \mathcal{P}$ be the identity process, i.e. the process that maps an input to itself.
