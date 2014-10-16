@@ -18,11 +18,23 @@ Let $\mathcal{P}$ be the set of processes and let $P, Q \in \mathcal{P}$ be synt
 are also syntactically correct processes.
 
 \section{Semantics}
-The operator precedence in our algebra is a follows: $*$ binds strongest, the next weaker operator is $\circ$, followed by $|$ and in the end $\vee$. Parenthesis might be necessary to express the desired composition.
+The operator precedence in our algebra is a follows: $*$ binds strongest, the next weaker operator is $\circ$, followed by $|$ and in the end $\vee$. Parentheses, as described in the syntax, might be necessary to express the desired composition.
 
 Let $\mathcal{T}$ be the set of types and let $t_0, t_1, \ldots \in \mathcal{T}$ be types. Let $\rho \colon \mathcal{P} \to \mathcal{T} \times \mathcal{T}$ be a function that assigns a type signature to every process. Furthermore, let $Err \in \mathcal{P}$ the error process, i.e. the process that always fails.
 
-Let $\circ \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the sequential composition of two processes. $P \circ Q$ means: first, execute $Q$, then, execute $P$. Clearly, $\mathcal{P}$ is closed under $\circ$ since the result is a process that lies in $\mathcal{P}$ by definition. Note that in order to compose processes with $\circ$, their 
+Let $\vee \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the choice between two processes. $P \vee Q$ yields a process that either behaves like $P$ or $Q$. $\mathcal{P}$ is closed under $\vee$ since $\vee$ selects between $P$ and $Q$ and $P, Q \in \mathcal{P}$. In order to compose processes with $\vee$, their type signatures have to match. Let
+\begin{eqnarray*}
+  \rho \left( P \right) & = & \left( t_i, t_j \right) \\
+  \rho \left( Q \right) & = & \left( t_k, t_l \right).
+\end{eqnarray*}
+Then $P \vee Q$ yields a valid process iff $t_i = t_k \wedge t_j = t_l$ and $Err$ otherwise.
+
+Let $\circ \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the sequential composition of two processes. $Q \circ P$ means: first, execute $P$, then, execute $Q$. Clearly, $\mathcal{P}$ is closed under $\circ$ since the result is a process that lies in $\mathcal{P}$ by definition. Note that in order to compose processes with $\circ$, their type signatures have to match. Suppose we want to compose processes $P$ and $Q$ using $\circ$, i.e. $Q \circ P$ and
+\begin{eqnarray*}
+  \rho \left( P \right) & = & \left( t_0, t_i \right) \\
+  \rho \left( Q \right) & = & \left( t_j, t_1 \right).
+\end{eqnarray*}
+Then the composition $Q \circ P$ yields a valid process iff $t_i = t_j$, and results in $Err$ otherwise. 
 
 \section{Laws}
 Let $Id \in \mathcal{P}$ be the identity process, i.e. the process that maps an input to itself.
