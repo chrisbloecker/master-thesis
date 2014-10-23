@@ -10,12 +10,26 @@ For now we are not interested in \textbf{what} a process does and \textbf{how} i
 Let $\mathcal{P}$ be the set of processes and let $P, Q \in \mathcal{P}$ be syntactically correct processes. Then
 \begin{itemize}
   \item $P \vee Q$
+  \vspace*{-0.25em}
   \item $P \circ Q$
+  \vspace*{-0.25em}
   \item $P \,|\, Q$
+  \vspace*{-0.25em}
   \item $P^*$
+  \vspace*{-0.25em}
   \item $\left( P \right)$
 \end{itemize}
-are also syntactically correct processes.
+form syntactically correct processes.
+
+The syntax can also be expressed in form of a grammar $G = \left( N, T, R, P \right)$, where $N = \left\{ P \right\}$ is the set of non-terminals, $T = \left\{ ??? \right\}$ is the set of terminals, $R$ is the set of production rules and $P$ is the start symbol \cite{Hopcroft:2006:IAT:1196416} with
+\begin{eqnarray*}
+  R \colon \quad P & \to & P \vee P \\
+    & | & P \circ P \\
+    & | & P|P \\
+    & | & P^* \\
+    & | & \left( P \right).
+\end{eqnarray*}
+Note that $G$ is context-free since it involves a Dyck language \cite{}.
 
 \section{Semantics}
 The operator precedence in our algebra is a follows: $*$ binds strongest, the next weaker operator is $\circ$, followed by $|$ and in the end $\vee$. Parentheses, as described in the syntax, might be necessary to express the desired composition.
@@ -29,14 +43,19 @@ Let $\vee \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the choice b
 \end{eqnarray*}
 Then $P \vee Q$ yields a valid process with $\rho \left( P \vee Q \right) = \left( t_i, t_j \right)$ iff $t_i = t_k \wedge t_j = t_l$ and $Err$ otherwise.
 
-Let $\circ \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the sequential composition of two processes. $Q \circ P$ means: first, execute $P$, then, execute $Q$. Clearly, $\mathcal{P}$ is closed under $\circ$ since the result is a process that lies in $\mathcal{P}$ by definition. Note that in order to compose processes with $\circ$, their type signatures have to match. Suppose we want to compose processes $P$ and $Q$ using $\circ$, i.e. $Q \circ P$ and
+Let $\circ \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the sequential composition of two processes. $Q \circ P$ means: first, execute $P$, then, execute $Q$. Clearly, $\mathcal{P}$ is closed under $\circ$ since the result is a process that lies in $\mathcal{P}$ by definition. Note that in order to compose processes with $\circ$, their type signatures have to match. Suppose, we want to compose processes $P$ and $Q$ using $\circ$, i.e. $Q \circ P$ and
 \begin{eqnarray*}
   \rho \left( P \right) & = & \left( t_0, t_i \right) \\
   \rho \left( Q \right) & = & \left( t_j, t_1 \right).
 \end{eqnarray*}
 Then the composition $Q \circ P$ yields a valid process with $\rho \left( Q \circ P \right) = \left( t_0, t_1 \right)$ iff $t_i = t_j$, and results in $Err$ otherwise. 
 
-Let $| \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the parallel composition of processes, i.e. running processes $P$ and $Q$ concurrently.
+Let $| \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the parallel composition of processes, i.e. running processes $P$ and $Q$ concurrently. Then $P \,|\, Q$ will creates a process that executes $P$ and $Q$ concurrently. Suppose, we want to compose $P$ and $Q$ using $|$, i.e. $P \,|\, Q$ and
+\begin{eqnarray*}
+  \rho \left( P \right) & = & \left( t_i, t_j \right) \\
+  \rho \left( Q \right) & = & \left( t_k, t_l \right).
+\end{eqnarray*}
+Then the composition $P \,|\, Q$ yields a valid process with $\rho \left( P \,|\, Q \right) = \left( t_i, t_j \right)$ iff $t_i = t_k \wedge t_j = t_l$, i.e. $\rho \left( P \right) = \rho \left( Q \right)$. Furthermore, we require $t_j$ to form a semigroup so we can combine the results of processes $P$ and $Q$ together into a single element of $t_j$. Note that $P \,|\, Q = Err$ iff $\rho \left( P \right) \neq \rho \left( Q \right)$.
 
 \section{Laws}
 Let $Id \in \mathcal{P}$ be the identity process, i.e. the process that maps an input to itself.
