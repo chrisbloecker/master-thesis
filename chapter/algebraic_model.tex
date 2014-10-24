@@ -21,11 +21,11 @@ Let $\mathcal{P}$ be the set of processes and let $P, Q \in \mathcal{P}$ be synt
 \end{itemize}
 form syntactically correct processes.
 
-The syntax can also be expressed in form of a grammar $G = \left( N, T, R, P \right)$, where $N = \left\{ P \right\}$ is the set of non-terminals, $T = \left\{ ??? \right\}$ is the set of terminals, $R$ is the set of production rules and $P$ is the start symbol \cite{Hopcroft:2006:IAT:1196416} with
+The syntax can also be expressed in form of a grammar $G = \left( N, T, R, P \right)$, where $N = \left\{ P \right\}$ is the set of non-terminals, $T = \left\{ ??? \right\}$ is the set of terminals, $R$ is the set of production rules and $P$ is the start symbol \cite{Hopcroft:2006:IAT:1196416} with % ToDo!
 \begin{eqnarray*}
   R \colon \quad P & \to & P \vee P \\
     & | & P \circ P \\
-    & | & P|P \\
+    & | & P \,|\, P \\
     & | & P^* \\
     & | & \left( P \right).
 \end{eqnarray*}
@@ -34,7 +34,7 @@ Note that $G$ is context-free since it involves a Dyck language \cite{}.
 \section{Semantics}
 The operator precedence in our algebra is a follows: $*$ binds strongest, the next weaker operator is $\circ$, followed by $|$ and in the end $\vee$. Parentheses, as described in the syntax, might be necessary to express the desired composition.
 
-Let $\mathcal{T}$ be the set of types and let $t_0, t_1, \ldots \in \mathcal{T}$ be types. Let $\rho \colon \mathcal{P} \to \mathcal{T} \times \mathcal{T}$ be a function that assigns a type signature to every process. Furthermore, let $Err \in \mathcal{P}$ the error process, i.e. the process that always fails.
+Let $\mathcal{T} = \left\{ \bot \right\} \, \cup \, \bigcup_i \left\{ t_i \right\}$ be the set of types and let $t_i \in \mathcal{T}$ be types for every $i$. Let $\rho \colon \mathcal{P} \to \mathcal{T} \times \mathcal{T}$ be a function that assigns a type signature to a process. Furthermore, let $Id$ be the process that simply outputs its input, i.e. the identity process and let $Err \in \mathcal{P}$ the error process, i.e. the process that always fails. Let their type signatures be $\rho \left( Id \right) = \left( t_*, t_* \right)$ and $\rho \left( Err \right) = \left( t_*, \bot \right)$, where $t_*$ is a polymorphic type and $\bot$ is the undefined type. $Id$ and $Err$ will match their concrete input type to a specific $t_i \in \mathcal{T}$, which is determined by the context.
 
 Let $\vee \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the choice between two processes. $P \vee Q$ yields a process that either behaves like $P$ or $Q$. $\mathcal{P}$ is closed under $\vee$ since $\vee$ selects between $P$ and $Q$ and $P, Q \in \mathcal{P}$. In order to compose processes with $\vee$, their type signatures have to match. Let
 \begin{eqnarray*}
@@ -57,5 +57,53 @@ Let $| \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the parallel co
 \end{eqnarray*}
 Then the composition $P \,|\, Q$ yields a valid process with $\rho \left( P \,|\, Q \right) = \left( t_i, t_j \right)$ iff $t_i = t_k \wedge t_j = t_l$, i.e. $\rho \left( P \right) = \rho \left( Q \right)$. Furthermore, we require $t_j$ to form a semigroup so we can combine the results of processes $P$ and $Q$ together into a single element of $t_j$. Note that $P \,|\, Q = Err$ iff $\rho \left( P \right) \neq \rho \left( Q \right)$.
 
+Let $* \colon \mathcal{P} \to \mathcal{P}$ be the Kleene star that can be used to express repetition, i.e. executing a process several times. $P^*$ creates a process that runs $P$ zero or more times and can also be expressed recursively as $P^* = Id \vee P^* \circ P$. Let $\rho \left( P \right) = \left( t_i, t_j \right)$, then $P^*$ is valid and $\rho \left( P^* \right) = \left( t_i, t_i \right)$ iff $t_i = t_j$ and $Err$ otherwise.
+
+Parentheses will be neccessary in some situations to overcome operator precedence and to express the desired composition of processes. They have no effect of the semantics of a single process, i.e. for a process $P$, let $R = \left( P \right)$, then $P = R$ and $\rho \left( P \right) = \rho \left( R \right)$.
+
 \section{Laws}
-Let $Id \in \mathcal{P}$ be the identity process, i.e. the process that maps an input to itself.
+Based on the defined semantics of our process algebra, we can find a set of laws that allow us to transform process expressions into an equivalent representation. In the following, let $P, Q, R \in \mathcal{P}$ and assume that their types are suitable for the desired composition.
+
+\subsection{Associativity}
+\begin{equation*}
+\begin{array}{rcccl}
+  \left( R \vee Q \right) \vee P & = & R \vee Q \vee P & = & R \vee \left( Q \vee P \right) \\
+  \left( R \,|\, Q \right) |\, P & = & R \,|\, Q \,|\, P & = & R \,| \left( Q \,|\, P \right) \\
+  \left( R \circ Q \right) \circ P & = & R \circ Q \circ P & = & R \circ \left( Q \circ P \right)
+\end{array}
+\end{equation*}
+
+\subsection{Distributivity}
+\begin{eqnarray*}
+  P \vee \left( Q \vee R \right) & = & \left( P \vee Q \right) \vee \left( P \vee R \right) \\
+  P \,| \left( Q \vee R \right) & = & \left( P \,|\, Q \right) \vee \left( P \,|\, R \right) \\
+  P \circ \left( Q \vee R \right) & = & \left( P \circ Q \right) \vee \left( P \circ R \right) \\
+  & & \\
+  P \circ \left( Q \,|\, R \right) & = & \left( P \circ Q \right) | \left( P \circ R \right)
+\end{eqnarray*}
+
+\subsection{Commutativity}
+\begin{eqnarray*}
+  P \vee Q & = & Q \vee P \\
+  P \,|\, Q & = & Q \,|\, P
+\end{eqnarray*}
+
+\subsection{Idempotence}
+\begin{eqnarray*}
+  P \vee P & = & P \\
+  Id \circ Id & = & Id \\
+  Err \circ Err & = & Err \\
+  (P^*)^* & = & P^*
+\end{eqnarray*}
+
+\subsection{Neutral elements}
+\begin{eqnarray*}
+  P \circ Id & = & P \\
+  Id \circ P & = & P
+\end{eqnarray*}
+
+\subsection{Further laws}
+\begin{eqnarray*}
+  Err \circ P & = & Err \\
+  P \circ Err & = & Err
+\end{eqnarray*}
