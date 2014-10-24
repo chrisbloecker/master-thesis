@@ -1,4 +1,5 @@
 \chapter{An algebraic model}
+\label{chp:algebraic_model}
 In the previous chapter we have seen two examples of process calculi and how they work. Before we start to define our own calculus for distributed programming, we will develop a yet more abstract algebraic model, similar to the one presented in \cite{Hoare:2012:LPU:2368298.2368301}. We will use it to define the semantics of our calculus, which will implement the algebraic model.
 
 First, let us define what we mean by \textit{process}: a process is (a piece of) a computer program. It can run concurrently with other processes. A process receives an input and produces an output. Essentially, a process can be seen as a function. % ToDo?
@@ -98,8 +99,8 @@ Based on the defined semantics of our process algebra, we can find a set of laws
 
 \subsection{Neutral elements}
 \begin{eqnarray*}
-  P \circ Id & = & P \\
-  Id \circ P & = & P
+  Id \circ P & = & P \\
+  P \circ Id & = & P
 \end{eqnarray*}
 
 \subsection{Further laws}
