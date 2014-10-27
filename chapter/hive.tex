@@ -1,16 +1,82 @@
 \chapter{Hive}
+In this chapter we will describe a concrete implementation of the algebraic model from \chpref{chp:algebraic_model} in Haskell. We will start off with the definition of the data structure and then take a closer look at the implementation of the interpreter that will take care its distribution in a distributed network. We will conclude this chapter with a collection of examples that will illustrate how to use our algebra to solve problems.
+
+\section{Cloud Haskell}
+We will base our implementation on Cloud Haskell \cite{Epstein:2011:THC:2034675.2034690}, a domain specific language for distributed programming in Haskell. Cloud Haskell is highly inspired by Erlang and uses message passing for communication between processes, there is no implicitly shared memory.
+
+A Cloud Haskell process is a function that runs in the \textsf{Process} monad and can be spawned on a local or remote node. Processes can send messages to other processes if they have knowledge about their process identifier, which serves as an address.
+
+While Erlang uses atoms as tags for messages, Cloud Haskell uses data types that need to be an instance of \textsf{Serializable}. \textsf{Serializable} itself is only a combination of both \textsf{Binary} and \textsf{Typeable}. \textsf{Binary} is neccessary to serialise a message into a \textsf{ByteString}, \textsf{Typeable} is used to identify the type of a message. This way, serialisation is made explicit, in contrast to Erlang where it is implicit \cite{Epstein:2011:THC:2034675.2034690}.
 
 \section{The algebra}
-\begin{itemize}
-  \item Const
-  \item Simple
-  \item Local
-  \item Choice
-  \item Sequence
-  \item Parallel
-  \item Multilel
-  \item Loop
-\end{itemize}
+Our implementation is supposed to resemble the structure and expressiveness of the algebraic model given in \chpref{chp:algebraic_model}. Furthermore, we prefer to prevent the creation of erroneous processes rather than dealing with them when we execute a process. To achieve this, we will employ a generalised algebraic data type and leverage the power of Haskell's type system to create a model that will only allow for the creation of valid processes.
+
+Our data type \textsf{Process} for processes will look like
+\begin{lstlisting}[language=Haskell]
+data Process a b where 
+\end{lstlisting}
+and incorporates two constructors for the creation of basic processes from Cloud Haskell processes:
+\begin{lstlisting}[language=Haskell]
+Const :: (Serializable b) 
+      => CH.Static (SerializableDict b)
+      -> CH.Closure (CH.Process b)
+      -> Process a b
+
+Simple :: (Serializable b) 
+       => CH.Static (SerializableDict b)
+       -> (a -> CH.Closure (CH.Process b))
+       -> Process a b
+\end{lstlisting}
+
+\begin{lstlisting}[language=Haskell]
+Local :: (Serializable b) 
+      => Process a b
+      -> Process a b
+\end{lstlisting}
+
+\begin{lstlisting}[language=Haskell]
+Choice :: (Serializable b)
+       => c
+       -> (a -> c -> c)
+       -> (c -> Bool)
+       -> Process a b
+       -> Process a b
+       -> Process a b
+\end{lstlisting}
+
+\begin{lstlisting}[language=Haskell]
+Sequence :: (Serializable b, Serializable c)
+         => Process a c
+         -> Process c b
+         -> Process a b
+\end{lstlisting}
+
+\begin{lstlisting}[language=Haskell]
+Parallel :: (Serializable b, Serializable c, Serializable d)
+         => Process a c
+         -> Process a d
+         -> Process (c, d) b
+         -> Process a b
+\end{lstlisting}
+
+\begin{lstlisting}[language=Haskell]
+Multilel :: (Serializable b, Serializable c)
+         => [Process a c]
+         -> b
+         -> Process (b, [c]) b
+         -> Process a b
+\end{lstlisting}
+
+\begin{lstlisting}[language=Haskell]
+Loop :: (Serializable b)
+     => b
+     -> c
+     -> (c -> Bool)
+     -> (b -> a)
+     -> (a -> c -> c)
+     -> Process a b
+     -> Process a b
+\end{lstlisting}
 
 \section{Implementation}
 
@@ -19,5 +85,3 @@
 \subsection{Hello world for interpreters}
 
 \subsection{An ant system for the TSP}
-
-\section{Equivalence to CSP}
