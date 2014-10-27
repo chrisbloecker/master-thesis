@@ -21,7 +21,7 @@ data Process a b where
 \end{lstlisting}
 The type parameters \textsf{a} and \textsf{b} reflect the process' input and output types where \textsf{a} is the input type and \textsf{b} is the output type. For every data constructor of \textsf{Process}, we need to constrain the output type to have an instance of \textsf{Serializable} so the result can be serialised and sent back to the caller.
 
-The Hive process algebra incorporates two constructors for the creation of basic processes from Cloud Haskell processes, i.e. \textsf{Const} and \textsf{Simple}. In principle, it is possible to use an arbitraty \textsf{CH.Process} to create a Hive \textsf{Process}, but regarding possible transformations based on the laws introduced in \chpref{chp:laws}, we require them to be free of side-effects in order to preserve their semantics after transformation. Idempotent actions should not alter processes' semantics regardless of transformations. However, maintaining a consistent environment across multiple nodes is troublesome and not part of our goal, but leaves room for future work and improvements. A process should be referentially transparent, i.e. its behaviour should be fully determined by its input and repeated execution of the same process with the same input should always yield the same output.
+The Hive process algebra incorporates two data constructors for the creation of basic processes from Cloud Haskell processes, i.e. \textsf{Const} and \textsf{Simple}. In principle, it is possible to use an arbitraty \textsf{CH.Process} to create a Hive \textsf{Process}, but regarding possible transformations based on the laws introduced in \chpref{chp:laws}, we require them to be free of side-effects in order to preserve their semantics after transformation. Idempotent actions should not alter processes' semantics regardless of transformations. However, maintaining a consistent environment across multiple nodes is troublesome and not part of our goal, but leaves room for future work and improvements. A process should be referentially transparent, i.e. its behaviour should be fully determined by its input and repeated execution of the same process with the same input should always yield the same output.
 \begin{lstlisting}[language=Haskell]
 Const :: (Serializable b) 
       => CH.Static (SerializableDict b)
@@ -36,23 +36,27 @@ Simple :: (Serializable b)
        -> (a -> CH.Closure (CH.Process b))
        -> Process a b
 \end{lstlisting}
+\textsf{Simple} takes a \textsf{CH.Static (SerializableDict b)} and, instead of a closure, a closure generator \textsf{a $\to$ CH.Closure (CH.Process b)}. The closure generator will generate a closure of type \textsf{CH.Closure (CH.Process b)} when given a value of type \textsf{a}. This value of type \textsf{a} serves as the environment for the process inside the closure.
 
+As mentioned, \textsf{Const} and \textsf{Simple} are the data constructors for the creation of Hive processes and represent the basic processes we saw in \chpref{chp:algebraic_model}. All other data constructors operate on existing Hive processes and resemble the algebraic operations from \chpref{chp:algebraic_model}, such as choice, parallel composition, sequential composition and \textsc{Kleene} star. However, as we will see, some of the data constructors will be more general and thus more expressive and flexible than the operators presented in \chpref{chp:algebraic_model}.
 
 \begin{lstlisting}[language=Haskell]
 Local :: (Serializable b) 
       => Process a b
       -> Process a b
 \end{lstlisting}
+\textsf{Local} simply wraps a Hive process without altering its behaviour or adding new data, the structure of \textsf{Local} is that of a decorator \cite{Gamma:1995:DPE:186897}. The purpose of \textsf{Local} is to give an indication to the process interpreter\footnote{We will have a closer look at the interpreter in \chpref{chp:implementation}. For now, the reader is invited to accept the existence of an interpreter that takes care of the distribution and execution of Hive process structures.} that the wrapped process should be executed locally. Typically, the reason for this arises from the expectation that the action of serialising a closure, sending it to a remote node, executing it there and obtaining the result is more expensive\footnote{Expensive in terms of the neccessary amount of time.} than executing the respective process locally. Since there is no general approach to estimate the neccessary amount of time to run a program \cite{}, we decide to equip the user with the \textsf{Local} data constructor and burden him with the obligation to make appropriate use of it.
 
 \begin{lstlisting}[language=Haskell]
 Choice :: (Serializable b)
        => c
-       -> (a -> c -> c)
-       -> (c -> Bool)
+       -> (a -> c -> d)
+       -> (d -> Bool)
        -> Process a b
        -> Process a b
        -> Process a b
 \end{lstlisting}
+The \textsf{Choice} data constructor is used to build a process that makes a choice between two processes. Unlike in the algebraic model from \chpref{chp:algebraic_model}, this choice is not made nondeterministically, but based on a predicate. \textsf{Choice} takes a value of type \textsf{c}, a function of type \textsf{a $\to$ c $\to$ d}, a predicate \textsf{d $\to$ Bool} and two processes of type \textsf{Process a b}. The interplay of the additional parameters will become clear in \chpref{chp:implementation}. For now, it will suffice to say that they enable process choice based on a static or dynamic value.
 
 \begin{lstlisting}[language=Haskell]
 Sequence :: (Serializable b, Serializable c)
@@ -89,6 +93,7 @@ Loop :: (Serializable b)
 \end{lstlisting}
 
 \section{Implementation}
+\label{chp:implementation}
 
 \section{Examples}
 
