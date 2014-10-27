@@ -12,25 +12,31 @@ In Haskell, functions can only be executed, composed and passed as arguments, th
 
 After a \textsf{Closure} has been executed, the result will be serialised and sent back to the caller. However, in some cases, the type system cannot infer the serialisability of the result type and therefore additional information needs to be provided. For a type \textsf{a}, serialisation information can be provided with a value of type \textsf{Static (SerializableDict a)}. Essentially this is only an explicit type tag that enables the selection of the correct serialisation function for type \textsf{a}.
 
-\section{The algebra}
+\section{The Hive algebra}
 Our implementation is supposed to resemble the structure and expressiveness of the algebraic model given in \chpref{chp:algebraic_model}. Furthermore, we prefer to prevent the creation of erroneous processes rather than dealing with them when we execute a process. To achieve this, we will employ a generalised algebraic data type and leverage the power of Haskell's type system to create a model that will only allow for the creation of valid processes.
 
-Our data type \textsf{Process} for processes will look like
+In the following \textsf{CH} is short for Cloud Haskell and will be the name for the qualified import of \textsf{Control.Distributed.Process}. Our data type \textsf{Process} for Hive processes will look like
 \begin{lstlisting}[language=Haskell]
 data Process a b where 
 \end{lstlisting}
-and incorporates two constructors for the creation of basic processes from Cloud Haskell processes, i.e. \textsf{Const} and \textsf{Simple}:
+The type parameters \textsf{a} and \textsf{b} reflect the process' input and output types where \textsf{a} is the input type and \textsf{b} is the output type. For every data constructor of \textsf{Process}, we need to constrain the output type to have an instance of \textsf{Serializable} so the result can be serialised and sent back to the caller.
+
+The Hive process algebra incorporates two constructors for the creation of basic processes from Cloud Haskell processes, i.e. \textsf{Const} and \textsf{Simple}. In principle, it is possible to use an arbitraty \textsf{CH.Process} to create a Hive \textsf{Process}, but regarding possible transformations based on the laws introduced in \chpref{chp:laws}, we require them to be free of side-effects in order to preserve their semantics after transformation. Idempotent actions should not alter processes' semantics regardless of transformations. However, maintaining a consistent environment across multiple nodes is troublesome and not part of our goal, but leaves room for future work and improvements. A process should be referentially transparent, i.e. its behaviour should be fully determined by its input and repeated execution of the same process with the same input should always yield the same output.
 \begin{lstlisting}[language=Haskell]
 Const :: (Serializable b) 
       => CH.Static (SerializableDict b)
       -> CH.Closure (CH.Process b)
       -> Process a b
+\end{lstlisting}
+\textsf{Const} takes a \textsf{CH.Static (SerializableDict b)} and a \textsf{Closure (CH.Process b)}, i.e. a closure that contains a \textsf{CH.Process} that produces a value of type \textsf{b} when executed. Note that a \textsf{Process} constructed with \textsf{Const} does not take any other parameters and therefore will always produce the same, a constant, result, no matter what input value might be presented to it. 
 
+\begin{lstlisting}[language=Haskell]
 Simple :: (Serializable b) 
        => CH.Static (SerializableDict b)
        -> (a -> CH.Closure (CH.Process b))
        -> Process a b
 \end{lstlisting}
+
 
 \begin{lstlisting}[language=Haskell]
 Local :: (Serializable b) 
