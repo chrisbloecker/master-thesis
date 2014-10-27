@@ -8,6 +8,10 @@ A Cloud Haskell process is a function that runs in the \textsf{Process} monad an
 
 While Erlang uses atoms as tags for messages, Cloud Haskell uses data types that need to be an instance of \textsf{Serializable}. \textsf{Serializable} itself is only a combination of both \textsf{Binary} and \textsf{Typeable}. \textsf{Binary} is neccessary to serialise a message into a \textsf{ByteString}, \textsf{Typeable} is used to identify the type of a message. This way, serialisation is made explicit, in contrast to Erlang where it is implicit \cite{Epstein:2011:THC:2034675.2034690}.
 
+In Haskell, functions can only be executed, composed and passed as arguments, they cannot be serialised. However, this would be neccessary in order to send a function to a remote node and execute it there. Cloud Haskell avoids this problem by using a table of static code pointers, i.e. fully qualified top level names of functions that are known at compile time, to refer to functions by a name. For remote execution, a function's name will be put into a \textsf{Closure}, together with its serialised environment, and sent to a remote node where it will be deserialised and executed. A \textsf{Closure} is nothing more than just mentioned: a function together with its environment \cite{Epstein:2011:THC:2034675.2034690}.
+
+After a \textsf{Closure} has been executed, the result will be serialised and sent back to the caller. However, in some cases, the type system cannot infer the serialisability of the result type and therefore additional information needs to be provided. For a type \textsf{a}, serialisation information can be provided with a value of type \textsf{Static (SerializableDict a)}. Essentially this is only an explicit type tag that enables the selection of the correct serialisation function for type \textsf{a}.
+
 \section{The algebra}
 Our implementation is supposed to resemble the structure and expressiveness of the algebraic model given in \chpref{chp:algebraic_model}. Furthermore, we prefer to prevent the creation of erroneous processes rather than dealing with them when we execute a process. To achieve this, we will employ a generalised algebraic data type and leverage the power of Haskell's type system to create a model that will only allow for the creation of valid processes.
 
@@ -15,7 +19,7 @@ Our data type \textsf{Process} for processes will look like
 \begin{lstlisting}[language=Haskell]
 data Process a b where 
 \end{lstlisting}
-and incorporates two constructors for the creation of basic processes from Cloud Haskell processes:
+and incorporates two constructors for the creation of basic processes from Cloud Haskell processes, i.e. \textsf{Const} and \textsf{Simple}:
 \begin{lstlisting}[language=Haskell]
 Const :: (Serializable b) 
       => CH.Static (SerializableDict b)
