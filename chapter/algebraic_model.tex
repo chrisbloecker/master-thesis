@@ -22,13 +22,14 @@ Let $\mathcal{P}$ be the set of processes and let $P, Q \in \mathcal{P}$ be synt
 \end{itemize}
 form syntactically correct processes.
 
-The syntax can also be expressed in form of a grammar $G = \left( N, T, R, P \right)$, where $N = \left\{ P \right\}$ is the set of non-terminals, $T = \left\{ ??? \right\}$ is the set of terminals, $R$ is the set of production rules and $P$ is the start symbol \cite{Hopcroft:2006:IAT:1196416} with % ToDo!
+The syntax can also be expressed in form of a grammar $G = \left( N, T, R, P \right)$, where $N = \left\{ P \right\}$ is the set of non-terminals, $T = \mathcal{P}$ is the set of terminals, $R$ is the set of production rules and $P$ is the start symbol \cite{Hopcroft:2006:IAT:1196416} with % ToDo!
 \begin{eqnarray*}
   R \colon \quad P & \to & P \vee P \\
     & | & P \circ P \\
     & | & P \,|\, P \\
     & | & P^* \\
-    & | & \left( P \right).
+    & | & \left( P \right). \\
+    & | & p \quad\quad\quad\quad \text{for every } p \in \mathcal{P}
 \end{eqnarray*}
 Note that $G$ is context-free since it involves a Dyck language \cite{}.
 
@@ -109,3 +110,24 @@ Based on the defined semantics of our process algebra, we can find a set of laws
   Err \circ P & = & Err \\
   P \circ Err & = & Err
 \end{eqnarray*}
+
+\subsection{Summary}
+ToDo:
+\begin{table}[h]
+  \centering
+  \begin{tabular}{|l|c|c|c|c|}
+    \hline
+    & $\vee$ & $|$ & $\circ$ & $*$ \\
+    \hline
+    \hline
+    Associativity & $\times$ & $\times$ & $\times$ & \\
+    \hline
+    Distributivity & & & & \\
+    \hline
+    Commutativity & $\times$ & $\times$ & & \\
+    \hline
+  \end{tabular}
+  \caption{Summary}
+\end{table}
+
+\lipsum[7]
