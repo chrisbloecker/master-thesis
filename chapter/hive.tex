@@ -10,7 +10,7 @@ While Erlang uses atoms as tags for messages, Cloud Haskell uses data types that
 
 In Haskell, functions can only be executed, composed and passed as arguments, they cannot be serialised. However, this would be neccessary in order to send a function to a remote node and execute it there. Cloud Haskell avoids this problem by using a table of static code pointers, i.e. fully qualified top level names of functions that are known at compile time, to refer to functions by a name. For remote execution, a function's name will be put into a \texttt{Closure}, together with its serialised environment, and sent to a remote node where it will be deserialised and executed. A \texttt{Closure} is nothing more than just mentioned: a function together with its environment \cite{Epstein:2011:THC:2034675.2034690}.
 
-After a \texttt{Closure} has been executed, the result will be serialised and sent back to the caller. However, in some cases, the type system cannot infer the serialisability of the result type and therefore additional information needs to be provided. For a type \texttt{a}, serialisation information can be provided with a value of type \texttt{Static (SerializableDict a)}. Essentially this is only an explicit type tag that enables the selection of the correct serialisation function for type \texttt{a}.
+After a \texttt{Closure} has been executed, the result will be serialised and sent back to the caller. However, in some cases, the type system cannot infer the serialisability of the result type and therefore additional information needs to be provided\footnote{Specifically, the problem is that the type constructors can be constrained with required type class instances for parameters. On deconstruction, this information is not available and therefore needs to be added explicitly again.}. For a type \texttt{a}, serialisation information can be provided with a value of type \texttt{Static (SerializableDict a)}. Essentially this is only an explicit type tag that enables the selection of the correct serialisation function for type \texttt{a}.
 
 \section{The Hive algebra}
 Our implementation is supposed to resemble the structure and expressiveness of the algebraic model given in \chpref{chp:algebraic_model}. Furthermore, we prefer to prevent the creation of erroneous processes rather than dealing with them when we execute a process. To achieve this, we will employ a generalised algebraic data type and leverage the power of Haskell's type system to create a model that will only allow for the creation of valid processes.
@@ -94,12 +94,88 @@ Loop :: (Serializable b)
      -> Process a b
      -> Process a b
 \end{lstlisting}
-With the \texttt{Loop} data constructor, we can wrap a process for repeated execution, resembling the \textsc{Kleene} star. However, we provide a much more sophisticated and general version than the \texttt{Kleene} star does or than can be found in imperative programming languages. First, \texttt{Loop} takes a value of type \texttt{b}, which serves as a default output value in case the loop is executed exatly zero times. In imperative programming, this is the implicitly unchanged global state of the program. Then it takes a value of type \texttt{c}, a predicate of type \texttt{c $\to$ Bool} and a function of type \texttt{a $\to$ c $\to$ c}. The combination of these three controls the termination of the \texttt{Loop}'s execution. The function of type \texttt{b $\to$ a} is used to convert the result of the process of type \texttt{Process a b} back to a value of type \texttt{a}, so it can be fed into the next execution of the \texttt{Loop}.
+With the \texttt{Loop} data constructor, we can wrap a process for repeated execution, resembling the \textsc{Kleene} star $*$. However, we provide a much more sophisticated and general version than the \texttt{Kleene} star does or than can be found in imperative programming languages. First, \texttt{Loop} takes a value of type \texttt{b}, which serves as a default output value in case the loop is executed exatly zero times. In imperative programming, this is the implicitly unchanged global state of the program. Then it takes a value of type \texttt{c}, a predicate of type \texttt{c $\to$ Bool} and a function of type \texttt{a $\to$ c $\to$ c}. The combination of these three controls the termination of the \texttt{Loop}'s execution. The function of type \texttt{b $\to$ a} is used to convert the result of the process of type \texttt{Process a b} back to a value of type \texttt{a}, so it can be fed into the next execution of the \texttt{Loop}.
 
 \section{Implementation}
 \label{chp:implementation}
+We kindly want to remind the reader about the goal we set in \chpref{chp:goal}, i.e. the automatic distribution of processes in a distributed system while hiding the fact that a distributed system is involved. As mentioned earlier, we are going to employ the interpreter pattern \cite{Gamma:1995:DPE:186897} for this purpose. But to do so, first we need some kind of infrastructure and nodes to where we can delegate work.
+
+\subsection{Architecture}
+The architecture of our system's infrastructure is intentionally kept simple. It involves a designated master node, a collection of worker nodes and a RESTful web interface for the exchange of JSON documents.
+
+When a client wants to submit a request, it has to make use of the web interface and supply a JSON document in an appropriate format. In a productive environment, there would be a parser that reads a submitted JSON document, generates a corresponding process structure from its content and passes it on to the process interpreter if the document is valid. For simplicity, we will assume for now that a request equals a valid process description that can be interpreted.
+
+The master node is responsible for handling client requests, logging information related to the received requests and managing connected nodes. When a request is received, the master will spawn a new \texttt{CH.Process} that runs the \textsc{Hive} process interpreter and pass the request to the new process where it will be interpreted. At the same time, the master assigns a ticket id to the request, logs the request together with its id to a database database\footnote{For this purpose, we make use the \texttt{acid-state} library.} and reports the id to the client. When the interpreter finishes interpreting the process structure from the request, it will report the result to the master. The master then updates the database by logging the result to the database and linking it to the according id. At any time, a client can try to retrieve the result to its request by supplying the request's ticket id to the master. The master then tries to read the result from the database, but will only reply to the client's satisfaction after the interpretation of its request has been finished and logged to the database.
+
+Worker nodes are kept very simple. When started and supplied with the master's address, they report their availability to the master and wait for further instruction by the master.
+
+The \textsc{Hive} process interpreter, which we will discuss in full detail in \chpref{chp:interpreter}, is run in a new process by the master for every client request that is received.
+
+\subsection{The process interpreter} 
+\label{chp:interpreter}
+\begin{lstlisting}[language=Haskell]
+runProcess :: Master -> Process a b -> a -> CH.Process b
+\end{lstlisting}
+
+\begin{lstlisting}[language=Haskell]
+runProcess master (Const sDict closure) x =
+  runProcess master (Simple sDict (const closure)) x
+\end{lstlisting}
+
+\begin{lstlisting}[language=Haskell]
+runProcess master (Simple sDict closureGen) x = do
+  node <- getNode master =<< getSelfPid
+  res  <- call sDict node (closureGen x)
+  returnNode master node
+  return res
+\end{lstlisting}
+
+\begin{lstlisting}[language=Haskell]
+runProcess master (Local p) x = do
+  fakeMaster <- getFakeMaster =<< getSelfPid
+  res <- runProcess fakeMaster p x
+  terminateMaster fakeMaster
+  return res
+\end{lstlisting}
+
+\begin{lstlisting}[language=Haskell]
+runProcess master (Choice c acc p p1 p2) x =
+  runProcess master (if p (acc x c) then p1 else p2) x
+\end{lstlisting}
+
+\begin{lstlisting}[language=Haskell]
+runProcess master (Sequence p1 p2) x =
+  runProcess master p1 x >>= runProcess master p2
+\end{lstlisting}
+
+\begin{lstlisting}[language=Haskell]
+runProcess master (Parallel p1 p2 combinator) x = do
+  mvar <- liftIO newEmptyMVar
+  spawnLocal $ runProcessHelper master p1 x mvar
+  r2 <- runProcess master p2 x
+  r1 <- liftIO $ takeMVar mvar
+  runProcess master combinator (r1, r2)
+\end{lstlisting}
+
+\begin{lstlisting}[language=Haskell]
+runProcess master (Multilel ps ib fold) x = do
+  mvars <- forM ps $ \_ -> liftIO newEmptyMVar
+  mapM_ (\(proc,mvar) -> spawnLocal $ runProcessHelper master proc x mvar) (ps `zip` mvars)
+  ress  <- forM mvars $ \m -> (liftIO . takeMVar $ m)
+  runProcess master fold (ib, ress)
+\end{lstlisting}
+
+\begin{lstlisting}[language=Haskell]
+runProcess master (Loop ib ic pr ba acc p) x =
+  if pr (acc x ic) then do
+    x' <- runProcess master p x
+    runProcess master (Loop x' (acc x ic) pr ba acc p) (ba x')
+  else
+    return ib
+\end{lstlisting}
 
 \section{Examples}
+\label{chp:example}
 
 \subsection{Hello world for interpreters}
 
