@@ -4,11 +4,11 @@ In the previous chapter we have seen two examples of process calculi and how the
 
 First, let us define what we mean by \textit{process}: a process is (a piece of) a computer program. It can run concurrently with other processes. A process receives an input and produces an output. Essentially, a process can be seen as a function. % ToDo?
 
-For now we are not interested in \textbf{what} a process does and \textbf{how} it does that. We will treat processes as black boxes that receive an input, perform an action and eventually produce an output. Our point of interest is the composability of processes and the algebraic structure we can define on them.
+For now we are not interested in \textbf{what} a process does or \textbf{how} it does that. We will treat processes as black boxes that receive an input, perform an action and eventually produce an output. Our point of interest is the composability of processes and the algebraic structure we can define on them.
 
 \section{Syntax}
 
-Let $\mathcal{P}$ be the set of processes and let $P, Q \in \mathcal{P}$ be syntactically correct processes. Then
+Let $\mathcal{P}$ be the set of processes and let $P, Q \in \mathcal{P}$ be basic processes. $\mathcal{P}$ represents the set of computable functions in form of processes and hence is countable. Then syntactically correct processes can be formed inductively by:
 \begin{itemize}
   \item $P \vee Q$
   \vspace*{-0.25em}
@@ -18,9 +18,8 @@ Let $\mathcal{P}$ be the set of processes and let $P, Q \in \mathcal{P}$ be synt
   \vspace*{-0.25em}
   \item $P^*$
   \vspace*{-0.25em}
-  \item $\left( P \right)$
+  \item $\left( P \right)$.
 \end{itemize}
-form syntactically correct processes.
 
 The syntax can also be expressed in form of a grammar $G = \left( N, T, R, P \right)$, where $N = \left\{ P \right\}$ is the set of non-terminals, $T = \mathcal{P}$ is the set of terminals, $R$ is the set of production rules and $P$ is the start symbol \cite{Hopcroft:2006:IAT:1196416} with % ToDo!
 \begin{eqnarray*}
@@ -28,17 +27,19 @@ The syntax can also be expressed in form of a grammar $G = \left( N, T, R, P \ri
     & | & P \circ P \\
     & | & P \,|\, P \\
     & | & P^* \\
-    & | & \left( P \right). \\
+    & | & \left( P \right) \\
     & | & p \quad\quad\quad\quad \text{for every } p \in \mathcal{P}
 \end{eqnarray*}
-Note that $G$ is context-free since it involves a Dyck language \cite{}.
+Note that $G$ is context-free-like since it involves a Dyck language \cite{} and a countable set of terminals.
 
-\section{Semantics}
+\section{Static Semantics}
+As mentioned before, let $\mathcal{P}$ be the countable set of processes. A basic, or atomic, process is a process that performs an atomic operation and is no further divisable. By \enquote{running a process}, we mean to provide it with an input, let it do its work by applying its embedded function, and receiving an output. Let $P$ be a process and $i$ be an input for $P$. Then running $P$ on $i$ will yield an associated output $o$, which we will formally represent by $i \overset{P}{\mapsto} o$. Note that an inverse process $\overline{P}$ with $i \overset{P}{\mapsto} o \overset{\overline{P}}{\mapsto} i$ does generally not exist since not every computable function is invertible\footnote{Take, e.g. the function $f \colon x \mapsto x^2$. Clearly, $f$ is not injective since $f \left( x \right) = f \left( -x \right)$ and therefore not invertible. However, there is an inverse relation $\overline{f_r} \colon x \mapsto \left\{ \overline{x} \,|\, f \left( \overline{x} \right) = x \right\}$ that maps a value $x$ to the set of values that, if $f$ is applied to them, will yield $x$.}.
+
 The operator precedence in our algebra is a follows: $*$ binds strongest, the next weaker operator is $\circ$, followed by $|$ and in the end $\vee$. Parentheses, as described in the syntax, might be necessary to express the desired composition.
 
-Let $\mathcal{T} = \left\{ \bot \right\} \, \cup \, \bigcup_i \left\{ t_i \right\}$ be the set of types and let $t_i \in \mathcal{T}$ be types for every $i$. Let $\rho \colon \mathcal{P} \to \mathcal{T} \times \mathcal{T}$ be a function that assigns a type signature to a process. Furthermore, let $Id$ be the process that simply outputs its input, i.e. the identity process and let $Err \in \mathcal{P}$ the error process, i.e. the process that always fails. Let their type signatures be $\rho \left( Id \right) = \left( t_*, t_* \right)$ and $\rho \left( Err \right) = \left( t_*, \bot \right)$, where $t_*$ is a polymorphic type and $\bot$ is the undefined type. $Id$ and $Err$ will match their concrete input type to a specific $t_i \in \mathcal{T}$, which is determined by the context.
+Let $\mathcal{T} = \left\{ \bot \right\} \, \cup \, \bigcup_i \left\{ t_i \right\}$ be the set of types, let $t_i \in \mathcal{T}$ be types for every $i$ and let $\bot$ be the undefined type. Let $\rho \colon \mathcal{P} \to \mathcal{T} \times \mathcal{T}$ be a function that assigns a type signature to a process. Furthermore, let $Id \in \mathcal{P}$ be the process that simply outputs its input, i.e. the identity process, and let $Err \in \mathcal{P}$ the error process, i.e. the process that always fails. To be precise, there is an identity process $Id_i$ with $\rho \left( Id_i \right) = \left( t_i, t_i \right)$ and an error process $Err_i$ with $\rho \left( Err_i \right) = \left( t_i, \bot \right)$ for every $t_i \in \mathcal{T}$. For simplicity, we will just refer to them as $Id$ and $Err$, but keep in mind that for every type, there is a specific identity and error process. Let their type signatures be $\rho \left( Id \right) = \left( a, a \right)$ and $\rho \left( Err \right) = \left( a, \bot \right)$, where $a$ is a type variable which resembles the fact that $Id$ and $Err$ are representing a family of processes.
 
-Let $\vee \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the choice between two processes. $P \vee Q$ yields a process that either behaves like $P$ or $Q$. $\mathcal{P}$ is closed under $\vee$ since $\vee$ selects between $P$ and $Q$ and $P, Q \in \mathcal{P}$. In order to compose processes with $\vee$, their type signatures have to match. Let
+Let $\vee \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the choice between two processes. $P \vee Q$ yields a process that either behaves like $P$ or $Q$. $\mathcal{P}$ is closed under $\vee$ since $\vee$ selects between $P, Q \in \mathcal{P}$. In order to compose processes with $\vee$, their type signatures have to match. Let
 \begin{eqnarray*}
   \rho \left( P \right) & = & \left( t_i, t_j \right) \\
   \rho \left( Q \right) & = & \left( t_k, t_l \right).
@@ -62,6 +63,8 @@ Then the composition $P \,|\, Q$ yields a valid process with $\rho \left( P \,|\
 Let $* \colon \mathcal{P} \to \mathcal{P}$ be the Kleene star that can be used to express repetition, i.e. executing a process several times. $P^*$ creates a process that runs $P$ zero or more times and can also be expressed recursively as $P^* = Id \vee P^* \circ P$. Let $\rho \left( P \right) = \left( t_i, t_j \right)$, then $P^*$ is valid and $\rho \left( P^* \right) = \left( t_i, t_i \right)$ iff $t_i = t_j$ and $Err$ otherwise.
 
 Parentheses will be neccessary in some situations to overcome operator precedence and to express the desired composition of processes. They have no effect of the semantics of a single process, i.e. for a process $P$, let $R = \left( P \right)$, then $P = R$ and $\rho \left( P \right) = \rho \left( R \right)$.
+
+\section{Semantics}
 
 \section{Laws}
 \label{chp:laws}
@@ -105,7 +108,7 @@ Based on the defined semantics of our process algebra, we can find a set of laws
   P \circ Id & = & P
 \end{eqnarray*}
 
-\subsection{Further laws}
+\subsection{Strictness}
 \begin{eqnarray*}
   Err \circ P & = & Err \\
   P \circ Err & = & Err

@@ -114,6 +114,10 @@ The \textsc{Hive} process interpreter, which we will discuss in full detail in \
 \subsection{The process interpreter} 
 \label{chp:interpreter}
 \begin{lstlisting}[language=Haskell]
+newtype Master = Master ProcessId
+\end{lstlisting}
+
+\begin{lstlisting}[language=Haskell]
 runProcess :: Master -> Process a b -> a -> CH.Process b
 \end{lstlisting}
 
