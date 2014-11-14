@@ -7,7 +7,7 @@ First, let us define what we mean by \textit{process}: a process is (a piece of)
 For now we are not interested in \textbf{what} a process does or \textbf{how} it does that. We will treat processes as black boxes that receive an input, perform an action and eventually produce an output. Our point of interest is the composability of processes and the algebraic structure we can define on them.
 
 \section{Syntax}
-
+\label{chp:syntax}
 Let $\mathcal{P}$ be the set of processes and let $P, Q \in \mathcal{P}$ be basic processes. $\mathcal{P}$ represents the set of computable functions in form of processes and hence is countable. Then syntactically correct processes can be formed inductively by:
 \begin{itemize}
   \item $P \vee Q$
@@ -33,18 +33,19 @@ The syntax can also be expressed in form of a grammar $G = \left( N, T, R, P \ri
 Note that $G$ is context-free-like since it involves a Dyck language \cite{} and a countable set of terminals.
 
 \section{Static Semantics}
-As mentioned before, let $\mathcal{P}$ be the countable set of processes. A basic, or atomic, process is a process that performs an atomic operation and is no further divisable. By \enquote{running a process}, we mean to provide it with an input, let it do its work by applying its embedded function, and receiving an output. Let $P$ be a process and $i$ be an input for $P$. Then running $P$ on $i$ will yield an associated output $o$, which we will formally represent by $i \overset{P}{\mapsto} o$. Note that an inverse process $\overline{P}$ with $i \overset{P}{\mapsto} o \overset{\overline{P}}{\mapsto} i$ does generally not exist since not every computable function is invertible\footnote{Take, e.g. the function $f \colon x \mapsto x^2$. Clearly, $f$ is not injective since $f \left( x \right) = f \left( -x \right)$ and therefore not invertible. However, there is an inverse relation $\overline{f_r} \colon x \mapsto \left\{ \overline{x} \,|\, f \left( \overline{x} \right) = x \right\}$ that maps a value $x$ to the set of values that, if $f$ is applied to them, will yield $x$.}.
+\label{chp:static_semantics}
+As mentioned before, let $\mathcal{P}$ be the countable set of processes. A basic, or atomic, process is a process that performs an atomic operation and is no further divisable.
 
 The operator precedence in our algebra is a follows: $*$ binds strongest, the next weaker operator is $\circ$, followed by $|$ and in the end $\vee$. Parentheses, as described in the syntax, might be necessary to express the desired composition.
 
 Let $\mathcal{T} = \left\{ \bot \right\} \, \cup \, \bigcup_i \left\{ t_i \right\}$ be the set of types, let $t_i \in \mathcal{T}$ be types for every $i$ and let $\bot$ be the undefined type. Let $\rho \colon \mathcal{P} \to \mathcal{T} \times \mathcal{T}$ be a function that assigns a type signature to a process. Furthermore, let $Id \in \mathcal{P}$ be the process that simply outputs its input, i.e. the identity process, and let $Err \in \mathcal{P}$ the error process, i.e. the process that always fails. To be precise, there is an identity process $Id_i$ with $\rho \left( Id_i \right) = \left( t_i, t_i \right)$ and an error process $Err_i$ with $\rho \left( Err_i \right) = \left( t_i, \bot \right)$ for every $t_i \in \mathcal{T}$. For simplicity, we will just refer to them as $Id$ and $Err$, but keep in mind that for every type, there is a specific identity and error process. Let their type signatures be $\rho \left( Id \right) = \left( a, a \right)$ and $\rho \left( Err \right) = \left( a, \bot \right)$, where $a$ is a type variable which resembles the fact that $Id$ and $Err$ are representing a family of processes.
 
-Let $\vee \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the choice between two processes. $P \vee Q$ yields a process that either behaves like $P$ or $Q$. $\mathcal{P}$ is closed under $\vee$ since $\vee$ selects between $P, Q \in \mathcal{P}$. In order to compose processes with $\vee$, their type signatures have to match. Let
+Let $\vee \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the non-deterministic choice between two processes that will be made by an oracle. $P \vee Q$ yields a process that either behaves like $P$ or $Q$, depending on the oracle's choice. Our oracle will be somewhat pessimistic, always selecting the error process if it is involved, therefore making $P \vee Q$ fail if either of them is $Err$. $\mathcal{P}$ is closed under $\vee$ since $\vee$ selects between $P, Q \in \mathcal{P}$. In order to compose processes with $\vee$, their type signatures have to match. Let
 \begin{eqnarray*}
   \rho \left( P \right) & = & \left( t_i, t_j \right) \\
   \rho \left( Q \right) & = & \left( t_k, t_l \right).
 \end{eqnarray*}
-Then $P \vee Q$ yields a valid process with $\rho \left( P \vee Q \right) = \left( t_i, t_j \right)$ iff $t_i = t_k \wedge t_j = t_l$ and $Err$ otherwise.
+Then $P \vee Q$ yields a valid process with $\rho \left( P \vee Q \right) = \left( t_i, t_j \right)$ iff $t_i = t_k \wedge t_j = t_l$ and $Err$ otherwise. 
 
 Let $\circ \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the sequential composition of two processes. $Q \circ P$ means: first, execute $P$, then, execute $Q$. Clearly, $\mathcal{P}$ is closed under $\circ$ since the result is a process that lies in $\mathcal{P}$ by definition. Note that in order to compose processes with $\circ$, their type signatures have to match. Suppose, we want to compose processes $P$ and $Q$ using $\circ$, i.e. $Q \circ P$ and
 \begin{eqnarray*}
@@ -58,13 +59,60 @@ Let $| \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the parallel co
   \rho \left( P \right) & = & \left( t_i, t_j \right) \\
   \rho \left( Q \right) & = & \left( t_k, t_l \right).
 \end{eqnarray*}
-Then the composition $P \,|\, Q$ yields a valid process with $\rho \left( P \,|\, Q \right) = \left( t_i, t_j \right)$ iff $t_i = t_k \wedge t_j = t_l$, i.e. $\rho \left( P \right) = \rho \left( Q \right)$. Furthermore, we require $t_j$ to form a semigroup so we can combine the results of processes $P$ and $Q$ together into a single element of $t_j$. Note that $P \,|\, Q = Err$ iff $\rho \left( P \right) \neq \rho \left( Q \right)$.
+Then the composition $P \,|\, Q$ yields a valid process with $\rho \left( P \,|\, Q \right) = \left( t_i, t_j \right)$ iff $t_i = t_k \wedge t_j = t_l$, i.e. $\rho \left( P \right) = \rho \left( Q \right)$. Furthermore, we require $t_j$ to form a magma so we can combine the results of processes $P$ and $Q$ together into a single element of $t_j$. Note that $P \,|\, Q = Err$ iff $\rho \left( P \right) \neq \rho \left( Q \right)$.
 
-Let $* \colon \mathcal{P} \to \mathcal{P}$ be the Kleene star that can be used to express repetition, i.e. executing a process several times. $P^*$ creates a process that runs $P$ zero or more times and can also be expressed recursively as $P^* = Id \vee P^* \circ P$. Let $\rho \left( P \right) = \left( t_i, t_j \right)$, then $P^*$ is valid and $\rho \left( P^* \right) = \left( t_i, t_i \right)$ iff $t_i = t_j$ and $Err$ otherwise.
+Let $* \colon \mathcal{P} \to \mathcal{P}$ be the \textsc{Kleene} star that can be used to express repetition, i.e. executing a process several times. $P^*$ creates a process that runs $P$ zero or more times and can also be expressed recursively as $P^* = Id \vee P^* \circ P$. Let $\rho \left( P \right) = \left( t_i, t_j \right)$, then $P^*$ is valid and $\rho \left( P^* \right) = \left( t_i, t_i \right)$ iff $t_i = t_j$ and $Err$ otherwise.
 
 Parentheses will be neccessary in some situations to overcome operator precedence and to express the desired composition of processes. They have no effect of the semantics of a single process, i.e. for a process $P$, let $R = \left( P \right)$, then $P = R$ and $\rho \left( P \right) = \rho \left( R \right)$.
 
 \section{Semantics}
+In \chpref{chp:static_semantics} we have introduced static semantics and construction rules for \textsc{Hive} processes. In this chapter, we will give an inductive definition of their semantics. In order to make this definition accurately, we need to introduce some terms first: \textit{enviorenment} of a process and \textit{running} a process.
+
+The environment $e$ of a process $P$ is the value that is presented to $P$ and that will be transformed by $P$, the type of $e$ needs to match $P$'s input type, which is given by $\rho$. $P$ takes $e$ and transforms it into a new value $e'$, thereby creating a new environment, which can be presented to another process. The relationship of $P$, $e$ and $e'$ can be described using \textsc{Hoare} triples from \textsc{Hoare} logic \cite{}. In \textsc{Hoare} logic, $e$ is a precondition, $e'$ is a postcondition and $P$ gives the command. The relationship between the three is given by $\left\{ e \right\} P \left\{ e' \right\}$ and means that $P$ transform the program's state from $e$ to $e'$. To be precise, in \textsc{Hoare} logic, both $e$ and $e'$ are formulas in predicate logic. They are used to give certain assurances over the current program state. However, we can interpret $e$ and $e'$ in a compatible way: Let $s$ be the state of the program, then the condition $e$ would mean that $s$ has to be exactly $e$.
+
+By running a process $P$, we mean presenting an environment $e$ to the process, applying its embedded function to $e$ and receiving a new environment $e'$, i.e. $\left\{ e \right\} P \left\{ e' \right\}$. For simplicity, we will treat processes as functions in the following discussion, so for applying $P$ to $e$, we will simply write $P \left( e \right)$ and identify this expression with $e'$.
+
+For the definition of process semantics, we introduce a function $sem \colon \mathcal{P} \to 2^{\left( \mathcal{T} \to \mathcal{T} \right)}$ that takes a process and associated it with its meaning, i.e. with the \textbf{set} of functions it calculates. Since the choice operator $\vee$ introduces non-determinism, every process that involves a choice between processes in its structure will have more than one possible outcome, which we need to resemble in the definition of $sem$.
+
+The semantics of an atomic process $P \in \mathcal{P}$ is directly given by the function it calculates:
+\begin{equation}
+  \label{eqn:sem_atomic}
+  sem \left\langle P \right\rangle = \left\{ P \right\}.
+\end{equation}
+
+The semantics of composed processes is determined by their structure and the involved sub-processes. Let $Q, R \in \mathcal{P}$ be composed processes. If $Q$ and $R$ are composed using the choice operator $\vee$, then $Q \vee R$ gives a process that behaves like $Q$ and $R$ at the same time and therefore
+\begin{equation}
+  \label{eqn:sem_choice}
+  sem \left\langle Q \vee R \right\rangle = \left\{ Q, R \right\}.
+\end{equation}
+
+If $Q$ and $R$ are composed using the sequence operator, i.e. $R \circ Q$, the semantics of the resulting process is given by conventional function composition. Note that, while on the left hand side of the above equation \enquote{$\circ$} stands for the sequence operator for process composition, it stands for function composition on the right hand side.
+\begin{equation}
+  \label{eqn:sem_sequence}
+  sem \left\langle R \circ Q \right\rangle = \left\{ R \circ Q \right\}.
+\end{equation}
+
+If $Q$ and $R$ are composed using the parallel operator, i.e. $Q \,|\, R$, the semantics of the resulting process is given by running both $Q$ and $R$ on the same environment and combining the results together. In \chpref{chp:static_semantics}, we saw that in order to compose two processes with the parallel combinator, they need to have the same result type $T_x$. Furthermore, $\left( T_x, \star \right)$ has to form a magma with the binary operation $\star \colon T_x \times T_x \to T_x$.
+\begin{equation}
+  \label{eqn:sem_parallel}
+  sem \left\langle Q \,|\, R \right\rangle = \left\{ x \mapsto Q \left( x \right) \star R \left( x \right) \right\}.
+\end{equation}
+
+Based on the semantics for $\vee$ and $\circ$ from \eqnref{eqn:sem_choice} and \eqnref{eqn:sem_sequence}, the semantics of the \textsc{Kleene} star $*$ is already given, but we will discuss it for the sake completeness. The definition in \chpref{chp:syntax} makes clear the recursive nature of the \textsc{Kleene} star: $R^* = Id \vee R^* \circ R = Id \vee R \vee R^* \circ R =  ...$ and immediately reveals its semantics:
+\begin{equation}
+  \label{eqn:sem_kleene}
+  sem \left\langle R^* \right\rangle = \left\{ Id, R, R \circ R, R \circ R \circ R, ... \right\}.
+\end{equation}
+
+Using $sem$, we can now define when two processes $P, Q \in \mathcal{P}$ are equivalent, in which case we will write $P \equiv Q$:
+\begin{equation}
+  \label{eqn:equivalence}
+  P \equiv Q \Leftrightarrow sem \left\langle P \right\rangle = sem \left\langle Q \right\rangle.
+\end{equation}
+
+
+
+Note that, for a process $P$ an inverse process $\overline{P}$ with $\overline{P} \circ P \equiv Id$ does generally \textbf{not} exist since not every computable function is invertible\footnote{Take, e.g. the function $f \colon x \mapsto x^2$. Clearly, $f$ is not injective since $f \left( x \right) = f \left( -x \right)$ and therefore not invertible. However, there is an inverse relation $\overline{f_r} \colon x \mapsto \left\{ \overline{x} \,|\, f \left( \overline{x} \right) = x \right\}$ that maps a value $x$ to the set of values that, if $f$ is applied to them, will yield $x$.}.
 
 \section{Laws}
 \label{chp:laws}
@@ -73,64 +121,37 @@ Based on the defined semantics of our process algebra, we can find a set of laws
 \subsection{Associativity}
 \begin{equation*}
 \begin{array}{rcccl}
-  \left( R \vee Q \right) \vee P & = & R \vee Q \vee P & = & R \vee \left( Q \vee P \right) \\
-  \left( R \,|\, Q \right) |\, P & = & R \,|\, Q \,|\, P & = & R \,| \left( Q \,|\, P \right) \\
-  \left( R \circ Q \right) \circ P & = & R \circ Q \circ P & = & R \circ \left( Q \circ P \right)
+  \left( R \vee Q \right) \vee P & \equiv & R \vee Q \vee P & \equiv & R \vee \left( Q \vee P \right) \\
+  \left( R \,|\, Q \right) |\, P & \equiv & R \,|\, Q \,|\, P & \equiv & R \,| \left( Q \,|\, P \right) \\
+  \left( R \circ Q \right) \circ P & \equiv & R \circ Q \circ P & \equiv & R \circ \left( Q \circ P \right)
 \end{array}
 \end{equation*}
 
 \subsection{Distributivity}
 \begin{eqnarray*}
-  P \vee \left( Q \vee R \right) & = & \left( P \vee Q \right) \vee \left( P \vee R \right) \\
-  P \,| \left( Q \vee R \right) & = & \left( P \,|\, Q \right) \vee \left( P \,|\, R \right) \\
-  P \circ \left( Q \vee R \right) & = & \left( P \circ Q \right) \vee \left( P \circ R \right) \\
+  P \vee \left( Q \vee R \right) & \equiv & \left( P \vee Q \right) \vee \left( P \vee R \right) \\
+  P \,| \left( Q \vee R \right) & \equiv & \left( P \,|\, Q \right) \vee \left( P \,|\, R \right) \\
+  P \circ \left( Q \vee R \right) & \equiv & \left( P \circ Q \right) \vee \left( P \circ R \right) \\
   & & \\
-  P \circ \left( Q \,|\, R \right) & = & \left( P \circ Q \right) | \left( P \circ R \right)
+  P \circ \left( Q \,|\, R \right) & \equiv & \left( P \circ Q \right) | \left( P \circ R \right)
 \end{eqnarray*}
 
 \subsection{Commutativity}
 \begin{eqnarray*}
-  P \vee Q & = & Q \vee P \\
-  P \,|\, Q & = & Q \,|\, P
+  P \vee Q & \equiv & Q \vee P \\
+  P \,|\, Q & \equiv & Q \,|\, P
 \end{eqnarray*}
 
 \subsection{Idempotence}
 \begin{eqnarray*}
-  P \vee P & = & P \\
-  Id \circ Id & = & Id \\
-  Err \circ Err & = & Err \\
-  (P^*)^* & = & P^*
+  P \vee P & \equiv & P \\
+  Id \circ Id & \equiv & Id \\
+  Err \circ Err & \equiv & Err \\
+  (P^*)^* & \equiv & P^*
 \end{eqnarray*}
 
 \subsection{Neutral elements}
 \begin{eqnarray*}
-  Id \circ P & = & P \\
-  P \circ Id & = & P
+  Id \circ P & \equiv & P \\
+  P \circ Id & \equiv & P
 \end{eqnarray*}
-
-\subsection{Strictness}
-\begin{eqnarray*}
-  Err \circ P & = & Err \\
-  P \circ Err & = & Err
-\end{eqnarray*}
-
-\subsection{Summary}
-ToDo:
-\begin{table}[h]
-  \centering
-  \begin{tabular}{|l|c|c|c|c|}
-    \hline
-    & $\vee$ & $|$ & $\circ$ & $*$ \\
-    \hline
-    \hline
-    Associativity & $\times$ & $\times$ & $\times$ & \\
-    \hline
-    Distributivity & & & & \\
-    \hline
-    Commutativity & $\times$ & $\times$ & & \\
-    \hline
-  \end{tabular}
-  \caption{Summary}
-\end{table}
-
-\lipsum[7]
