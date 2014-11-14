@@ -72,7 +72,7 @@ The environment $e$ of a process $P$ is the value that is presented to $P$ and t
 
 By running a process $P$, we mean presenting an environment $e$ to the process, applying its embedded function to $e$ and receiving a new environment $e'$, i.e. $\left\{ e \right\} P \left\{ e' \right\}$. For simplicity, we will treat processes as functions in the following discussion, so for applying $P$ to $e$, we will simply write $P \left( e \right)$ and identify this expression with $e'$.
 
-For the definition of process semantics, we introduce a function $sem \colon \mathcal{P} \to 2^{\left( \mathcal{T} \to \mathcal{T} \right)}$ that takes a process and associated it with its meaning, i.e. with the \textbf{set} of functions it calculates. Since the choice operator $\vee$ introduces non-determinism, every process that involves a choice between processes in its structure will have more than one possible outcome, which we need to resemble in the definition of $sem$.
+For the definition of process semantics, we introduce a function $sem \colon \mathcal{P} \to 2^{\left( \mathcal{T} \to \mathcal{T} \right)}$ that takes a process and associated it with its meaning, i.e. with the \textbf{set} of functions it calculates. Since the choice operator $\vee$ and the \textsc{Kleene} star $*$ introduce non-determinism, every process that involves a choice between processes or the \textsc{Kleene} star will have more than one possible outcome, which we resemble in the definition of $sem$.
 
 The semantics of an atomic process $P \in \mathcal{P}$ is directly given by the function it calculates:
 \begin{equation}
@@ -80,7 +80,7 @@ The semantics of an atomic process $P \in \mathcal{P}$ is directly given by the 
   sem \left\langle P \right\rangle = \left\{ P \right\}.
 \end{equation}
 
-The semantics of composed processes is determined by their structure and the involved sub-processes. Let $Q, R \in \mathcal{P}$ be composed processes. If $Q$ and $R$ are composed using the choice operator $\vee$, then $Q \vee R$ gives a process that behaves like $Q$ and $R$ at the same time and therefore
+The semantics of composed processes is determined by their structure and the involved sub-processes, where a sub-process is a process that has been used in combination with process combinators to build a process. Let $Q, R \in \mathcal{P}$ be composed processes. If $Q$ and $R$ are composed using the choice operator $\vee$, then $Q \vee R$ gives a process that behaves like $Q$ and $R$ at the same time and therefore
 \begin{equation}
   \label{eqn:sem_choice}
   sem \left\langle Q \vee R \right\rangle = \left\{ Q, R \right\}.
@@ -104,15 +104,20 @@ Based on the semantics for $\vee$ and $\circ$ from \eqnref{eqn:sem_choice} and \
   sem \left\langle R^* \right\rangle = \left\{ Id, R, R \circ R, R \circ R \circ R, ... \right\}.
 \end{equation}
 
-Using $sem$, we can now define when two processes $P, Q \in \mathcal{P}$ are equivalent, in which case we will write $P \equiv Q$:
+Using $sem$, we can now define when two processes $P, Q \in \mathcal{P}$ are equivalent. This is the case if their semantics is the same and we write $P \equiv Q$:
 \begin{equation}
   \label{eqn:equivalence}
   P \equiv Q \Leftrightarrow sem \left\langle P \right\rangle = sem \left\langle Q \right\rangle.
 \end{equation}
 
+Let $P, Q, R \in \mathcal{P}$ be processes. Assume that $Q$ is a sub-process of $P$, i.e. $P$ contains $Q$ at some point in its structure, then we can transform $P$ into a new process by replacing every occurrence of $Q$ with $R$. We write $P_{\left[ Q / R \right]}$ for this and remark that the resulting process will be equivalent to $P$ iff $Q$ and $R$ are equivalent:
+\begin{equation}
+  P \equiv P_{\left[ Q / R \right]} \Leftrightarrow Q \equiv R.
+\end{equation}
 
+This knowledge can be used to perform equivalent transformations on processes and optimise them according to some measurable property. E.g. assume that we have a process $P$ that involved $Q$ as a sub-process. Now if $Q$ has high time complexity and we have another process $R$ with low time complexity and $Q \equiv R$, then we might want to use $P_{\left[ Q / R \right]}$ in a productive system instead of $P$ in order to save run time.
 
-Note that, for a process $P$ an inverse process $\overline{P}$ with $\overline{P} \circ P \equiv Id$ does generally \textbf{not} exist since not every computable function is invertible\footnote{Take, e.g. the function $f \colon x \mapsto x^2$. Clearly, $f$ is not injective since $f \left( x \right) = f \left( -x \right)$ and therefore not invertible. However, there is an inverse relation $\overline{f_r} \colon x \mapsto \left\{ \overline{x} \,|\, f \left( \overline{x} \right) = x \right\}$ that maps a value $x$ to the set of values that, if $f$ is applied to them, will yield $x$.}.
+As a final remark, we want to point out that, for a process $P$ an inverse process $\overline{P}$ with $\overline{P} \circ P \equiv Id$ does generally \textbf{not} exist since not every computable function is invertible\footnote{Take, e.g. the function $f \colon x \mapsto x^2$. Clearly, $f$ is not injective since $f \left( x \right) = f \left( -x \right)$ and therefore not invertible. However, there is an inverse relation $\overline{f_r} \colon x \mapsto \left\{ \overline{x} \,|\, f \left( \overline{x} \right) = x \right\}$ that maps a value $x$ to the set of values that, if $f$ is applied to them, will yield $x$.}.
 
 \section{Laws}
 \label{chp:laws}
