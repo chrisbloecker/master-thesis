@@ -12,9 +12,9 @@ Let $\mathcal{P}$ be the set of processes and let $P, Q \in \mathcal{P}$ be basi
 \begin{itemize}
   \item $P \vee Q$
   \vspace*{-0.25em}
-  \item $P \circ Q$
-  \vspace*{-0.25em}
   \item $P \,|\, Q$
+  \vspace*{-0.25em}
+  \item $P \circ Q$
   \vspace*{-0.25em}
   \item $P^*$
   \vspace*{-0.25em}
@@ -24,8 +24,8 @@ Let $\mathcal{P}$ be the set of processes and let $P, Q \in \mathcal{P}$ be basi
 The syntax can also be expressed in form of a grammar $G = \left( N, T, R, P \right)$, where $N = \left\{ P \right\}$ is the set of non-terminals, $T = \mathcal{P}$ is the set of terminals, $R$ is the set of production rules and $P$ is the start symbol \cite{Hopcroft:2006:IAT:1196416} with % ToDo!
 \begin{eqnarray*}
   R \colon \quad P & \to & P \vee P \\
-    & | & P \circ P \\
     & | & P \,|\, P \\
+    & | & P \circ P \\
     & | & P^* \\
     & | & \left( P \right) \\
     & | & p \quad\quad\quad\quad \text{for every } p \in \mathcal{P}
@@ -38,30 +38,30 @@ As mentioned before, let $\mathcal{P}$ be the countable set of processes. A basi
 
 The operator precedence in our algebra is a follows: $*$ binds strongest, the next weaker operator is $\circ$, followed by $|$ and in the end $\vee$. Parentheses, as described in the syntax, might be necessary to express the desired composition.
 
-Let $\mathcal{T} = \left\{ \bot \right\} \, \cup \, \bigcup_i \left\{ t_i \right\}$ be the set of types, let $t_i \in \mathcal{T}$ be types for every $i$ and let $\bot$ be the undefined type. Let $\rho \colon \mathcal{P} \to \mathcal{T} \times \mathcal{T}$ be a function that assigns a type signature to a process. Furthermore, let $Id \in \mathcal{P}$ be the process that simply outputs its input, i.e. the identity process, and let $Err \in \mathcal{P}$ the error process, i.e. the process that always fails. To be precise, there is an identity process $Id_i$ with $\rho \left( Id_i \right) = \left( t_i, t_i \right)$ and an error process $Err_i$ with $\rho \left( Err_i \right) = \left( t_i, \bot \right)$ for every $t_i \in \mathcal{T}$. For simplicity, we will just refer to them as $Id$ and $Err$, but keep in mind that for every type, there is a specific identity and error process. Let their type signatures be $\rho \left( Id \right) = \left( a, a \right)$ and $\rho \left( Err \right) = \left( a, \bot \right)$, where $a$ is a type variable which resembles the fact that $Id$ and $Err$ are representing a family of processes.
+Let $\mathcal{T} = \left\{ \bot \right\} \, \cup \, \bigcup_i \left\{ T_i \right\}$ be the set of types, let $T_i \in \mathcal{T}$ be types for every $i$ and let $\bot$ be the undefined type. Let $\rho \colon \mathcal{P} \to \mathcal{T} \times \mathcal{T}$ be a function that assigns a type signature to a process. Furthermore, let $Id \in \mathcal{P}$ be the process that simply outputs its input, i.e. the identity process, and let $Err \in \mathcal{P}$ the error process, i.e. the process that always fails. To be precise, there is an identity process $Id_i$ with $\rho \left( Id_i \right) = \left( T_i, T_i \right)$ and an error process $Err_i$ with $\rho \left( Err_i \right) = \left( T_i, \bot \right)$ for every $T_i \in \mathcal{T}$. For simplicity, we will just refer to them as $Id$ and $Err$, but keep in mind that for every type, there is a specific identity and error process. Let their type signatures be $\rho \left( Id \right) = \left( a, a \right)$ and $\rho \left( Err \right) = \left( a, \bot \right)$, where $a$ is a type variable which resembles the fact that $Id$ and $Err$ are representing a family of processes.
 
 Let $\vee \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the non-deterministic choice between two processes that will be made by an oracle. $P \vee Q$ yields a process that either behaves like $P$ or $Q$, depending on the oracle's choice. Our oracle will make this choice optimistically and never select the error process if it is involved. $\mathcal{P}$ is closed under $\vee$ since $\vee$ selects between $P, Q \in \mathcal{P}$. In order to compose processes with $\vee$, their type signatures have to match. Let
 \begin{eqnarray*}
-  \rho \left( P \right) & = & \left( t_i, t_j \right) \\
-  \rho \left( Q \right) & = & \left( t_k, t_l \right).
+  \rho \left( P \right) & = & \left( T_i, T_j \right) \\
+  \rho \left( Q \right) & = & \left( T_k, T_l \right).
 \end{eqnarray*}
-Then $P \vee Q$ yields a valid process with $\rho \left( P \vee Q \right) = \left( t_i, t_j \right)$ iff $t_i = t_k \wedge t_j = t_l$ and $Err$ otherwise. 
+Then $P \vee Q$ yields a valid process with $\rho \left( P \vee Q \right) = \left( T_i, T_j \right)$ iff $T_i = T_k \wedge T_j = T_l$ and $Err$ otherwise. 
 
 Let $\circ \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the sequential composition of two processes. $Q \circ P$ means: first, execute $P$, then, execute $Q$. Clearly, $\mathcal{P}$ is closed under $\circ$ since the result is a process that lies in $\mathcal{P}$ by definition. Note that in order to compose processes with $\circ$, their type signatures have to match. Suppose, we want to compose processes $P$ and $Q$ using $\circ$, i.e. $Q \circ P$ and
 \begin{eqnarray*}
-  \rho \left( P \right) & = & \left( t_0, t_i \right) \\
-  \rho \left( Q \right) & = & \left( t_j, t_1 \right).
+  \rho \left( P \right) & = & \left( T_i, T_j \right) \\
+  \rho \left( Q \right) & = & \left( T_k, T_l \right).
 \end{eqnarray*}
-Then the composition $Q \circ P$ yields a valid process with $\rho \left( Q \circ P \right) = \left( t_0, t_1 \right)$ iff $t_i = t_j$, and results in $Err$ otherwise. 
+Then the composition $Q \circ P$ yields a valid process with $\rho \left( Q \circ P \right) = \left( T_i, T_l \right)$ iff $T_j = T_k$, and results in $Err$ otherwise. 
 
 Let $| \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the parallel composition of processes, i.e. running processes $P$ and $Q$ concurrently. Then $P \,|\, Q$ will creates a process that executes $P$ and $Q$ concurrently. Suppose, we want to compose $P$ and $Q$ using $|$, i.e. $P \,|\, Q$ and
 \begin{eqnarray*}
-  \rho \left( P \right) & = & \left( t_i, t_j \right) \\
-  \rho \left( Q \right) & = & \left( t_k, t_l \right).
+  \rho \left( P \right) & = & \left( T_i, T_j \right) \\
+  \rho \left( Q \right) & = & \left( T_k, T_l \right).
 \end{eqnarray*}
-Then the composition $P \,|\, Q$ yields a valid process with $\rho \left( P \,|\, Q \right) = \left( t_i, t_j \right)$ iff $t_i = t_k \wedge t_j = t_l$, i.e. $\rho \left( P \right) = \rho \left( Q \right)$. Furthermore, we require $t_j$ to form a magma so we can combine the results of processes $P$ and $Q$ together into a single element of $t_j$. Note that $P \,|\, Q = Err$ iff $\rho \left( P \right) \neq \rho \left( Q \right)$.
+Then the composition $P \,|\, Q$ yields a valid process with $\rho \left( P \,|\, Q \right) = \left( T_i, T_j \right)$ iff $T_i = T_k \wedge T_j = T_l$, i.e. $\rho \left( P \right) = \rho \left( Q \right)$. Furthermore, we require $T_j$ to form a magma so we can combine the results of processes $P$ and $Q$ together into a single element of $T_j$. Note that $P \,|\, Q = Err$ iff $\rho \left( P \right) \neq \rho \left( Q \right)$.
 
-Let $* \colon \mathcal{P} \to \mathcal{P}$ be the \textsc{Kleene} star that can be used to express repetition, i.e. executing a process several times. $P^*$ creates a process that runs $P$ zero or more times and can also be expressed recursively as $P^* = Id \vee P^* \circ P$. Let $\rho \left( P \right) = \left( t_i, t_j \right)$, then $P^*$ is valid and $\rho \left( P^* \right) = \left( t_i, t_i \right)$ iff $t_i = t_j$ and $Err$ otherwise.
+Let $* \colon \mathcal{P} \to \mathcal{P}$ be the \textsc{Kleene} star that can be used to express repetition, i.e. executing a process several times. $P^*$ creates a process that runs $P$ zero or more times and can also be expressed recursively as $P^* = Id \vee P^* \circ P$. Let $\rho \left( P \right) = \left( T_i, T_j \right)$, then $P^*$ is valid and $\rho \left( P^* \right) = \left( T_i, T_i \right)$ iff $T_i = T_j$ and $Err$ otherwise.
 
 Parentheses will be neccessary in some situations to overcome operator precedence and to express the desired composition of processes. They have no effect of the semantics of a single process, i.e. for a process $P$, let $R = \left( P \right)$, then $P = R$ and $\rho \left( P \right) = \rho \left( R \right)$.
 
@@ -98,7 +98,7 @@ If $Q$ and $R$ are composed using the sequence operator, i.e. $R \circ Q$, the s
   sem \left\langle R \circ Q \right\rangle = \left\{ R \circ Q \right\}.
 \end{equation}
 
-If $Q$ and $R$ are composed using the parallel operator, i.e. $Q \,|\, R$, the semantics of the resulting process is given by running both $Q$ and $R$ on the same environment and combining the results together. In \chpref{chp:static_semantics}, we saw that in order to compose two processes with the parallel combinator, they need to have the same result type $T_x$. Furthermore, $\left( T_x, \star \right)$ has to form a magma with the binary operation $\star \colon T_x \times T_x \to T_x$.
+If $Q$ and $R$ are composed using the parallel operator, i.e. $Q \,|\, R$, the semantics of the resulting process is given by running both $Q$ and $R$ on the same environment and combining the results together. In \chpref{chp:static_semantics}, we saw that in order to compose two processes with the parallel combinator, they need to have the same result type $T_x$. Furthermore, $\left( T_x, \star \right)$ has to form a magma with the binary commutative operation $\star \colon T_x \times T_x \to T_x$.
 \begin{equation}
   \label{eqn:sem_parallel}
   sem \left\langle Q \,|\, R \right\rangle = \left\{ x \mapsto Q \left( x \right) \star R \left( x \right) \right\}.
@@ -166,8 +166,10 @@ Idempotence properties can be dependant on both the operation at hand and a spec
 \end{eqnarray*}
 
 \subsection{Neutral elements}
-The identity process $Id$ is both a left and right neutral element for sequential composition $\circ$.
+The identity process $Id$ is both a left and right neutral element for sequential composition $\circ$. Furthermore, it follows directly from the definition of the semantics of the error process $Err$ and the choice operator $\vee$ that $Err$ is a neutral element for $\vee$. The commutative property of $\vee$ makes $Err$ both a left and right neutral element.
 \begin{eqnarray*}
   Id \circ P & \equiv & P \\
-  P \circ Id & \equiv & P
+  P \circ Id & \equiv & P \\
+  Err \,|\, P & \equiv & P \\
+  P \,|\, Err & \equiv & P
 \end{eqnarray*}
