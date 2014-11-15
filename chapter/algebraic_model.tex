@@ -40,7 +40,7 @@ The operator precedence in our algebra is a follows: $*$ binds strongest, the ne
 
 Let $\mathcal{T} = \left\{ \bot \right\} \, \cup \, \bigcup_i \left\{ t_i \right\}$ be the set of types, let $t_i \in \mathcal{T}$ be types for every $i$ and let $\bot$ be the undefined type. Let $\rho \colon \mathcal{P} \to \mathcal{T} \times \mathcal{T}$ be a function that assigns a type signature to a process. Furthermore, let $Id \in \mathcal{P}$ be the process that simply outputs its input, i.e. the identity process, and let $Err \in \mathcal{P}$ the error process, i.e. the process that always fails. To be precise, there is an identity process $Id_i$ with $\rho \left( Id_i \right) = \left( t_i, t_i \right)$ and an error process $Err_i$ with $\rho \left( Err_i \right) = \left( t_i, \bot \right)$ for every $t_i \in \mathcal{T}$. For simplicity, we will just refer to them as $Id$ and $Err$, but keep in mind that for every type, there is a specific identity and error process. Let their type signatures be $\rho \left( Id \right) = \left( a, a \right)$ and $\rho \left( Err \right) = \left( a, \bot \right)$, where $a$ is a type variable which resembles the fact that $Id$ and $Err$ are representing a family of processes.
 
-Let $\vee \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the non-deterministic choice between two processes that will be made by an oracle. $P \vee Q$ yields a process that either behaves like $P$ or $Q$, depending on the oracle's choice. Our oracle will be somewhat pessimistic, always selecting the error process if it is involved, therefore making $P \vee Q$ fail if either of them is $Err$. $\mathcal{P}$ is closed under $\vee$ since $\vee$ selects between $P, Q \in \mathcal{P}$. In order to compose processes with $\vee$, their type signatures have to match. Let
+Let $\vee \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the non-deterministic choice between two processes that will be made by an oracle. $P \vee Q$ yields a process that either behaves like $P$ or $Q$, depending on the oracle's choice. Our oracle will make this choice optimistically and never select the error process if it is involved. $\mathcal{P}$ is closed under $\vee$ since $\vee$ selects between $P, Q \in \mathcal{P}$. In order to compose processes with $\vee$, their type signatures have to match. Let
 \begin{eqnarray*}
   \rho \left( P \right) & = & \left( t_i, t_j \right) \\
   \rho \left( Q \right) & = & \left( t_k, t_l \right).
@@ -80,10 +80,16 @@ The semantics of an atomic process $P \in \mathcal{P}$ is directly given by the 
   sem \left\langle P \right\rangle = \left\{ P \right\}.
 \end{equation}
 
+The error process $Err$ presents a special case here: as stated in \chpref{chp:static_semantics}, its output type is undefined. Hence, its output is empty and it does not compute any function:
+\begin{equation}
+  \label{eqn:sem_error}
+  sem \left\langle Err \right\rangle = \emptyset.
+\end{equation}
+
 The semantics of composed processes is determined by their structure and the involved sub-processes, where a sub-process is a process that has been used in combination with process combinators to build a process. Let $Q, R \in \mathcal{P}$ be composed processes. If $Q$ and $R$ are composed using the choice operator $\vee$, then $Q \vee R$ gives a process that behaves like $Q$ and $R$ at the same time and therefore
 \begin{equation}
   \label{eqn:sem_choice}
-  sem \left\langle Q \vee R \right\rangle = \left\{ Q, R \right\}.
+  sem \left\langle Q \vee R \right\rangle = sem \left\langle Q \right\rangle \cup sem \left\langle R \right\rangle = \left\{ Q, R \right\}.
 \end{equation}
 
 If $Q$ and $R$ are composed using the sequence operator, i.e. $R \circ Q$, the semantics of the resulting process is given by conventional function composition. Note that, while on the left hand side of the above equation \enquote{$\circ$} stands for the sequence operator for process composition, it stands for function composition on the right hand side.
@@ -101,7 +107,7 @@ If $Q$ and $R$ are composed using the parallel operator, i.e. $Q \,|\, R$, the s
 Based on the semantics for $\vee$ and $\circ$ from \eqnref{eqn:sem_choice} and \eqnref{eqn:sem_sequence}, the semantics of the \textsc{Kleene} star $*$ is already given, but we will discuss it for the sake completeness. The definition in \chpref{chp:syntax} makes clear the recursive nature of the \textsc{Kleene} star: $R^* = Id \vee R^* \circ R = Id \vee R \vee R^* \circ R =  ...$ and immediately reveals its semantics:
 \begin{equation}
   \label{eqn:sem_kleene}
-  sem \left\langle R^* \right\rangle = \left\{ Id, R, R \circ R, R \circ R \circ R, ... \right\}.
+  sem \left\langle R^* \right\rangle = sem \left\langle Id \vee R^* \circ R \right\rangle = sem \left\langle Id \right\rangle \cup sem \left\langle R^* \circ R \right\rangle.
 \end{equation}
 
 Using $sem$, we can now define when two processes $P, Q \in \mathcal{P}$ are equivalent. This is the case if their semantics is the same and we write $P \equiv Q$:
@@ -121,9 +127,10 @@ As a final remark, we want to point out that, for a process $P$ an inverse proce
 
 \section{Laws}
 \label{chp:laws}
-Based on the defined semantics of our process algebra, we can find a set of laws that allow us to transform process expressions into an equivalent representation. In the following, let $P, Q, R \in \mathcal{P}$ and assume that their types are suitable for the desired composition.
+Based on the defined semantics of our process algebra, i.e. $sem$, we can find a set of laws that allow us to transform processes into and equivalent representation. In the following, let $P, Q, R \in \mathcal{P}$ and assume that their types are suitable for the desired composition in the respective case.
 
 \subsection{Associativity}
+The associativity property holds for the choice operator $\vee$, the parallel operator $|$ and the sequence operator $\circ$ the the \textsc{Hive} process algebra.
 \begin{equation*}
 \begin{array}{rcccl}
   \left( R \vee Q \right) \vee P & \equiv & R \vee Q \vee P & \equiv & R \vee \left( Q \vee P \right) \\
@@ -133,6 +140,7 @@ Based on the defined semantics of our process algebra, we can find a set of laws
 \end{equation*}
 
 \subsection{Distributivity}
+In our algebra, the choice operator $\vee$, the parallel operator $|$ and the sequence operator $\circ$ distribute over the choice operator $\vee$. Furthermore, the sequence operator $\circ$ distributes over the parallel operator $|$.
 \begin{eqnarray*}
   P \vee \left( Q \vee R \right) & \equiv & \left( P \vee Q \right) \vee \left( P \vee R \right) \\
   P \,| \left( Q \vee R \right) & \equiv & \left( P \,|\, Q \right) \vee \left( P \,|\, R \right) \\
@@ -142,12 +150,14 @@ Based on the defined semantics of our process algebra, we can find a set of laws
 \end{eqnarray*}
 
 \subsection{Commutativity}
+The commutativity property is given for the choice operator $\vee$ and the parallel operator $|$, but not for the sequence operator $\circ$.
 \begin{eqnarray*}
   P \vee Q & \equiv & Q \vee P \\
   P \,|\, Q & \equiv & Q \,|\, P
 \end{eqnarray*}
 
 \subsection{Idempotence}
+Idempotence properties can be dependant on both the operation at hand and a specific element. For every process $P$, if it is combined with itself using the choice operator $\vee$, the resulting process has the same semantics as the original process $P$. The identity process $Id$ as well as the error process $Err$ is idempotent regarding sequential composition $\circ$ with itself. Furthermore, multiple application of the \textsc{Kleene} star $*$ does not change the semantics of a process compared to single application of $*$.
 \begin{eqnarray*}
   P \vee P & \equiv & P \\
   Id \circ Id & \equiv & Id \\
@@ -156,6 +166,7 @@ Based on the defined semantics of our process algebra, we can find a set of laws
 \end{eqnarray*}
 
 \subsection{Neutral elements}
+The identity process $Id$ is both a left and right neutral element for sequential composition $\circ$.
 \begin{eqnarray*}
   Id \circ P & \equiv & P \\
   P \circ Id & \equiv & P
