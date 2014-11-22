@@ -1,4 +1,4 @@
-% $Id: header.tex 1229 2009-10-23 13:58:42Z inf6254 $
+% $Id: header.tex 1229 2009-10-23 13s:58:42Z inf6254 $
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \documentclass
   [ %twoside,            % beidseitiger Druck
@@ -40,8 +40,13 @@
 \usepackage{tabularx}              % Tabellen mit fester Breite
 \usepackage{csquotes}
 \usepackage{natbib}
-\usepackage{array, amsmath}
+\usepackage{array, amsmath, amssymb, amsthm}
 \usepackage{lipsum}
+
+\newtheorem{definition}{Definition}[chapter]
+\newtheorem{example}{Example}[chapter]
+\newtheorem{myproof}{Proof}[chapter]
+\newtheorem{theorem}{Theorem}[chapter]
 
 % Layout
 \pagestyle{scrheadings}
@@ -63,6 +68,8 @@
 \newcommand{\Datum}{January 31, 2015}
 \newcommand{\chpref}[1]{chapter~\ref{#1}}
 \newcommand{\eqnref}[1]{equation~\ref{#1}}
+\newcommand{\expref}[1]{example~\ref{#1}}
+\newcommand{\defref}[1]{definition~\ref{#1}}
 
 \ifpdf
   \usepackage{hyperref}

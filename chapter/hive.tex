@@ -12,7 +12,7 @@ In Haskell, functions can only be executed, composed and passed as arguments, th
 
 After a \texttt{Closure} has been executed, the result will be serialised and sent back to the caller. However, in some cases, the type system cannot infer the serialisability of the result type and therefore additional information needs to be provided\footnote{Specifically, the problem is that the type constructors can be constrained with required type class instances for parameters. On deconstruction, this information is not available and therefore needs to be added explicitly again.}. For a type \texttt{a}, serialisation information can be provided with a value of type \texttt{Static (SerializableDict a)}. Essentially this is only an explicit type tag that enables the selection of the correct serialisation function for type \texttt{a}.
 
-\section{The Hive algebra}
+\section{The Hive process algebra}
 Our implementation resembles the structure and expressiveness of the algebraic model given in \chpref{chp:algebraic_model}. Furthermore, we prefer to prevent the creation of erroneous processes rather than dealing with them when we execute a process. To achieve this, we will employ a generalised algebraic data type and leverage the power of Haskell's type system to create a model that will only allow for the creation of valid processes.
 
 In the following \texttt{CH} is short for Cloud Haskell and will be the name for the qualified import of \texttt{Control.Distributed.Process}. Our data type \texttt{Process} for Hive processes will look like
@@ -103,7 +103,7 @@ With the \texttt{Loop} data constructor, we can wrap a process for repeated exec
 We kindly want to remind the reader about the goal we set in \chpref{chp:goal}, i.e. the automatic distribution of processes in a distributed system while hiding the fact that a distributed system is involved and thereby making distributed programming transparent and easy. As mentioned earlier, we are going to employ the interpreter pattern \cite{Gamma:1995:DPE:186897} for this purpose. But to do so, first we need some kind of infrastructure and nodes where we can delegate the work to.
 
 \subsection{Architecture}
-The architecture of our system's infrastructure is intentionally kept simple. It involves a designated master node, a collection of worker nodes and a RESTful web interface for the exchange of JSON documents.
+The architecture of our system's infrastructure is intentionally kept simple. It involves a designated \textbf{master} node, a collection of \textbf{worker} nodes and a RESTful web interface for the exchange of JSON documents that is realised using Yesod\footnote{Yesod is a Haskell web frameword. More information about Yesod can be found at \url{http://www.yesodweb.com/} and \url{https://github.com/yesodweb/yesod}}.
 
 When a client wants to submit a request, it has to make use of the web interface and supply a JSON document in an appropriate format. In a productive environment, there would be a parser that reads a submitted JSON document, generates a corresponding process structure from its content and passes it on to the process interpreter if the document is valid. For simplicity, we will assume for now that a request equals a valid process description that can be interpreted.
 
@@ -111,9 +111,10 @@ The master node is responsible for handling client requests, logging information
 
 Worker nodes are kept very simple. When started and supplied with the master's address, they report their availability to the master and wait for further instruction.
 
-The \textsc{Hive} process interpreter, which we will discuss in full detail in \chpref{chp:interpreter}, is run in a new process by the master for every client request that is received. The interpreter inspects the structure of the received process and distributes the incorporated sub-processes to worker nodes or executes them locally if they have been marked for local execution using the \texttt{Local} wrapper. For every sub-process, the interpreter asks the master for a worker node where it can run the sub-process. On such a request, the master fetches a worker node from a FIFO queue and returns it to the interpreter. After a sub-process has finished execution on a worker node, the interpreter returns the respective worker node to the master for future allocation to other interpreters. It would very well be possible to employ a more sophisticated scheduling algorithm, but the combination of a FIFO queue and a work stealing-alike \cite{} behaviour of the process interpreters is fairly efficient and easy to implement. Our primary goal is not to achieve the best possible load balancing or employ the most efficient technique for queueing worker nodes, however this leaves room for future improvement.
+The \textsc{Hive} process interpreter, which we will discuss in full detail in \chpref{chp:interpreter}, is run in a new process by the master for every client request that is received. The interpreter inspects the structure of the received process and distributes the incorporated sub-processes to worker nodes or executes them locally if they have been marked for local execution using the \texttt{Local} wrapper. For every sub-process, the interpreter asks the master for a worker node where it can run the sub-process. On such a request, the master fetches a worker node from a FIFO queue and returns it to the interpreter. After a sub-process has finished execution on a worker node, the interpreter returns the respective worker node to the master for future allocation to other interpreters. It would very well be possible to employ a more sophisticated scheduling algorithm, but the combination of a FIFO queue and a work stealing-alike \cite{} behaviour of the process interpreter is fairly efficient and easy to implement. Our primary goal is not to achieve the best possible load balancing or employ the most efficient technique for queueing worker nodes, however this leaves room for future improvement.
 
-\subsection{The process interpreter} 
+\subsection{The process interpreter}
+
 \label{chp:interpreter}
 \begin{lstlisting}[language=Haskell]
 newtype Master = Master ProcessId
