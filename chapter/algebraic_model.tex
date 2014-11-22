@@ -42,58 +42,89 @@ Note that $G$ is context-free-like since it involves a Dyck language \cite{} and
 
 \section{Static Semantics}
 \label{chp:static_semantics}
-As mentioned before, let $\mathcal{P}$ be the countable set of processes. A basic, or atomic, process is a process that performs an atomic operation and is no further divisable.
+In this chapter we will define the static semantics of our algebraic model. We will define what a basic and what a composed process is and we will equip processes with a type signature. The type signature of a process will determine if the process can be used for composition with other processes, depending on the selected combinator.
 
-The operator precedence in our algebra is a follows: $*$ binds strongest, the next weaker operator is $\circ$, followed by $|$ and in the end $\vee$. Parentheses, as described in the syntax, might be necessary to express the desired composition.
+As before, let $\mathcal{P}$ be the countable set of processes. A basic, or atomic, process is a process that performs an atomic operation and is no further divisable. A composed process is a process that is composed of other processes, using one or many of the introduced process combinators $\vee, |, \circ$ and $*$.
 
-Let $\mathcal{T} = \left\{ \bot \right\} \, \cup \, \bigcup_{i \in \mathbb{N}_0} \left\{ T_i \right\}$ be the set of types, let $T_i \in \mathcal{T}$ be types for every $i$ and let $\bot$ be the undefined type. Let $\rho \colon \mathcal{P} \to \mathcal{T} \times \mathcal{T}$ be a function that assigns a type signature to a process. Furthermore, let $Id \in \mathcal{P}$ be the process that simply outputs its input, i.e. the identity process, and let $Err \in \mathcal{P}$ the error process, i.e. the process that always fails. To be precise, there is an identity process $Id_i$ with $\rho \left( Id_i \right) = \left( T_i, T_i \right)$ and an error process $Err_i$ with $\rho \left( Err_i \right) = \left( T_i, \bot \right)$ for every $T_i \in \mathcal{T}$. For simplicity, we will just refer to them as $Id$ and $Err$, but keep in mind that for every type, there is a specific identity and error process. Let their type signatures be $\rho \left( Id \right) = \left( a, a \right)$ and $\rho \left( Err \right) = \left( a, \bot \right)$, where $a$ is a type variable which resembles the fact that $Id$ and $Err$ are representing a family of processes.
+\begin{definition}[Operator precedence]
+\label{def:operator_precedence}
+The operator precedence in our algebra is as follows: $*$ binds strongest, the next weaker binding operator is $\circ$, followed by $|$ and in the end $\vee$. Parentheses, as described in the syntax, might be necessary to express the desired composition.
+
+\hfill\qedsymbol
+\end{definition}
+
+Let $\mathcal{T}$ be a set of types with
+\[\mathcal{T} = \left\{ \bot \right\} \, \cup \, \bigcup_{i \in \mathbb{N}_0} \left\{ T_i \right\}\]
+and let $T_i \in \mathcal{T}$ be types for every $i$. Furthermore, let $\bot$ be the undefined type.
+
+% ------------------------------------------------------------------------------
+% type signature
+% ------------------------------------------------------------------------------
+\begin{definition}[Type signature]
+\label{def:type_signature}
+The type signature of a process states types of which the input value and the output value of a process will be.
+
+\hfill\qedsymbol
+\end{definition}
+
+In the following, let $\rho \colon \mathcal{P} \to \mathcal{T} \times \mathcal{T}$ be a function that assigns a type signature to a process. Furthermore, let $Id \in \mathcal{P}$ be the process that simply outputs its input, i.e. the identity process, and let $Err \in \mathcal{P}$ the error process, i.e. the process that always fails. To be precise, there is an identity process $Id_i$ with $\rho \left( Id_i \right) = \left( T_i, T_i \right)$ and an error process $Err_i$ with $\rho \left( Err_i \right) = \left( T_i, \bot \right)$ for every $T_i \in \mathcal{T}$. For simplicity, we will just refer to them as $Id$ and $Err$, but keep in mind that for every type, there is a specific identity and error process. Let their type signatures be $\rho \left( Id \right) = \left( a, a \right)$ and $\rho \left( Err \right) = \left( a, \bot \right)$, where $a$ is a type variable which resembles the fact that $Id$ and $Err$ are representing a family of processes.
 
 
 % ------------------------------------------------------------------------------
 % choice
 % ------------------------------------------------------------------------------
-Let $\vee \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the non-deterministic choice between two processes that will be made by an oracle. $P \vee Q$ yields a process that either behaves like $P$ or $Q$, depending on the oracle's choice. Our oracle will make this choice optimistically and never select the error process if it is involved. $\mathcal{P}$ is closed under $\vee$ since $\vee$ selects between $P, Q \in \mathcal{P}$. In order to compose processes with $\vee$, their type signatures have to match. Let
-\begin{eqnarray*}
+\begin{definition}[Static semantics of the choice operator]
+\label{def:static_choice}
+Let $\vee \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the non-deterministic choice between two processes that will be made by an optimistic oracle\footnote{Our oracle will make this choice optimistically and never select the error process if it is involved.}. In order to compose processes with $\vee$, their type signatures have to match. Let $P, Q \in \mathcal{P}$ be processes and let $T_i, T_j, T_k, T_l \in \mathcal{T}$ be types. The type signatures of $P$ and $Q$ are given by $\rho$:
+\begin{eqnarray}
   \rho \left( P \right) & = & \left( T_i, T_j \right) \\
-  \rho \left( Q \right) & = & \left( T_k, T_l \right).
-\end{eqnarray*}
-Then $P \vee Q$ yields a valid process with $\rho \left( P \vee Q \right) = \left( T_i, T_j \right)$ iff $T_i = T_k \wedge T_j = T_l$ and $Err$ otherwise. 
+  \rho \left( Q \right) & = & \left( T_k, T_l \right)
+\end{eqnarray}
+Then $P \vee Q$ yields a valid process with $\rho \left( P \vee Q \right) = \left( T_i, T_j \right)$ iff $T_i = T_k \wedge T_j = T_l$ and $Err$ otherwise. $P \vee Q$ yields a process that either behaves like $P$ or $Q$, depending on the oracle's choice. Depending on the point of view, we could also say that $P \vee Q$ behaves like $P$ and $Q$ at the same time.
 
-
-% ------------------------------------------------------------------------------
-% sequence
-% ------------------------------------------------------------------------------
-Let $\circ \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the sequential composition of two processes. $Q \circ P$ means: first, execute $P$, then, execute $Q$. Clearly, $\mathcal{P}$ is closed under $\circ$ since the result is a process that lies in $\mathcal{P}$ by definition. Note that in order to compose processes with $\circ$, their type signatures have to match. Suppose, we want to compose processes $P$ and $Q$ using $\circ$, i.e. $Q \circ P$ and
-\begin{eqnarray*}
-  \rho \left( P \right) & = & \left( T_i, T_j \right) \\
-  \rho \left( Q \right) & = & \left( T_k, T_l \right).
-\end{eqnarray*}
-Then the composition $Q \circ P$ yields a valid process with $\rho \left( Q \circ P \right) = \left( T_i, T_l \right)$ iff $T_j = T_k$, and results in $Err$ otherwise. 
+\hfill\qedsymbol
+\end{definition}
 
 
 % ------------------------------------------------------------------------------
 % parallel
 % ------------------------------------------------------------------------------
-Let $| \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the parallel composition of processes, i.e. running processes $P$ and $Q$ concurrently. Then $P \,|\, Q$ will creates a process that executes $P$ and $Q$ concurrently. Suppose, we want to compose $P$ and $Q$ using $|$, i.e. $P \,|\, Q$ and
+\begin{definition}[Static semantics of the parallel operator]
+Let $| \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the parallel composition of processes. Let $P, Q \in \mathcal{P}$ be processes and let $T_i, T_j, T_k, T_l \in \mathcal{T}$ be types. The type signatures of $P$ and $Q$ are given by $\rho$:
 \begin{eqnarray*}
   \rho \left( P \right) & = & \left( T_i, T_j \right) \\
   \rho \left( Q \right) & = & \left( T_k, T_l \right).
 \end{eqnarray*}
-Then the composition $P \,|\, Q$ yields a valid process with $\rho \left( P \,|\, Q \right) = \left( T_i, T_j \right)$ iff $T_i = T_k \wedge T_j = T_l$, i.e. $\rho \left( P \right) = \rho \left( Q \right)$. Furthermore, we require $T_j$ to form a magma so we can combine the results of processes $P$ and $Q$ together into a single element of $T_j$. Note that $P \,|\, Q = Err$ iff $\rho \left( P \right) \neq \rho \left( Q \right)$.
+Then the composition $P \,|\, Q$ yields a valid process with the signature $\rho \left( P \,|\, Q \right) = \left( T_i, T_j \right)$ iff $T_i = T_k \wedge T_j = T_l$, i.e. $\rho \left( P \right) = \rho \left( Q \right)$, and $Err$ otherwise.
+
+\hfill\qedsymbol
+\end{definition}
+
+
+% ------------------------------------------------------------------------------
+% sequence
+% ------------------------------------------------------------------------------
+\begin{definition}[Static semantics of the sequence operator]
+\label{def:static_sequence}
+Let $\circ \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the sequential composition of two processes. Let $P, Q \in \mathcal{P}$ be processes and let $T_i, T_j, T_k, T_l \in \mathcal{T}$ be types. The type signatures of $P$ and $Q$ are given by $\rho$: 
+\begin{eqnarray*}
+  \rho \left( P \right) & = & \left( T_i, T_j \right) \\
+  \rho \left( Q \right) & = & \left( T_k, T_l \right).
+\end{eqnarray*}
+Then the composition $Q \circ P$ yields a valid process with $\rho \left( Q \circ P \right) = \left( T_i, T_l \right)$ iff $T_j = T_k$, and results in $Err$ otherwise. By $Q \circ P$, we mean running $P$ first and then $Q$.
+
+\hfill\qedsymbol
+\end{definition}
 
 
 % ------------------------------------------------------------------------------
 % kleene
 % ------------------------------------------------------------------------------
+\begin{definition}[Static semantics of the \textsc{Kleene} star]
 Let $* \colon \mathcal{P} \to \mathcal{P}$ be the \textsc{Kleene} star that can be used to express repetition, i.e. executing a process several times. $P^*$ creates a process that runs $P$ zero or more times and can also be expressed recursively as $P^* = Id \vee P^* \circ P$. Let $\rho \left( P \right) = \left( T_i, T_j \right)$, then $P^*$ is valid and $\rho \left( P^* \right) = \left( T_i, T_i \right)$ iff $T_i = T_j$ and $Err$ otherwise.
 
-
-% ------------------------------------------------------------------------------
-% parentheses
-% ------------------------------------------------------------------------------
-Parentheses will be neccessary in some situations to overcome operator precedence and to express the desired composition of processes. They have no effect of the semantics of a single process, i.e. for a process $P$, let $R = \left( P \right)$, then $P = R$ and $\rho \left( P \right) = \rho \left( R \right)$.
-
-
+\hfill\qedsymbol
+\end{definition}
 
 
 
