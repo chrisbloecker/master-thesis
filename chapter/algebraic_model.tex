@@ -272,7 +272,7 @@ Consider the definition of $\sigma$ and $S$ from \expref{exp:sem_atomic} and app
   \hfill\qedsymbol
 \end{example}
 
-The definition given in \defref{def:sem_kleene} is complete and correct, however it is recursive and contains a non-terminating component. We will give an alternative but, yet equivalent definition for the semantics of the \textsc{Kleene} star $*$ that does not have this property. For this purpose, we introduce a shorthand notation for running a process $n$-times.
+The definition given in \defref{def:sem_kleene} is complete and correct, however it is recursive and contains a non-terminating component. We will give an alternative, yet equivalent definition for the semantics of the \textsc{Kleene} star $*$ that does not have this property. For this purpose, we introduce a shorthand notation for running a process $n$-times.
 \begin{definition}[Multiple execution]
 \label{def:multiple_execution}
 Let $R \in \mathcal{P}$ be a process. Then $R^n$ is the inductively defined $n$-time execution of $R$ with $n \in \mathbb{N}_0$.
@@ -308,14 +308,27 @@ Let $P, Q \in \mathcal{P}$ be processes. $P$ and $Q$ are equivalent iff their se
   \hfill\qedsymbol
 \end{definition}
 
-Let $P, Q, R \in \mathcal{P}$ be processes. Assume that $Q$ is a sub-process of $P$, i.e. $P$ contains $Q$ at some point in its structure, then we can transform $P$ into a new process by replacing every occurrence of $Q$ with $R$. We write $P_{\left[ Q / R \right]}$ for this and remark that the resulting process will be equivalent to $P$ iff $Q$ and $R$ are equivalent:
-\begin{equation}
-  P \equiv P_{\left[ Q / R \right]} \Leftrightarrow Q \equiv R.
-\end{equation}
+\begin{definition}[Process substitution]
+\label{def:process_substitution}
+Let $P, Q, R \in \mathcal{P}$ be processes and let $Q$ be a sub-process of $P$, i.e. $P$ contains $Q$ at some point in its structure. Then we can transform $P$ into a new process by replacing every occurrence of $Q$ with $R$ and write $P_{\left[ Q / R \right]}$ for this. The resulting process $P_{\left[ Q / R \right]}$ is equivalent to $P$ iff $Q$ and $R$ are equivalent:
+  \begin{equation}
+    P \equiv P_{\left[ Q / R \right]} \Leftrightarrow Q \equiv R.
+  \end{equation}
+  \hfill\qedsymbol
+\end{definition}
 
-This knowledge can be used to perform equivalent transformations on processes and optimise them according to some measurable property. E.g. assume that we have a process $P$ that involved $Q$ as a sub-process. Now if $Q$ has high time complexity and we have another process $R$ with low time complexity and $Q \equiv R$, then we might want to use $P_{\left[ Q / R \right]}$ in a productive system instead of $P$ in order to save run time.
+The equivalence from \defref{def:process_substitution} can be used to perform transformations on processes and optimise them according to some measurable property. E.g. assume that we have a process $P$ that involved $Q$ as a sub-process. Now if $Q$ has high time complexity and we have another process $R$ with low time complexity and $Q \equiv R$, then we might want to use $P_{\left[ Q / R \right]}$ in a productive system instead of $P$ in order to save run time.
 
-As a final remark, we want to point out that, for a process $P$ an inverse process $\overline{P}$ with $\overline{P} \circ P \equiv Id$ does generally \textbf{not} exist since not every computable function is invertible\footnote{Take, e.g. the function $f \colon x \mapsto x^2$. Clearly, $f$ is not injective since $f \left( x \right) = f \left( -x \right)$ and therefore not invertible. However, there is an inverse relation $\overline{f_r} \colon x \mapsto \left\{ \overline{x} \,|\, f \left( \overline{x} \right) = x \right\}$ that maps a value $x$ to the set of values that, if $f$ is applied to them, will yield $x$.}.
+\begin{definition}[Inverse process]
+\label{def:inverse_process}
+Let $P \in \mathcal{P}$ be a process. Then an inverse process $\overline{P}$ for $P$ is a process that satisfies the following property:
+  \begin{equation}
+    \overline{P} \circ P \equiv Id.
+  \end{equation}
+  \hfill\qedsymbol
+\end{definition}
+
+As a final remark, we want to point out that, for a process $P$ an inverse process as defined in \defref{def:inverse_process} does generally \textbf{not} exist since not every computable function is invertible\footnote{Take, e.g. the function $f \colon x \mapsto x^2$. Clearly, $f$ is not injective since $f \left( x \right) = f \left( -x \right)$ and therefore not invertible. However, there is an inverse relation $\overline{f_r} \colon x \mapsto \left\{ \overline{x} \,|\, f \left( \overline{x} \right) = x \right\}$ that maps a value $x$ to the set of values that, if $f$ is applied to them, will yield $x$.}.
 
 
 
