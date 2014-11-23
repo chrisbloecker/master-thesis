@@ -20,12 +20,18 @@ LS   = ls
 
 all:
 	@make compile
+	@make index
+	@make glossary
+	@make compile
 
 compile:
 	@$(LATEX) $(FILE)$(TEXEXT)
 	@$(BIBTEX) $(FILE)
 	@$(LATEX) $(FILE)$(TEXEXT)
 	@$(LATEX) $(FILE)$(TEXEXT)
+
+glossary:
+	@$(INDEX) $(FILE)$(NOMEXT) -s nomencl.ist -o $(FILE)$(GLSEXT)
 
 view:
 	@$(VIEW) $(FILE)$(PDFEXT) &
