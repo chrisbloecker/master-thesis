@@ -121,6 +121,7 @@ Then the composition $Q \circ P$ yields a valid process with $\rho \left( Q \cir
 % kleene
 % ------------------------------------------------------------------------------
 \begin{definition}[Static semantics of the \textsc{Kleene} star]
+\label{def:static_kleene}
 Let $* \colon \mathcal{P} \to \mathcal{P}$ be the \textsc{Kleene} star that can be used to express repetition, i.e. executing a process several times. $P^*$ creates a process that runs $P$ zero or more times and can also be expressed recursively as $P^* = Id \vee P^* \circ P$. Let $\rho \left( P \right) = \left( T_i, T_j \right)$, then $P^*$ is valid and $\rho \left( P^* \right) = \left( T_i, T_i \right)$ iff $T_i = T_j$ and $Err$ otherwise.
 
 \hfill\qedsymbol
@@ -287,7 +288,7 @@ Let $R \in \mathcal{P}$ be a process with $\rho \left( R \right) = \left( T_a, T
 Based on the semantics for $\vee$ and $\circ$ from \eqnref{eqn:sem_choice} and \eqnref{eqn:sem_sequence}, the semantics of the \textsc{Kleene} star $*$ is already given, but we will discuss it for the sake completeness. The definition in \chpref{chp:syntax} makes clear the recursive nature of the \textsc{Kleene} star: $R^* = Id \vee R^* \circ R$ and immediately reveals its semantics.
 \begin{definition}[Semantics of the \textsc{Kleene} star]
 \label{def:sem_kleene}
-Let $R \in \mathcal{P}$ be a process and let the \textsc{Kleene} star $*$ be applied to $R$, i.e. $R^*$. The semantics of $R^*$ is then directly derived from \defref{def:syn_kleene} and \defref{def:sem_choice}.
+Let $R \in \mathcal{P}$ be a process and let the \textsc{Kleene} star $*$ be applied to $R$, i.e. $R^*$. The semantics of $R^*$ is then directly derived from \defref{def:static_kleene} and \defref{def:sem_choice}.
   \begin{equation}
     \label{eqn:sem_kleene}
     sem \left\langle R^* \right\rangle = sem \left\langle Id \vee R^* \circ R \right\rangle = sem \left\langle Id \right\rangle \cup sem \left\langle R^* \circ R \right\rangle.

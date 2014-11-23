@@ -43,11 +43,16 @@
 \usepackage{array, amsmath, amssymb, amsthm}
 \usepackage{lipsum}
 \usepackage[toc,page]{appendix}
+\usepackage{nomencl}
 
-\newtheorem{definition}{Definition}[chapter]
-\newtheorem{example}{Example}[chapter]
-\newtheorem{myproof}{Proof}[chapter]
+\theoremstyle{theorem}
 \newtheorem{theorem}{Theorem}[chapter]
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{guess}[theorem]{Guess}
+\newtheorem{myproof}[theorem]{Proof}
 
 % Layout
 \pagestyle{scrheadings}
@@ -71,6 +76,7 @@
 \newcommand{\eqnref}[1]{equation~\ref{#1}}
 \newcommand{\expref}[1]{example~\ref{#1}}
 \newcommand{\defref}[1]{definition~\ref{#1}}
+\newcommand{\lstref}[1]{listing~\ref{#1}}
 
 \ifpdf
   \usepackage{hyperref}
