@@ -122,7 +122,7 @@ Then the composition $Q \circ P$ yields a valid process with $\rho \left( Q \cir
 % ------------------------------------------------------------------------------
 \begin{definition}[Static semantics of the \textsc{Kleene} star]
 \label{def:static_kleene}
-Let $* \colon \mathcal{P} \to \mathcal{P}$ be the \textsc{Kleene} star that can be used to express repetition, i.e. executing a process several times. $P^*$ creates a process that runs $P$ zero or more times and can also be expressed recursively as $P^* = Id \vee P^* \circ P$. Let $\rho \left( P \right) = \left( T_i, T_j \right)$, then $P^*$ is valid and $\rho \left( P^* \right) = \left( T_i, T_i \right)$ iff $T_i = T_j$ and $Err$ otherwise.
+Let $* \colon \mathcal{P} \to \mathcal{P}$ be the \textsc{Kleene} star that can be used to express repetition, i.e. executing a process several times. $P^*$ creates a process that runs $P$ zero or more times and can also be expressed recursively as $P^* = Id \vee P^* \circ P$. Let $\rho \left( P \right) = \left( T_i, T_j \right)$, then $P^*$ is valid and $\rho \left( P^* \right) = \left( T_i, T_i \right)$ iff $T_i = T_j$ and $Err$ otherwise. Like for the choice operator $\vee$, an oracle selects the concrete number of repetitions of a process $P^*$, thus leading to non-determinism.
 
 \hfill\qedsymbol
 \end{definition}
