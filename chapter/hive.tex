@@ -264,12 +264,13 @@ intDict :: SerializableDict Int
 intDict = SerializableDict
 \end{lstlisting}
 
-Now we need to pass the list of names of all the functions that shall be called remotely to the \textsf{Cloud Haskell} function \texttt{remotable}. Their names will then be entered into a table of static code pointers 
-\begin{lstlisting}[language=Haskell, caption=., numbers=left, frame=bt, firstnumber=28]
+Now we need to pass the list of names of all the functions that shall be called remotely to the \textsf{Cloud Haskell} function \texttt{remotable}. Their names will then be entered into a table of static code pointers to make the function remotely callable. They can be called on any node that shares the relevant entries in its table of static code pointers.
+\begin{lstlisting}[language=Haskell, caption=Making functions remotely callable., label=lst:arith_remotable, numbers=left, frame=bt, firstnumber=28]
 remotable ['val, 'add, 'subtract, 'multiply, 'divide, 'intDict]
 \end{lstlisting}
 
-\begin{lstlisting}[language=Haskell, caption=., numbers=left, frame=bt, firstnumber=29]
+To turn the previously defined functions into \textsc{Hive} processes, we need to wrap them using the type constructors for basic processes, i.e. \texttt{Const} and \texttt{Simple}. For that, we need to supply a closure and a matching dictionary for the serialisation of the result value of the respective closure per process. Since the only result type involved here is \texttt{Int}, we're fine with \texttt{SerializableDict Int}, which is created by \texttt{\$(mkStatic 'intDict)} from the previously defined \texttt{intDict} using \textsf{Template Haskell}. The dictionary itself will not be sent over network and since it is a static value, i.e. it is known at compile time, it doesn't need to be sent over network. It can be looked up in the table of static code pointers by its name since it has been added by supplying its top level name to \texttt{remotable}, as shown in \lstref{lst:arith_remotable}. The wrapping into \textsc{Hive} processes is shown in \lstref{lst:arith_wrapping}.
+\begin{lstlisting}[language=Haskell, caption=Creating function closures and wrapping them into \textsc{Hive} processes., label=lst:arith_wrapping, numbers=left, frame=bt, firstnumber=29]
 valP :: Int -> Process () Int
 valP i = Const $(mkStatic 'intDict) ($(mkClosure 'val) i)
 
@@ -286,7 +287,8 @@ divideP :: Process (Int, Int) Int
 divideP = Simple $(mkStatic 'intDict) $(mkClosure 'divide)
 \end{lstlisting}
 
-\begin{lstlisting}[language=Haskell, caption=., numbers=left, frame=bt, firstnumber=43]
+All prerequisites are met now and we can start with the transformations from \texttt{Expr} to \textsc{Hive} processes, which we write an interpreter for that can be seen in \lstref{lst:arith_transformation}. \texttt{interpret} maps expressions of the form \texttt{Val} to a basic process that simply returns a wrapped value and maps composed expressions to composed processes using the \texttt{Parallel} type constructor. When passing the resulting \textsc{Hive} process to the \textsc{Hive} process interpreter \texttt{runProcess}, it will take care of the distribution of the sub-processes of the \texttt{Parallel} nodes.
+\begin{lstlisting}[language=Haskell, caption=Transformation from \texttt{Expr} to \textsc{Hive} processes., label=lst:arith_transformation, numbers=left, frame=bt, firstnumber=43]
 interpret :: Expr -> Process () Int
 interpret (Val i)   = valP i
 interpret (Add x y) = Parallel (interpret x) (interpret y) addP
@@ -294,5 +296,7 @@ interpret (Sub x y) = Parallel (interpret x) (interpret y) subtractP
 interpret (Mul x y) = Parallel (interpret x) (interpret y) multiplyP
 interpret (Div x y) = Parallel (interpret x) (interpret y) divideP
 \end{lstlisting}
+
+In this example we have defined a data structure that can be used to represent arithmetic expressions and implemented a conventional interpreter for this data structure. Then, we have defined a mapping from these arithmetic expressions to \textsc{Hive} processes, and used the \textsc{Hive} process interpreter to distribute their interpretation. We did not have to explicitly implement network communication of any kind for this, but only have to make appropriate use of the \textsc{Hive} process algebra to represent our computation as a composed process. As we can clearly see, the goal of making distributed programming transparent has been reached. \textsc{Hive} equips the developer with a framework of reusable process combinators.
 
 \subsection{An ant system for the TSP}
