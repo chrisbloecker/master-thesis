@@ -298,5 +298,3 @@ interpret (Div x y) = Parallel (interpret x) (interpret y) divideP
 \end{lstlisting}
 
 In this example we have defined a data structure that can be used to represent arithmetic expressions and implemented a conventional interpreter for this data structure. Then, we have defined a mapping from these arithmetic expressions to \textsc{Hive} processes, and used the \textsc{Hive} process interpreter to distribute their interpretation. We did not have to explicitly implement network communication of any kind for this, but only have to make appropriate use of the \textsc{Hive} process algebra to represent our computation as a composed process. As we can clearly see, the goal of making distributed programming transparent has been reached. \textsc{Hive} equips the developer with a framework of reusable process combinators.
-
-\subsection{An ant system for the TSP}
