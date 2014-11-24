@@ -2,13 +2,13 @@
 In this chapter we will describe a concrete implementation of the algebraic model from \chpref{chp:algebraic_model} in Haskell. We will start off with the definition of the data structure and then take a closer look at the implementation of the interpreter that will take care its distribution in a distributed network. We will conclude this chapter with a collection of examples that will illustrate how to use our algebra to solve problems.
 
 \section{Cloud Haskell}
-We will base our implementation on Cloud Haskell \cite{Epstein:2011:THC:2034675.2034690}, a domain specific language for distributed programming in Haskell. Cloud Haskell is highly inspired by Erlang and uses message passing for communication between processes, there is no implicitly shared memory.
+We will base our implementation on \textsf{Cloud Haskell} \cite{Epstein:2011:THC:2034675.2034690}, a domain specific language for distributed programming in Haskell. Cloud Haskell is highly inspired by Erlang and uses message passing for communication between processes, there is no implicitly shared memory.
 
 A Cloud Haskell process is a function that runs in the \texttt{Process} monad and can be spawned on a local or remote node. Processes can send messages to other processes if they have knowledge about their process identifier, which serves as an address.
 
-While Erlang uses atoms as tags for messages, Cloud Haskell uses data types that need to be an instance of \texttt{Serializable}. \texttt{Serializable} itself is only a combination of both \texttt{Binary} and \texttt{Typeable}. \texttt{Binary} is neccessary to serialise a message into a \texttt{ByteString}, \texttt{Typeable} is used to identify the type of a message. This way, serialisation is made explicit, in contrast to Erlang where it is implicit \cite{Epstein:2011:THC:2034675.2034690}.
+While Erlang uses atoms as tags for messages, \textsf{Cloud Haskell} uses data types that need to be an instance of \texttt{Serializable}. \texttt{Serializable} itself is only a combination of both \texttt{Binary} and \texttt{Typeable}. \texttt{Binary} is neccessary to serialise a message into a \texttt{ByteString}, \texttt{Typeable} is used to identify the type of a message. This way, serialisation is made explicit, in contrast to Erlang where it is implicit \cite{Epstein:2011:THC:2034675.2034690}.
 
-In Haskell, functions can only be executed, composed and passed as arguments, they cannot be serialised. However, this would be neccessary in order to send a function to a remote node and execute it there. Cloud Haskell avoids this problem by using a table of static code pointers, i.e. fully qualified top level names of functions that are known at compile time, to refer to functions by a name. For remote execution, a function's name will be put into a \texttt{Closure}, together with its serialised environment, and sent to a remote node where it will be deserialised and executed. A \texttt{Closure} is nothing more than just mentioned: a function together with its environment \cite{Epstein:2011:THC:2034675.2034690}.
+In Haskell, functions can only be executed, composed and passed as arguments, they cannot be serialised. However, this would be neccessary in order to send a function to a remote node and execute it there. Cloud Haskell avoids this problem by using a table of static code pointers, i.e. fully qualified top level names of functions that are known at compile time, to refer to functions by a name. For remote execution, a function's name will be put into a \texttt{Closure}, together with its serialised environment, and sent to a remote node where it will be deserialised and executed. A \texttt{Closure} is nothing more than just mentioned: a function together with its environment \cite{Epstein:2011:THC:2034675.2034690} and can be created using the \textsf{Cloud Haskell} function \texttt{mkClosure} and \textsf{Template Haskell}. \texttt{mkClosure} takes the top level name of a function and returns a closure generator. The function supplied to \texttt{mkClosure} needs to be of type \texttt{a $\to$ Process b}, i.e. has to be of arity one and return a \textsf{Cloud Haskell} process. For a function \texttt{f} of type \texttt{a $\to$ Process b}, the type of \texttt{\$(mkClosure 'f)} will be \texttt{a $\to$ Closure (Process b)}, i.e. it is a closure generator that generates a closure when supplied with a value of type \texttt{a}.
 
 After a \texttt{Closure} has been executed, the result will be serialised and sent back to the caller. However, in some cases, the type system cannot infer the serialisability of the result type and therefore additional information needs to be provided\footnote{Specifically, the problem is that the type constructors can be constrained with required type class instances for parameters. On deconstruction, this information is not available and therefore needs to be added explicitly again.}. For a type \texttt{a}, serialisation information can be provided with a value of type \texttt{Static (SerializableDict a)}. Essentially this is only an explicit type tag that enables the selection of the correct serialisation function for type \texttt{a}.
 
@@ -206,9 +206,93 @@ runProcess master (Loop ib ic pred ba acc p) x =
     return ib
 \end{lstlisting}
 
+ToDo: Summary...
+
 \section{Examples}
 \label{chp:example}
+After introducing the \textsc{Hive} process algebra and discussing the interpreter that takes care of the distribution of \textsc{Hive} processes, we will give some examples on how to make use of the \textsc{Hive} process algebra. We will start off with an interpreter for arithmetic expressions and discuss a distributed ant system for approximate solution of the travelling salesman problem after that.
 
 \subsection{Hello world for interpreters}
+We're starting off with the typical hello world program for interpreters, i.e. an interpreter for arithmetic expressions. Except for imports from the \textsf{Cloud Haskell} library and the \textsc{Hive} process algebra, this example will be self-contained. It is intentionally kept very simple and the necessity for a distributed interpreter for arithmetic expressions is certainly not given. However, an interpreter for arithmetic expressions is fairly simple and thus, well suited to illustrate how to apply the \texttt{Hive} process algebra for distribution without distracting from it.
+
+First, we need an appropriate data type to represent arithmetic expressions. An arithmetic expression \texttt{Expr} is either a value \texttt{Val} containing an \texttt{Int} or a combination of two arithmetic expressions. The combinators we want to support are addition \texttt{Add}, subtraction \texttt{Sub}, multiplication \texttt{Mul} and division \texttt{Div}. The relevant data type together with the data constructors can be found in \lstref{lst:arith_model} 
+\begin{lstlisting}[language=Haskell, caption=Data model for the representation of arithmetic expressions., label=lst:arith_model, numbers=left, frame=bt]
+data Expr = Val Int
+          | Add Expr Expr
+          | Sub Expr Expr
+          | Mul Expr Expr
+          | Div Expr Expr
+\end{lstlisting}
+
+When we use an interpreter to interpret an arithmetic expression, we expect it to return a value of type \texttt{Int}. The implementation of such an interpreter \texttt{eval} can be found in \lstref{lst:arith_eval} and is straightforward. The interpreted value of a \texttt{Val} expression is simply its wrapped \texttt{Int} value. The interpreted value of a more complicated expression is given by recursively interpreting the involved sub-expressions and combining the results with the appropriate operator, i.e. \texttt{+} for \texttt{Add}, \texttt{-} for \texttt{Sub}, \texttt{*} for \texttt{Mul} and \texttt{div} for \texttt{Div}.
+\begin{lstlisting}[language=Haskell, caption=Implementation of an interpreter for arithmetic expressions of type \texttt{Expr}., label=lst:arith_eval, numbers=left, frame=bt, firstnumber=6]
+eval :: Expr -> Int
+eval (Val i) = i
+eval (Add x y) = eval x + eval y
+eval (Sub x y) = eval x - eval y
+eval (Mul x y) = eval x * eval y
+eval (Div x y) = eval x `div` eval y
+\end{lstlisting}
+
+Now, if we want to make use of the \textsc{Hive} process interpreter \texttt{runProcess} to distribute the interpretation of arithmetic expressions, we need to define a transformation from the category of arithmetic expressions \texttt{Expr} to the category of \textsc{Hive} processes \texttt{Process a b}. Arithmetic expressions of type \texttt{Expr} do not take any parameter, they are fully defined by the values incorporated into \texttt{Val} values and yield a value of type \texttt{Int} when interpreted and hence need to be mapped to \textsc{Hive} processes of type \texttt{Process () Int}.
+
+For the representation of arithmetic expressions that have the form of \texttt{Val}, we implement a generator \texttt{val} for \textsf{Cloud Haskell} processes that will be used to create basic \textsc{Hive} processes by wrapping them into a \texttt{Const} wrapper. The implementation of \texttt{val} can be found in \lstref{lst:arith_val}.
+\begin{lstlisting}[language=Haskell, caption=A generator for \textsf{Cloud Haskell} process for the representation of \texttt{Val} nodes., label=lst:arith_val, numbers=left, frame=bt, firstnumber=12]
+val :: Int -> CH.Process Int
+val i = return i
+\end{lstlisting}
+
+Arithmetic expressions of the form \texttt{Add}, \texttt{Sub}, \texttt{Mul} and \texttt{Div} can be interpreted in parallel since their sub-expressions are independent from each other. We can exploit \texttt{Parallel} processes from the \textsc{Hive} process algebra to interpret the sub-expressions in parallel. To do so, we need to supply combinator processes for the \texttt{Parallel} processes, so the obtained results from the sub-processes can be combined into a single value. The implementation of the relevant combinator processes can be found in \lstref{lst:arith_combinators}, they all have the same type \texttt{(Int, Int) $\to$ CH.Process Int}. Remember that functions that should be wrapped into a closure need to be of arity one and return a \textsf{Cloud Haskell} process.
+\begin{lstlisting}[language=Haskell, caption=\textsf{Cloud Haskell} processes for the combination of results from processes that have been executed in parallel., label=lst:arith_combinators,numbers=left, frame=bt, firstnumber=14]
+add :: (Int, Int) -> CH.Process Int
+add (x, y) = return (x + y)
+
+subtract :: (Int, Int) -> CH.Process Int
+subtract (x, y) = return (x - y)
+
+multiply :: (Int, Int) -> CH.Process Int
+multiply (x, y) = return (x * y)
+
+divide :: (Int, Int) -> CH.Process Int
+divide (_, 0) = undefined
+divide (x, y) = return (x `div` y)
+\end{lstlisting}
+
+In addition, we need a \texttt{SerializableDict} for each type that we want to send back as a result over the network. Since the only type involved in this is \texttt{Int}, we only need a dictionary of type \texttt{SerializableDict Int}, which is shown in \lstref{lst:arith_dict}.
+\begin{lstlisting}[language=Haskell, caption=\texttt{SerializableDict} for values of type \texttt{Int}., label=lst:arith_dict, numbers=left, frame=bt, firstnumber=26]
+intDict :: SerializableDict Int
+intDict = SerializableDict
+\end{lstlisting}
+
+Now we need to pass the list of names of all the functions that shall be called remotely to the \textsf{Cloud Haskell} function \texttt{remotable}. Their names will then be entered into a table of static code pointers 
+\begin{lstlisting}[language=Haskell, caption=., numbers=left, frame=bt, firstnumber=28]
+remotable ['val, 'add, 'subtract, 'multiply, 'divide, 'intDict]
+\end{lstlisting}
+
+\begin{lstlisting}[language=Haskell, caption=., numbers=left, frame=bt, firstnumber=29]
+valP :: Int -> Process () Int
+valP i = Const $(mkStatic 'intDict) ($(mkClosure 'val) i)
+
+addP :: Process (Int, Int) Int
+addP = Simple $(mkStatic 'intDict) $(mkClosure 'add)
+
+subtractP :: Process (Int, Int) Int
+subtractP = Simple $(mkStatic 'intDict) $(mkClosure 'subtract)
+
+multiplyP :: Process (Int, Int) Int
+multiplyP = Simple $(mkStatic 'intDict) $(mkClosure 'multiply)
+
+divideP :: Process (Int, Int) Int
+divideP = Simple $(mkStatic 'intDict) $(mkClosure 'divide)
+\end{lstlisting}
+
+\begin{lstlisting}[language=Haskell, caption=., numbers=left, frame=bt, firstnumber=43]
+interpret :: Expr -> Process () Int
+interpret (Val i)   = valP i
+interpret (Add x y) = Parallel (interpret x) (interpret y) addP
+interpret (Sub x y) = Parallel (interpret x) (interpret y) subtractP
+interpret (Mul x y) = Parallel (interpret x) (interpret y) multiplyP
+interpret (Div x y) = Parallel (interpret x) (interpret y) divideP
+\end{lstlisting}
 
 \subsection{An ant system for the TSP}
