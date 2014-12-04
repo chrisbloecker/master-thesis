@@ -1,37 +1,36 @@
 \chapter{An algebraic model}
 \label{chp:algebraic_model}
-In the previous chapter we have seen two examples of process calculi and how they work. Before we start to define our own calculus for distributed programming, we will develop a yet more abstract algebraic model, similar to the one presented in \cite{Hoare:2012:LPU:2368298.2368301}. We will use it to define the semantics of our calculus, which will implement the algebraic model.
+In the previous chapter we have seen two examples of process calculi and how they work. Before we start to define our own calculus for distributed programming, we develop a yet more abstract algebraic model, similar to the one presented in \cite{Hoare:2012:LPU:2368298.2368301}. We use it to define the semantics of our calculus, which implements the algebraic model.
 
-First, let us define what we mean by \textit{process}: a process is (a piece of) a computer program. It can run concurrently with other processes. A process receives an input and produces an output. Essentially, a process can be seen as a function. % ToDo?
+First, let us define what we mean by \textit{process}: a process is (a piece of) a computer program. It can run concurrently with other processes. A process receives an input and produces an output. Essentially, a process can be seen as a function and just like that, it is pure and free of side-effects, it does not have any other state than the input it receives upon creation.
 
-For now we are not interested in \textbf{what} a process does or \textbf{how} it does that. We will treat processes as black boxes that receive an input, perform an action and eventually produce an output. Our point of interest is the composability of processes and the algebraic structure we can define on them.
+For now we are not interested in \textbf{what} a process does or \textbf{how} it does that. We treat processes as black boxes that receive an input, perform an action and eventually produce an output. Our point of interest is the composability of processes and the algebraic structure we can define on them.
 
 \section{Syntax}
 \label{chp:syntax}
 Let $\mathcal{P}$ be the set of processes and let $P, Q \in \mathcal{P}$ be basic processes. $\mathcal{P}$ represents the set of computable functions in form of processes and hence is countable. Then syntactically correct processes can be formed inductively by:
 \begin{itemize}
-  \item $P \vee Q$
+  \item $P \vee Q$ \hspace*{2em} (Choice)
   \vspace*{-0.25em}
-  \item $P \,|\, Q$
+  \item $P \,|\, Q$ \hspace*{2.5em} (Parallel)
   \vspace*{-0.25em}
-  \item $P \circ Q$
+  \item $P \circ Q$ \hspace*{2.2em} (Sequence)
   \vspace*{-0.25em}
-  \item $P^*$
+  \item $P^*$ \hspace*{3.5em} (Repetition)
   \vspace*{-0.25em}
   \item $\left( P \right)$.
 \end{itemize}
 
-The syntax can also be expressed in form of a grammar $G = \left( N, T, R, P \right)$, where $N = \left\{ P \right\}$ is the set of non-terminals, $T = \mathcal{P}$ is the set of terminals, $R$ is the set of production rules and $P$ is the start symbol \cite{Hopcroft:2006:IAT:1196416} with % ToDo!
-\begin{eqnarray*}
-  R \colon \quad P & \to & P \vee P \\
-    & | & P \,|\, P \\
-    & | & P \circ P \\
-    & | & P^* \\
-    & | & \left( P \right) \\
-    & | & p \quad\quad\quad\quad \text{for every } p \in \mathcal{P}
-\end{eqnarray*}
-Note that $G$ is context-free-like since it involves a Dyck language \cite{} and a countable set of terminals.
-
+%The syntax can also be expressed in form of a grammar $G = \left( N, T, R, P \right)$, where $N = \left\{ P \right\}$ is the set of non-terminals, $T = \mathcal{P}$ is the set of terminals, $R$ is the set of production rules and $P$ is the start symbol \cite{Hopcroft:2006:IAT:1196416} with % ToDo!
+%\begin{eqnarray*}
+%  R \colon \quad P & \to & P \vee P \\
+%    & | & P \,|\, P \\
+%    & | & P \circ P \\
+%    & | & P^* \\
+%    & | & \left( P \right) \\
+%    & | & p \quad\quad\quad\quad \text{for every } p \in \mathcal{P}
+%\end{eqnarray*}
+%Note that $G$ is context-free-like since it involves a Dyck language \cite{} and a countable set of terminals.
 
 
 
@@ -42,7 +41,7 @@ Note that $G$ is context-free-like since it involves a Dyck language \cite{} and
 
 \section{Static Semantics}
 \label{chp:static_semantics}
-In this chapter we will define the static semantics of our algebraic model. We will define what a basic and what a composed process is and we will equip processes with a type signature. The type signature of a process will determine if the process can be used for composition with other processes, depending on the selected combinator.
+In this chapter we define the static semantics of our algebraic model. We define what a basic and what a composed process is and we equip processes with a type signature. The type signature of a process determines if the process can be used for composition with other processes, depending on the selected combinator.
 
 As before, let $\mathcal{P}$ be the countable set of processes. A basic, or atomic, process is a process that performs an atomic operation and is no further divisable. A composed process is a process that is composed of other processes, using one or many of the introduced process combinators $\vee, |, \circ$ and $*$.
 
@@ -80,7 +79,7 @@ Let $\vee \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the non-dete
   \rho \left( P \right) & = & \left( T_i, T_j \right) \\
   \rho \left( Q \right) & = & \left( T_k, T_l \right)
 \end{eqnarray}
-Then $P \vee Q$ yields a valid process with $\rho \left( P \vee Q \right) = \left( T_i, T_j \right)$ iff $T_i = T_k \wedge T_j = T_l$ and $Err$ otherwise. $P \vee Q$ yields a process that either behaves like $P$ or $Q$, depending on the oracle's choice. Depending on the point of view, we could also say that $P \vee Q$ behaves like $P$ and $Q$ at the same time.
+Then $P \vee Q$ yields a valid process with $\rho \left( P \vee Q \right) = \left( T_i, T_j \right)$ iff $T_i = T_k \wedge T_j = T_l$, otherwise the composition is invalid. $P \vee Q$ yields a process that either behaves like $P$ or $Q$, depending on the oracle's choice. Depending on the point of view, we could also say that $P \vee Q$ behaves like $P$ and $Q$ at the same time.
 
 \hfill\qedsymbol
 \end{definition}
@@ -95,7 +94,7 @@ Let $| \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the parallel co
   \rho \left( P \right) & = & \left( T_i, T_j \right) \\
   \rho \left( Q \right) & = & \left( T_k, T_l \right).
 \end{eqnarray*}
-Then the composition $P \,|\, Q$ yields a valid process with the signature $\rho \left( P \,|\, Q \right) = \left( T_i, T_j \right)$ iff $T_i = T_k \wedge T_j = T_l$, i.e. $\rho \left( P \right) = \rho \left( Q \right)$, and $Err$ otherwise.
+Then the composition $P \,|\, Q$ yields a valid process with the signature $\rho \left( P \,|\, Q \right) = \left( T_i, T_j \right)$ iff $T_i = T_k \wedge T_j = T_l$, i.e. $\rho \left( P \right) = \rho \left( Q \right)$, and is invalid otherwise.
 
 \hfill\qedsymbol
 \end{definition}
@@ -111,7 +110,7 @@ Let $\circ \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the sequent
   \rho \left( P \right) & = & \left( T_i, T_j \right) \\
   \rho \left( Q \right) & = & \left( T_k, T_l \right).
 \end{eqnarray*}
-Then the composition $Q \circ P$ yields a valid process with $\rho \left( Q \circ P \right) = \left( T_i, T_l \right)$ iff $T_j = T_k$, and results in $Err$ otherwise. By $Q \circ P$, we mean running $P$ first and then $Q$.
+Then the composition $Q \circ P$ yields a valid process with $\rho \left( Q \circ P \right) = \left( T_i, T_l \right)$ iff $T_j = T_k$, and is invalid otherwise. By $Q \circ P$, we mean running $P$ first and then $Q$.
 
 \hfill\qedsymbol
 \end{definition}
@@ -122,7 +121,7 @@ Then the composition $Q \circ P$ yields a valid process with $\rho \left( Q \cir
 % ------------------------------------------------------------------------------
 \begin{definition}[Static semantics of the \textsc{Kleene} star]
 \label{def:static_kleene}
-Let $* \colon \mathcal{P} \to \mathcal{P}$ be the \textsc{Kleene} star that can be used to express repetition, i.e. executing a process several times. $P^*$ creates a process that runs $P$ zero or more times and can also be expressed recursively as $P^* = Id \vee P^* \circ P$. Let $\rho \left( P \right) = \left( T_i, T_j \right)$, then $P^*$ is valid and $\rho \left( P^* \right) = \left( T_i, T_i \right)$ iff $T_i = T_j$ and $Err$ otherwise. Like for the choice operator $\vee$, an oracle selects the concrete number of repetitions of a process $P^*$, thus leading to non-determinism.
+Let $* \colon \mathcal{P} \to \mathcal{P}$ be the \textsc{Kleene} star that can be used to express repetition, i.e. executing a process several times. $P^*$ creates a process that runs $P$ zero or more times and can also be expressed recursively as $P^* = Id \vee P^* \circ P$. Let $\rho \left( P \right) = \left( T_i, T_j \right)$, then $P^*$ is valid and $\rho \left( P^* \right) = \left( T_i, T_i \right)$ iff $T_i = T_j$ and invalid otherwise. Like for the choice operator $\vee$, an oracle selects the concrete, \textbf{finite} number of repetitions of a process $P^*$, thus leading to non-determinism.
 
 \hfill\qedsymbol
 \end{definition}
@@ -171,11 +170,11 @@ The semantics of an atomic process $P \in \mathcal{P}$ is directly given by the 
   \hfill\qedsymbol
 \end{example}
 
-The error process $Err$ presents a special case here: as stated in \chpref{chp:static_semantics}, its output type is undefined. Hence, its output is empty and it does not compute any function:
+The error process $Err$ presents a special case here: as stated in \chpref{chp:static_semantics}, its output type is undefined. Hence, its result is always the undefined value, which is identified with the undefined type:
 \begin{definition}[Semantics of the error process]
   \begin{equation}
     \label{eqn:sem_error}
-    sem \left\langle Err \right\rangle = \emptyset.
+    sem \left\langle Err \right\rangle = \left\{ \bot \right\}.
   \end{equation}
   \hfill\qedsymbol
 \end{definition}
@@ -196,6 +195,12 @@ Let $Q, R \in \mathcal{P}$ be processes and let them be composed using the choic
     \label{eqn:sem_choice}
     sem \left\langle Q \vee R \right\rangle = sem \left\langle Q \right\rangle \cup sem \left\langle R \right\rangle
   \end{equation}
+If either $P$ of $Q$ is the error process, the optimistic oracle selects the other process. If both $P$ and $Q$ are the error process $Err$, the oracle must select the error process.
+  \begin{eqnarray}
+    sem \left\langle P \vee Err \right\rangle & = & sem \left\langle P \right\rangle \\
+    sem \left\langle Err \vee Q \right\rangle & = & sem \left\langle Q \right\rangle \\
+    sem \left\langle Err \vee Err \right\rangle & = & sem \left\langle Err \right\rangle = \left\{ \bot \right\}
+  \end{eqnarray}
   \hfill\qedsymbol
 \end{definition}
 
@@ -259,14 +264,14 @@ Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_ato
 
 The reason why we want $\star$ to be commutative is the intuition one might have about parallel composition of processes. For two processes $Q, R \in \mathcal{P}$, it is a reasonable expectation that $Q \,|\, R$ and $R \,|\, Q$ behave exactly the same. Since in the definition of the semantics of parallel composition we employ $\star$ to combine the results of the parallel processes, the properties of $\star$ will be transferred to the parallel composition operator $|$. Hence, if we want $|$ to have commutative properties, we have to require this from $\star$.
 
-Furthermore, for a semigroup $\left(T_r, \star \right)$ that is employed to combine results of processes that have composed using the parallel operator $|$, we require every $t_r \in T_r$, i.e. every concrete value of type $T_r$, to be idempotent respective to $\star$:
+Furthermore, for a semigroup $\left(T_r, \star \right)$ that is employed to combine results of processes that are composed using the parallel operator $|$, we require every $t_r \in T_r$, i.e. every concrete value of type $T_r$, to be idempotent respective to $\star$:
 \begin{equation}
   \label{eqn:idempotence}
   \bigwedge_{t_r \in T_r} t_r \star t_r = t_r.
 \end{equation}
 
 \begin{theorem}
-If the property shown in \eqnref{eqn:idempotence} holds, we can guarantee that parallel composition of processes lives up to another reasonable intuition, i.e. parallel composition of a process with itself does not change its semantics. In other words, let $R \in \mathcal{P}$ and compose $R$ using $|$ with itself, them $R \,|\, R$ has the same semantics as $R$.
+If the property shown in \eqnref{eqn:idempotence} holds, we can guarantee that parallel composition of processes lives up to another reasonable intuition, i.e. parallel composition of a process with itself does not change its semantics. In other words, let $R \in \mathcal{P}$ and compose $R$ using $|$ with itself, then $R \,|\, R$ has the same semantics as $R$.
 \end{theorem}
 
 \begin{myproof}
@@ -328,10 +333,23 @@ Let $R \in \mathcal{P}$ be a process. Then $R^n$ is the inductively defined $n$-
 
 
 % ------------------------------------------------------------------------------
-% equivalenve
+% equivalence
 % ------------------------------------------------------------------------------
-We can now use the semantics of processes, $sem$, to define when two processes, e.g. $P, Q \in \mathcal{P}$, are equivalent. This is the case if their semantics are the same, in this case we write $P \equiv Q$.
-\begin{definition}
+\section{Semantic equivalence}
+We can now use the semantics of processes, $sem$, to define a partial ordering on processes.
+\begin{definition}[Partial ordering on processes]
+Let $P, Q \in \mathcal{P}$ be processes. Then $P$ and $Q$ are in relation $P \leq Q$
+  \begin{equation}
+    P \leq Q \Leftrightarrow sem \left\langle P \right\rangle = sem \left\langle Q \right\rangle \setminus \left\{ \bot \right\}
+  \end{equation}
+\end{definition}
+
+
+
+
+
+when two processes, e.g. $P, Q \in \mathcal{P}$, are equivalent. This is the case if their semantics are the same, in this case we write $P \equiv Q$.
+\begin{definition}[Equivalence of processes]
 Let $P, Q \in \mathcal{P}$ be processes. $P$ and $Q$ are equivalent iff their semantics are equal.
   \begin{equation}
     \label{eqn:equivalence}
