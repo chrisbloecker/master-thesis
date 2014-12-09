@@ -199,7 +199,24 @@ The idempotence property of $\cup$ for equal sets is transferred to the choice o
 \hfill$\blacksquare$
 \end{myproof}
 
+\begin{theorem}[Idempotence of the identity process respecting the sequence operator]
+\label{thm:idempotence_identity}
+When the identity process $Id$ combined with itself sequentially, the resulting process is the identity process $Id$. The sequence operator is idempotent respecting the identity process:
+\begin{equation*}
+  Id \circ Id \equiv Id.
+\end{equation*}
+\end{theorem}
+
 \begin{myproof}[Idempotence of the identity process respecting the sequence operator]
+Let $Id \in \mathcal{P}$ be the identity process and use the sequence operator $\circ$ to compose it with itself. Then $sem \left\langle Id \circ \right\rangle = sem \left\langle Id \right\rangle$.
+\begin{eqnarray*}
+  sem \left\langle Id \circ Id \right\rangle & \overset{\defref{def:sem_id}}{=} & \left\{ \left( x \mapsto x \right) \circ \left( x \mapsto x \right) \right\} \\
+  & \overset{function \ composition}{=} & \left\{ x \mapsto x \right\} \\
+  & \overset{\defref{def:sem_id}}{=} & sem \left\langle Id \right\rangle
+\end{eqnarray*}
+The idempotence property of function composition $\circ$ respecting the identity function is transferred to sequential process composition $\circ$ and hence, \thmref{thm:idempotence_identity} holds.
+
+\hfill$\blacksquare$
 \end{myproof}
 
 \begin{myproof}[Idempotence of the error process respecting the sequence operator]
