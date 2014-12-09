@@ -157,6 +157,26 @@ The semantics of an atomic process $P \in \mathcal{P}$ is directly given by the 
   \hfill\qedsymbol
 \end{definition}
 
+\begin{definition}[Semantics of the identity process]
+\label{def:sem_id}
+Let $Id \in \mathcal{P}$ be the identity process, i.e. the process that always returns its argument.
+\begin{equation}
+  \label{eqn:sem_id}
+  sem \left\langle Id \right\rangle = \left\{ x \mapsto x \right\}
+\end{equation}
+\hfill\qedsymbol
+\end{definition}
+
+\begin{definition}[Semantics of the error process]
+\label{def:sem_err}
+Let $Err \in \mathcal{P}$ be the error process, i.e. the process that always returns the undefined value $\bot$.
+\begin{equation}
+  \label{eqn:sem_err}
+  sem \left\langle Err \right\rangle = \left\{ \bot \right\}
+\end{equation}
+\hfill\qedsymbol
+\end{definition}
+
 \begin{example}[Semantics of an atomic process]
   \label{exp:sem_atomic}
   Let $\sigma \colon x \mapsto x+1 \subset \mathbb{N} \times \mathbb{N}$ be the function that is embedded into the atomic process $S \in \mathcal{P}$. Then the semantics $sem \left\langle S \right\rangle$ of $S$ is given by its embedded function $\sigma$:
