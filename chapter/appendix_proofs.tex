@@ -1,8 +1,50 @@
 \chapter{Proofs}
+\begin{theorem}[Associativity of the choice operator]
+\label{thm:associativity_choice}
+The choice operator $\vee$ has associative property, i.e. for any processes $P, Q, R \in \mathcal{P}$, the following equivalence holds:
+\begin{equation*}
+  P \vee \left( Q \vee R \right) \equiv \left( P \vee Q \right) \vee R.
+\end{equation*}
+\end{theorem}
+
 \begin{myproof}[Associativity of the choice operator]
+Let $P, Q, R \in \mathcal{P}$ be processes. Then $sem \left\langle P \vee \left( Q \vee R \right) \right\rangle = sem \left\langle \left( P \vee Q \right) \vee R \right\rangle$.
+\begin{eqnarray*}
+  sem \left\langle P \vee \left( Q \vee R \right) \right\rangle & \overset{\defref{def:sem_choice}}{=} & sem \left\langle P \right\rangle \cup sem \left\langle Q \vee R \right\rangle \\
+  & \overset{\defref{def:sem_choice}}{=} & sem \left\langle P \right\rangle \cup \left( sem \left\langle Q \right\rangle \cup sem \left\langle R \right\rangle \right) \\
+  & \overset{associativity \ of \ \cup}{=} & sem \left\langle P \right\rangle \cup sem \left\langle Q \right\rangle \cup sem \left\langle R \right\rangle \\
+  & \overset{associativity \ of \ \cup}{=} & \left( sem \left\langle P \right\rangle \cup sem \left\langle Q \right\rangle \right) \cup sem \left\langle R \right\rangle \\
+  & \overset{\defref{def:sem_choice}}{=} & sem \left\langle P \vee Q \right\rangle \cup sem \left\langle R \right\rangle \\
+  & \overset{\defref{def:sem_choice}}{=} & sem \left\langle \left( R \vee Q \right) \vee R \right\rangle
+\end{eqnarray*}
+Hence, \thmref{thm:associativity_choice} holds.
+\\ \text{ }
+\hfill$\blacksquare$
 \end{myproof}
 
+\begin{theorem}[Associativity of the parallel operator]
+\label{thm:associativity_parallel}
+The parallel operator $|$ has associative property, i.e. for any processes $P, Q, R \in \mathcal{P}$, the following equivalence holds:
+\begin{equation*}
+  P \,| \left( Q \,|\, R \right) \equiv \left( P \,|\, Q \right) |\, R.
+\end{equation*}
+\end{theorem}
+
 \begin{myproof}[Associativity of the parallel operator]
+Let $P, Q, R \in \mathcal{P}$ be processes with the type signature $\rho \left( P \right) = \rho \left( Q \right) = \rho \left( R \right) = \left( T_a, T_r \right)$ and let $\left( T_r, \star \right)$ be a semi-group with the commutative operation $\star : T_r \times T_r \to T_r$. Then $sem \left\langle P \,| \left( Q \,|\, R \right) \right\rangle = sem \left\langle \left( P \,|\, Q \right) |\, R \right\rangle$.
+\begin{eqnarray*}
+  sem \left\langle P \,| \left( Q \,|\, R \right) \right\rangle & \overset{\defref{def:sem_parallel}}{=} & \left\{ p \star u \,|\, p \in sem \left\langle P \right\rangle, u \in sem \left\langle Q \,|\, R \right\rangle \right\} \\
+  & \overset{\defref{def:sem_parallel}}{=} & \left\{ p \star u \,|\, p \in sem \left\langle P \right\rangle, u \in \left\{q \star r \,|\, q \in sem \left\langle Q \right\rangle, r \in sem \left\langle R \right\rangle \right\} \right\} \\
+  & \overset{substitution \ of \ u}{=} & \left\{ p \star \left( q \star r \right) \,|\, p \in sem \left\langle P \right\rangle, q \in sem \left\langle Q \right\rangle, r \in sem \left\langle R \right\rangle \right\} \\
+  & \overset{associativity \ of \  \star}{=} & \left\{ p \star q \star r \,|\, p \in sem \left\langle P \right\rangle, q \in sem \left\langle Q \right\rangle, r \in sem \left\langle R \right\rangle \right\} \\
+  & \overset{associativity \ of \  \star}{=} & \left\{ \left( p \star q \right) \star r \,|\, p \in sem \left\langle P \right\rangle, q \in sem \left\langle Q \right\rangle, r \in sem \left\langle R \right\rangle \right\} \\
+  & \overset{introduction \ of \ v}{=} & \left\{ v \star r \,|\, v \in \left\{ p \star q \,|\, p \in sem \left\langle P \right\rangle, q \in sem \left\langle Q \right\rangle \right\}, r \in sem \left\langle R \right\rangle \right\} \\
+  & \overset{\defref{def:sem_parallel}}{=} & \left\{ v \star r \,|\, v \in sem \left\langle P \,|\, Q \right\rangle, r \in sem \left\langle R \right\rangle \right\} \\
+  & \overset{\defref{def:sem_parallel}}{=} & sem \left\langle \left( P \,|\, Q \right) |\, R \right\rangle
+\end{eqnarray*}
+Hence, \thmref{thm:associativity_parallel} holds.
+\\ \text{ }
+\hfill$\blacksquare$
 \end{myproof}
 
 \begin{myproof}[Associativity of the sequence operator]

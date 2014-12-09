@@ -4,7 +4,7 @@ In this chapter we describe a concrete implementation of the algebraic model fro
 \section{Cloud Haskell}
 We base our implementation on \textsf{Cloud Haskell} \cite{Epstein:2011:THC:2034675.2034690}, a domain specific language for distributed programming in Haskell. Cloud Haskell is highly inspired by Erlang and uses message passing for communication between processes, there is no implicitly shared memory.
 
-A Cloud Haskell process is a function that runs in the \texttt{Process} monad and can be spawned on a local or remote node. Processes can send messages to other processes if they have knowledge about their process identifier, which serves as an address. The fact that we use \textsf{Cloud Haskell} processes in the \textsf{Cloud Haskell} \texttt{Process} monad, which is built on top of the \texttt{IO} monad, has immediate consequences: we can not force processes to be free of side-effects. Actually processes can perform any kind of action they like, including reading from or writing to the file system, querying databases or accessing web resources.
+A Cloud Haskell process is a function that runs in the \texttt{Process} monad and can be spawned on a local or remote node. Processes can send messages to other processes if they have knowledge about their process identifier, which serves as an address. The fact that we use \textsf{Cloud Haskell} processes in the \textsf{Cloud Haskell} \texttt{Process} monad, which is built on top of the \texttt{IO} monad, has immediate consequences: we can not force processes to be free of side-effects. Actually processes can perform any kind of action they like, including reading from or writing to the file system, executing queries on databases or accessing web resources.
 
 While Erlang uses atoms as tags for messages, \textsf{Cloud Haskell} uses data types that need to be an instance of \texttt{Serializable}. \texttt{Serializable} itself is only a combination of both \texttt{Binary} and \texttt{Typeable}. \texttt{Binary} is neccessary to serialise a message into a \texttt{ByteString}, \texttt{Typeable} is used to identify the type of a message. This way, serialisation is made explicit, in contrast to Erlang where it is implicit \cite{Epstein:2011:THC:2034675.2034690}.
 
@@ -206,13 +206,16 @@ runProcess master (Loop ib ic pred ba acc p) x =
     return ib
 \end{lstlisting}
 
+\subsection{Process optimiser}
+
+Especially in the context of meta-heuristics and approximation algorithms, where the usage of random number generators is essential, this comes in handy. However, this makes the application of an automated process optimiser highly impractical.
+
 ToDo: Summary...
 
-\section{Examples}
+\section{Example: arithmetic expressions - hello world for interpreters}
 \label{chp:example}
 After introducing the \textsc{Hive} process algebra and discussing the interpreter that takes care of the distribution of \textsc{Hive} processes, we will give some examples on how to make use of the \textsc{Hive} process algebra. We will start off with an interpreter for arithmetic expressions and discuss a distributed ant system for approximate solution of the travelling salesman problem after that.
 
-\subsection{Hello world for interpreters}
 We're starting off with the typical hello world program for interpreters, i.e. an interpreter for arithmetic expressions. Except for imports from the \textsf{Cloud Haskell} library and the \textsc{Hive} process algebra, this example will be self-contained. It is intentionally kept very simple and the necessity for a distributed interpreter for arithmetic expressions is certainly not given. However, an interpreter for arithmetic expressions is fairly simple and thus, well suited to illustrate how to apply the \texttt{Hive} process algebra for distribution without distracting from it.
 
 First, we need an appropriate data type to represent arithmetic expressions. An arithmetic expression \texttt{Expr} is either a value \texttt{Val} containing an \texttt{Int} or a combination of two arithmetic expressions. The combinators we want to support are addition \texttt{Add}, subtraction \texttt{Sub}, multiplication \texttt{Mul} and division \texttt{Div}. The relevant data type together with the data constructors can be found in \lstref{lst:arith_model} 
