@@ -2,6 +2,7 @@
 In this chapter we describe a concrete implementation of the algebraic model from \chpref{chp:algebraic_model} in Haskell. We start off with the definition of the data structure and then take a closer look at the implementation of the interpreter that takes care of the distribution of process structures in a distributed system. We conclude this chapter with an examples that illustrates how to use our algebra to solve problems.
 
 \section{Cloud Haskell}
+\label{chp:cloud_haskell}
 We base our implementation on \textsf{Cloud Haskell} \cite{Epstein:2011:THC:2034675.2034690}, a domain specific language for distributed programming in Haskell. Cloud Haskell is highly inspired by Erlang and uses message passing for communication between processes, there is no implicitly shared memory.
 
 A Cloud Haskell process is a function that runs in the \texttt{Process} monad and can be spawned on a local or remote node. Processes can send messages to other processes if they have knowledge about their process identifier, which serves as an address. The fact that we use \textsf{Cloud Haskell} processes in the \textsf{Cloud Haskell} \texttt{Process} monad, which is built on top of the \texttt{IO} monad, has immediate consequences: we can not force processes to be free of side-effects. Actually processes can perform any kind of action they like, including reading from or writing to the file system, executing queries on databases or accessing web resources.
@@ -206,17 +207,22 @@ runProcess master (Loop ib ic pred ba acc p) x =
     return ib
 \end{lstlisting}
 
+\subsection{Difference to the algebraic model}
+\label{chp:difference_model_implementation}
+Opposed to the situation given in the algebraic model, \textsc{Hive} processes are \textbf{not} pure. As mentioned in \chpref{chp:cloud_haskell}, our processes execute in the \textsf{Cloud Haskell} \texttt{Process} monad, which builds on top of the \texttt{IO} monad.
+
+For many real world applications this comes in handy. When implementing a software that solves computationally hard problems, like e.g. the travelling salesman problem which will be discussed in \chpref{chp:tsp}, usually there are meta-heuristic\footnote{Meta-heuristics will be discussed in \chpref{chp:meta_heuristics}} approaches or approximation algorithms \cite{rolf2006approximationsalgorithmen} used, which make use of random number generators. Using random number generators in pure processes is not impossible, but would require to always provide a process with a seed for the random number generator.
+
+In fact, using non-pure processes gives the developer more freedom to optimise processes manually. Instead of transmitting data structures of possibly several megabyte or even gigabyte over the network every time a process is spawned, the data could be stored in a local file on the nodes or in a database that is accessible over the network. However, this means that processes can perform operations that yield different results when executed several times, which has immediate implications for a process optimiser.
+
 \subsection{Process optimiser}
+We have mentioned earlier that we can use the laws given in \chpref{chp:laws} to build a process optimiser that would automatically transform processes into an equivalent representation, based on defined criteria. One of such criteria might be the memory the representation of a process tree takes up or the runtime that a process will need to execute. Unfortunately it's hard to predict the runtime of a process, so the user would need to supply the optimiser with a heuristic that is capable of estimating the runtime of processes. However, based on the laws from \chpref{chp:laws} there are some situations where it seems very reasonable to optimise a composed process, such as $P \vee P$ or $P \,|\, P$ for a process $P$.
 
-Especially in the context of meta-heuristics and approximation algorithms, where the usage of random number generators is essential, this comes in handy. However, this makes the application of an automated process optimiser highly impractical.
-
-ToDo: Summary...
+But as discussed in \chpref{chp:difference_model_implementation}, a developer might make use of side-effects intentionally. He might construct a process that performs random walks in the solution space of a computationally hard problem, based on a random number generator and then run multiple instances of that process in parallel. A process optimiser would optimise this set of parallel running processes to only one process, not knowing that the processes would behave differently at runtime because they are not pure. This is why we do not provide an automated process optimiser and trust the developer to make appropriate use of the laws given in \chpref{chp:laws}.
 
 \section{Example: arithmetic expressions - hello world for interpreters}
 \label{chp:example}
-After introducing the \textsc{Hive} process algebra and discussing the interpreter that takes care of the distribution of \textsc{Hive} processes, we will give some examples on how to make use of the \textsc{Hive} process algebra. We will start off with an interpreter for arithmetic expressions and discuss a distributed ant system for approximate solution of the travelling salesman problem after that.
-
-We're starting off with the typical hello world program for interpreters, i.e. an interpreter for arithmetic expressions. Except for imports from the \textsf{Cloud Haskell} library and the \textsc{Hive} process algebra, this example will be self-contained. It is intentionally kept very simple and the necessity for a distributed interpreter for arithmetic expressions is certainly not given. However, an interpreter for arithmetic expressions is fairly simple and thus, well suited to illustrate how to apply the \texttt{Hive} process algebra for distribution without distracting from it.
+After introducing the \textsc{Hive} process algebra and discussing the interpreter that takes care of the distribution of \textsc{Hive} processes, we give an example of how to make use of the \textsc{Hive} process algebra. To do so, we employ the typical hello world program for interpreters, i.e. an interpreter for arithmetic expressions. Except for imports from the \textsf{Cloud Haskell} library and the \textsc{Hive} process algebra, this example will be self-contained. It is intentionally kept very simple and the necessity for a distributed interpreter for arithmetic expressions is certainly not given. However, an interpreter for arithmetic expressions is fairly simple and thus, well suited to illustrate how to apply the \texttt{Hive} process algebra for distribution without distracting from it.
 
 First, we need an appropriate data type to represent arithmetic expressions. An arithmetic expression \texttt{Expr} is either a value \texttt{Val} containing an \texttt{Int} or a combination of two arithmetic expressions. The combinators we want to support are addition \texttt{Add}, subtraction \texttt{Sub}, multiplication \texttt{Mul} and division \texttt{Div}. The relevant data type together with the data constructors can be found in \lstref{lst:arith_model} 
 \begin{lstlisting}[language=Haskell, caption=Data model for the representation of arithmetic expressions., label=lst:arith_model, numbers=left, frame=bt]

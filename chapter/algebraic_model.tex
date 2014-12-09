@@ -455,7 +455,9 @@ As a final remark, we want to point out that, for a process $P$ an inverse proce
 
 \section{Laws}
 \label{chp:laws}
-Based on the defined semantics of our process algebra, i.e. $sem$, we can find a set of laws that allow us to transform processes into and equivalent representation. In the following, let $P, Q, R \in \mathcal{P}$ and assume that their types are suitable for the desired composition in the respective case.
+Based on the defined semantics of our process algebra, i.e. $sem$, we can find a set of laws that allow us to transform processes into an equivalent representation. This is useful for two cases: on the one hand, it gives the developer who is using our algebra a tool to reason about his programs and transform them into equivalent representations. On the other hand, it is possible to implement an automated process optimiser that can, based on measurable properties, transform processes into more efficient representations while maintaining their semantics.
+
+In the following, let $P, Q, R \in \mathcal{P}$ and assume that their types are suitable for the desired composition in the respective case. Proofs for the stated laws can be found in \appref{chp:proofs}.
 
 \subsection{Associativity}
 The associativity property holds for the choice operator $\vee$, the parallel operator $|$ and the sequence operator $\circ$ the the \textsc{Hive} process algebra.
