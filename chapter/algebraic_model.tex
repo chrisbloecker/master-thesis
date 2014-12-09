@@ -52,21 +52,37 @@ The operator precedence in our algebra is as follows: $*$ binds strongest, the n
 \hfill\qedsymbol
 \end{definition}
 
-Let $\mathcal{T}$ be a set of types with
-\[\mathcal{T} = \left\{ \bot \right\} \, \cup \, \bigcup_{i \in \mathbb{N}_0} \left\{ T_i \right\}\]
-and let $T_i \in \mathcal{T}$ be types for every $i$. Furthermore, let $\bot$ be the undefined type.
+\begin{definition}[Types]
+Let $\mathcal{T}$ be the set of types with
+\begin{equation}
+  \mathcal{T} = \left\{ \bot \right\} \, \cup \, \bigcup_{i \in \mathbb{N}_0} \left\{ T_i \right\}
+\end{equation}
+and let $T_i \in \mathcal{T}$ be types for every $i$. Furthermore, let $\bot$ be the undefined type that is identified with its only value $\bot$.
+
+\hfill\qedsymbol
+\end{definition}
 
 % ------------------------------------------------------------------------------
 % type signature
 % ------------------------------------------------------------------------------
 \begin{definition}[Type signature]
 \label{def:type_signature}
-The type signature of a process states types of which the input value and the output value of a process will be.
+The type signature of a process states types of which the input value and the output value of a process are.
 
 \hfill\qedsymbol
 \end{definition}
 
 In the following, let $\rho \colon \mathcal{P} \to \mathcal{T} \times \mathcal{T}$ be a function that assigns a type signature to a process. Furthermore, let $Id \in \mathcal{P}$ be the process that simply outputs its input, i.e. the identity process, and let $Err \in \mathcal{P}$ the error process, i.e. the process that always fails. To be precise, there is an identity process $Id_i$ with $\rho \left( Id_i \right) = \left( T_i, T_i \right)$ and an error process $Err_i$ with $\rho \left( Err_i \right) = \left( T_i, \bot \right)$ for every $T_i \in \mathcal{T}$. For simplicity, we will just refer to them as $Id$ and $Err$, but keep in mind that for every type, there is a specific identity and error process. Let their type signatures be $\rho \left( Id \right) = \left( a, a \right)$ and $\rho \left( Err \right) = \left( a, \bot \right)$, where $a$ is a type variable which resembles the fact that $Id$ and $Err$ are representing a family of processes.
+
+% ------------------------------------------------------------------------------
+% strictness
+% ------------------------------------------------------------------------------
+\begin{definition}[Strictness of processes]
+\label{def:process_strictness}
+Processes are strict in the undefined value. If the undefined value $\bot$ is presented to a process as its input, then the output of the process is the undefined value $\bot$. Processes also give the undefined value as output whenever they receive an input value that lies outside their domain.
+
+\hfill\qedsymbol
+\end{definition}
 
 
 % ------------------------------------------------------------------------------
@@ -138,7 +154,7 @@ In \chpref{chp:static_semantics} we have introduced static semantics and constru
 
 The argument $a$ of a process $P$ is the value that is presented to $P$ and that will be transformed into a result value $r$ by $P$. The type of $a$ needs to match $P$'s input type, which is given by $\rho$. The relationship of $P$, $a$ and $r$ can be described using \textsc{Hoare} triples from \textsc{Hoare} logic \cite{}. In \textsc{Hoare} logic, $a$ is a precondition, $r$ is a postcondition and $P$ is a command. The relationship between the three is given by $\left\{ a \right\} P \left\{ r \right\}$ and means that $P$ transform the program's state from a situation where $a$ holds to a situation where $r$ holds. To be precise, in \textsc{Hoare} logic both $a$ and $r$ are formulas in predicate logic. They are used to give certain assurances over the current program state. However, we can interpret $a$ and $r$ in a compatible way: Let $s$ be the state of the program, then the condition $a$ would mean that $s$ has to be exactly $a$.
 
-By running a process $P$, we mean presenting an argument $a$ to the process, applying its embedded function to $a$ and receiving a result value $r$, i.e. $\left\{ a \right\} P \left\{ r \right\}$. The goal of this chapter is to define the embedded function of a process which is exactly its semantics.
+By running a process $P$, we mean presenting an argument $a$ to the process, applying its intrinsic function to $a$ and receiving a result value $r$, i.e. $\left\{ a \right\} P \left\{ r \right\}$. The goal of this chapter is to define the intrinsic function of a process which is exactly its semantics.
 
 For the definition of process semantics, we introduce a function $sem \colon \mathcal{P} \to 2^{\left( \mathcal{T} \to \mathcal{T} \right)}$ that takes a process and associated it with its meaning, i.e. with the \textbf{set} of functions it calculates. Since the choice operator $\vee$ and the \textsc{Kleene} star $*$ introduce non-determinism, every process that involves a choice between processes or the \textsc{Kleene} star will have more than one possible outcome, which we resemble in the definition of $sem$.
 
@@ -146,10 +162,10 @@ For the definition of process semantics, we introduce a function $sem \colon \ma
 % ------------------------------------------------------------------------------
 % atomic process
 % ------------------------------------------------------------------------------
-The semantics of an atomic process $P \in \mathcal{P}$ is directly given by the function it calculates. For an atomic process $P$, let $f_P$ be its embedded function.
+The semantics of an atomic process $P \in \mathcal{P}$ is directly given by the function it calculates. For an atomic process $P$, let $f_P$ be its intrinsic function.
 \begin{definition}[Semantics of atomic processes]
   \label{def:sem_atomic}
-  Let $P$ be an atomic process, then its semantics $sem \left\langle P \right\rangle$ is given by its embedded function $f_P$.
+  Let $P$ be an atomic process, then its semantics $sem \left\langle P \right\rangle$ is given by its intrinsic function $f_P$.
   \begin{equation}
     \label{eqn:sem_atomic}
     sem \left\langle P \right\rangle = \left\{ f_P \right\}
@@ -167,23 +183,14 @@ Let $Id \in \mathcal{P}$ be the identity process, i.e. the process that always r
 \hfill\qedsymbol
 \end{definition}
 
-\begin{definition}[Semantics of the error process]
-\label{def:sem_err}
-Let $Err \in \mathcal{P}$ be the error process, i.e. the process that always returns the undefined value $\bot$.
-\begin{equation}
-  \label{eqn:sem_err}
-  sem \left\langle Err \right\rangle = \left\{ \bot \right\}
-\end{equation}
-\hfill\qedsymbol
-\end{definition}
 
 \begin{example}[Semantics of an atomic process]
   \label{exp:sem_atomic}
-  Let $\sigma \colon x \mapsto x+1 \subset \mathbb{N} \times \mathbb{N}$ be the function that is embedded into the atomic process $S \in \mathcal{P}$. Then the semantics $sem \left\langle S \right\rangle$ of $S$ is given by its embedded function $\sigma$:
+  Let $\sigma \colon x \mapsto x+1 \subset \mathbb{N} \times \mathbb{N}$ be the function that is intrinsic to the atomic process $S \in \mathcal{P}$. Then the semantics $sem \left\langle S \right\rangle$ of $S$ is given by its intrinsic function $\sigma$:
   \begin{equation}
     sem \left\langle S \right\rangle = \left\{ \sigma \right\} = \left\{ x \mapsto x+1 \right\}
   \end{equation}
-  Let $\delta \colon x \mapsto 2x \subset \mathbb{N} \times \mathbb{N}$ be the function that is embedded into the atomic process $D \in \mathcal{P}$. Then the semantics $sem \left\langle D \right\rangle$ of $D$ is given by its embedded function $\delta$:
+  Let $\delta \colon x \mapsto 2x \subset \mathbb{N} \times \mathbb{N}$ be the function that is intrinsic to the atomic process $D \in \mathcal{P}$. Then the semantics $sem \left\langle D \right\rangle$ of $D$ is given by its intrinsic function $\delta$:
   \begin{equation}
     sem \left\langle D \right\rangle = \left\{ \delta \right\} = \left\{ x \mapsto 2x \right\}
   \end{equation}
@@ -192,6 +199,8 @@ Let $Err \in \mathcal{P}$ be the error process, i.e. the process that always ret
 
 The error process $Err$ presents a special case here: as stated in \chpref{chp:static_semantics}, its output type is undefined. Hence, its result is always the undefined value, which is identified with the undefined type:
 \begin{definition}[Semantics of the error process]
+\label{def:sem_err}
+Let $Err \in \mathcal{P}$ be the error process, i.e. the process that always returns the undefined value $\bot$.
   \begin{equation}
     \label{eqn:sem_error}
     sem \left\langle Err \right\rangle = \left\{ \bot \right\}.
@@ -199,11 +208,16 @@ The error process $Err$ presents a special case here: as stated in \chpref{chp:s
   \hfill\qedsymbol
 \end{definition}
 
-
 % ------------------------------------------------------------------------------
 % composed processes
 % ------------------------------------------------------------------------------
-The semantics of composed processes is determined by their structure and the involved sub-processes, where a sub-process is a process that has been used in combination with process combinators to build a process. 
+The semantics of composed processes is determined by their structure and the involved sub-processes. 
+
+\begin{definition}[Sub-process] 
+A sub-process is a process that has been used together with one or many process combinators to build a structurally more complicated process.
+
+\hfill\qedsymbol
+\end{definition}
 
 % ------------------------------------------------------------------------------
 % choice
@@ -356,38 +370,69 @@ Let $R \in \mathcal{P}$ be a process. Then $R^n$ is the inductively defined $n$-
 % equivalence
 % ------------------------------------------------------------------------------
 \section{Semantic equivalence}
-We can now use the semantics of processes, $sem$, to define a partial ordering on processes.
+Based on the definition of process semantics $sem$, we can define a partial ordering $<$ on processes. The partial ordering can then be used to define semantic equivalence on processes.
+
 \begin{definition}[Partial ordering on processes]
-Let $P, Q \in \mathcal{P}$ be processes. Then $P$ and $Q$ are in relation $P \leq Q$
+\label{def:process_ordering}
+Let $P, Q \in \mathcal{P}$ be processes. Then $P$ and $Q$ are in relation $P < Q$ iff the semantics from $P$ can be obtained by removing the undefined value from the semantics of $Q$.
   \begin{equation}
-    P \leq Q \Leftrightarrow sem \left\langle P \right\rangle = sem \left\langle Q \right\rangle \setminus \left\{ \bot \right\}
-  \end{equation}
-\end{definition}
-
-
-
-
-
-when two processes, e.g. $P, Q \in \mathcal{P}$, are equivalent. This is the case if their semantics are the same, in this case we write $P \equiv Q$.
-\begin{definition}[Equivalence of processes]
-Let $P, Q \in \mathcal{P}$ be processes. $P$ and $Q$ are equivalent iff their semantics are equal.
-  \begin{equation}
-    \label{eqn:equivalence}
-    P \equiv Q \Leftrightarrow sem \left\langle P \right\rangle = sem \left\langle Q \right\rangle
+    P < Q \Leftrightarrow sem \left\langle P \right\rangle = sem \left\langle Q \right\rangle \setminus \left\{ \bot \right\}
   \end{equation}
   \hfill\qedsymbol
 \end{definition}
 
+If two processes $P$ and $Q$ are in relation $<$, i.e. $P < Q$, this means that $P$ is defined on at least the same values as $Q$ is, $P$'s domain includes $Q$'s domain. Furthermore, if $\bot \in sem \left\langle Q \right\rangle$ then $P$ is defined on values where $Q$ is undefined.
+
+\begin{definition}[Equivalence of processes]
+\label{def:process_equivalence}
+Let $P, Q \in \mathcal{P}$ be processes. $P$ and $Q$ are equivalent iff their semantics are exactly the same.
+  \begin{equation}
+    \label{eqn:equivalence}
+    P \equiv Q \Leftrightarrow sem \left\langle P \right\rangle = \left\langle Q \right\rangle
+  \end{equation}
+  \hfill\qedsymbol
+\end{definition}
+
+\begin{corollary}[Equivalence of ordered processes]
+\label{crl:equivalence_ordered_processes}
+Let $P, Q \in \mathcal{P}$ be processes. Then from \defref{def:process_ordering} and \defref{def:process_equivalence} follows that
+  \begin{equation}
+    P < Q \wedge Q < P \Rightarrow P \equiv Q
+  \end{equation}
+  and $\bot \notin sem \left\langle P \right\rangle, \bot \notin sem \left\langle Q \right\rangle$. However, from the equivalence of two processes $P, Q$ it does not automatically follow that they are ordered since the semantics of $P$ and $Q$ can contain $\bot$.
+  \begin{equation}
+    P \equiv Q \not\Rightarrow P < Q \wedge Q < P
+\end{equation}    
+  \hfill\qedsymbol
+\end{corollary}
+
 \begin{definition}[Process substitution]
 \label{def:process_substitution}
-Let $P, Q, R \in \mathcal{P}$ be processes and let $Q$ be a sub-process of $P$, i.e. $P$ contains $Q$ at some point in its structure. Then we can transform $P$ into a new process by replacing every occurrence of $Q$ with $R$ and write $P_{\left[ Q / R \right]}$ for this. The resulting process $P_{\left[ Q / R \right]}$ is equivalent to $P$ iff $Q$ and $R$ are equivalent:
+Let $P, Q, R \in \mathcal{P}$ be processes and let $Q$ be a sub-process of $P$, i.e. $P$ contains $Q$ at some point in its structure. Then we can transform $P$ into a new process by replacing every occurrence of $Q$ with $R$ and write $P_{\left[ Q / R \right]}$ for this.
+
+\hfill\qedsymbol
+\end{definition}
+
+\begin{corollary}[Substitution with an equivalent process]
+\label{crl:process_substitution}
+Let $P, Q, R \in \mathcal{P}$ be processes and $Q \equiv R$. Then it follows from \defref{def:process_equivalence} and \defref{def:process_substitution} that $P_{\left[ Q / R \right]}$ is equivalent to $P$ iff $Q$ and $R$ are equivalent:
   \begin{equation}
     P \equiv P_{\left[ Q / R \right]} \Leftrightarrow Q \equiv R.
   \end{equation}
   \hfill\qedsymbol
-\end{definition}
+\end{corollary}
 
-The equivalence from \defref{def:process_substitution} can be used to perform transformations on processes and optimise them according to some measurable property. E.g. assume that we have a process $P$ that involved $Q$ as a sub-process. Now if $Q$ has high time complexity and we have another process $R$ with low time complexity and $Q \equiv R$, then we might want to use $P_{\left[ Q / R \right]}$ in a productive system instead of $P$ in order to save run time.
+\begin{corollary}[Substitution of ordered processes]
+Let $P, Q, R, S \in \mathcal{P}$ be processes and $R < Q$. Then from \crlref{crl:equivalence_ordered_processes} and \defref{def:process_substitution} it follows that
+  \begin{equation}
+    R < Q \Rightarrow P_{\left[ Q / R \right]} \equiv P \lor P_{\left[ Q / R \right]} < P
+  \end{equation}
+  depending on $P$'s sub-processes and their semantics. If $P$ involves a sub-process $S$ that is not a sub-process of $Q$ and $\bot \in sem \left\langle S \right\rangle$, then $P$ can still produce $\bot$ and it follows $P \equiv P_{\left[Q / R \right]}$. This is the case because of the strictness of processes in $\bot$, as defined in \defref{def:process_strictness}. If there is no such sub-process involved in $P$, then $P_{\left[Q / R \right]} < P$.
+    
+  \hfill\qedsymbol
+\end{corollary}
+
+The equivalence from \crlref{crl:process_substitution} can be used to perform transformations on processes and optimise them according to some measurable property. E.g. assume that we have a process $P$ that involved $Q$ as a sub-process. Now if $Q$ has high time complexity and we have another process $R$ with low time complexity and $Q \equiv R$, then we might want to use $P_{\left[ Q / R \right]}$ in a productive system instead of $P$ in order to save run time.
 
 \begin{definition}[Inverse process]
 \label{def:inverse_process}
@@ -452,7 +497,5 @@ Idempotence properties can be dependant on both the operation at hand and a spec
 The identity process $Id$ is both a left and right neutral element for sequential composition $\circ$. Furthermore, it follows directly from the definition of the semantics of the error process $Err$ and the choice operator $\vee$ that $Err$ is a neutral element for $\vee$. The commutative property of $\vee$ makes $Err$ both a left and right neutral element.
 \begin{eqnarray*}
   Id \circ P & \equiv & P \\
-  P \circ Id & \equiv & P \\
-  Err \,|\, P & \equiv & P \\
-  P \,|\, Err & \equiv & P
+  P \circ Id & \equiv & P
 \end{eqnarray*}
