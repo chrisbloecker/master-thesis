@@ -43,6 +43,7 @@
 \usepackage{lipsum}
 \usepackage[toc,page]{appendix}
 \usepackage{nomencl}
+\usepackage{makeidx}
 
 \theoremstyle{theorem}
 \newtheorem{theorem}{Theorem}[chapter]
@@ -59,6 +60,7 @@
 \clubpenalty = 10000
 \widowpenalty = 10000
 \displaywidowpenalty = 10000
+\hbadness = 10000
 
 \makeatletter
 \renewcommand{\fps@figure}{htbp}
@@ -129,3 +131,6 @@
 \lstinputlisting[frame=lines,aboveskip=2\bigskipamount,#1]{#2}
 \end{spacing}
 }
+
+\makeindex
+\makenomenclature

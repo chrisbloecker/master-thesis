@@ -1,7 +1,7 @@
 \chapter{Hive}
 In this chapter we describe a concrete implementation of the algebraic model from \chpref{chp:algebraic_model} in Haskell. We start off with the definition of the data structure and then take a closer look at the implementation of the interpreter that takes care of the distribution of process structures in a distributed system. We conclude this chapter with an examples that illustrates how to use our algebra to solve problems.
 
-\section{Cloud Haskell}
+\section{\index{Cloud Haskell}Cloud Haskell}
 \label{chp:cloud_haskell}
 We base our implementation on \textsf{Cloud Haskell} \cite{Epstein:2011:THC:2034675.2034690}, a domain specific language for distributed programming in Haskell. Cloud Haskell is highly inspired by Erlang and uses message passing for communication between processes, there is no implicitly shared memory.
 
