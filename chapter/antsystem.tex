@@ -27,6 +27,7 @@ When applying this approach, it might happen that in the local neighbourhood of 
 The term meta-heuristic is chosen because it involves heuristics to guess solutions and is applicable to a wide field of problems, so we have a recipe of how to build a heuristic algorithm to solve arbitrary problems, as long as there is a way to define when solutions are similar.
 
 \section{Artificial ant systems\index{Ant system}}
+\label{chp:ant_system}
 Artificial ant systems are a meta-heuristic approach that can be applied to a big variety of computationally hard optimisation problems that can be represented as a graph, like the \textsc{TSP}. An overview about different types of ant systems and example applications can be found in \cite{Dorigo:2004:ACO:975277}. Here, we only briefly discuss one form of ant systems and use the \textsc{Hive} process algebra to implement a prototype of an ant system that finds approximate solutions for instances of the \textsc{TSP}. However, \cite{Dorigo:2004:ACO:975277} serves us as a reference throughout this chapter without the need of further mentioning.
 
 Artificial ant systems are inspired by the swarm behaviour of ants from ant colonies in nature. When in search for new food sources, natural ants explore their environment by performing random walks. Once they discover a new food source, they return to their colony and mark the way to the food source with so called \textit{pheromones}. These pheromones can be picked up by other ants and guide their way to the food source. When an ant encounters a pheromone trail, it makes a decision between following it or continuing exploring its environment. The probability of following a trail gets higher as it gets covered more densely with pheromones. If the ant decides to follow the pheromone trail, it continues up to the food source, picks up some food and carries it back to its colony. On the way back, it reinforces the pheromone trail by depositing additional pheromones. Over time, more and more ants follow the pheromone trail and an ant trail emerges. A natural phenomenom, called \textit{evaporation}, counters the builtup of trails: a small fraction of pheromones disappears continuously, so the trail vanishes eventually if there are no ants left reinforcing it.
@@ -67,6 +68,96 @@ Ant systems perform their work in three phases:
   \item update \\
     ants deposit new pheromones, evaporation takes place
 \end{enumerate}
-Phase (1) takes place exactly once. Phases (2) and (3) take place in turn until either a predefined maximum execution time is reached or a solution of sufficient quality has been found. Other criteria to abort the computation are imagineable.
+Phase (1) takes place exactly once. Phases (2) and (3) take place in turn until either a predefined maximum execution time is reached or a solution of sufficient quality has been found. Other criteria to abort the computation can be applied as well.
 
 \section{A prototype of an ant system using \textsc{Hive}}
+Having introduced the principles of ant systems, we use the \textsc{Hive} process algebra to implement a distributed ant system. Most notably, we do so without specifying any explicit communication between processes, illustrating that \textsc{Hive} fulfils its purpose.
+
+We begin by modelling the configuration for the ant system, including the previously mentioned necessary parameters, the data model for a configuration can be found in \lstref{lst:ant_conf}. The actual problem input is given by \texttt{graph}, \texttt{ants} specifies how many ants should be concurrently used to explore solutions and \texttt{alpha} and \texttt{beta} are used by the ants when exploring solutions (cf. \chpref{chp:ant_system}). The configuration also includes the current pheromones as well as the best solution to the problem that has been found so far, both kept up to date by the ant system. Furthermore, it must be possible to send the configuration over the network to ants running on other nodes in a distributed system. Therefore we need to add instances for the type classes \texttt{Generic}, \texttt{Typeable} and \texttt{Binary}.
+
+\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,label=lst:ant_conf,caption=Configuration for the ant system.]
+data Conf = Conf { graph      :: Graph Int
+                 , pheromones :: !Pheromones
+                 , path       :: !Path
+                 , ants       :: Int
+                 , iter       :: Int
+                 , alpha      :: Double
+                 , beta       :: Double
+                 }
+  deriving (Generic, Typeable)
+
+instance Binary Conf where
+\end{lstlisting}
+
+Next we define the basic \textsf{Cloud Haskell} processes which we wrap into \textsc{Hive} processes later. The basic \textsf{Cloud Haskell} processes can be found in \lstref{lst:ant_basic}, but note that we don't show the implementation details of these processes here, they can be found in the appendix ToDo!. For now, only the existence and how we work with them is important.
+
+The \texttt{ant} process resembles the work of an ant that is supplied with a configuration and return exactly one solution candidate to the presented problem.
+
+The \texttt{combinePaths} process receives a configuration and a list of candidate solutions and returns a new configuration. To do so, it inspects the list of solution candidates and updates both the pheromone concentrations for the graph stored in the configuration and the best known solution so far.
+
+The \texttt{extractSolution} process is fairly simple and doesn't do anything else than extracting the best known solution from the configuration it is supplied with.
+
+\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,firstnumber=12,label=lst:ant_basic,caption=Basic \textsf{Cloud Haskell} processes.]
+ant :: Conf -> CH.Process Path
+ant conf = ...
+
+combinePaths :: (Conf, [Path]) -> CH.Process Conf
+combinePaths (conf, ps) = ...
+
+extractSolution :: Conf -> CH.Process Path
+extractSolution = return . path
+\end{lstlisting}
+
+As discussed in \chpref{chp:cloud_haskell}, we need to provide a \texttt{SerializableDict} for every data type that we want to be able to send over the network to another process. In this case, we need to do this for \texttt{Path} and \texttt{Conf} since values of these types are returned by remotely run processes. As a brief reminder: a \texttt{SerializableDict} is basically just an explicit type tag and doesn't involve anything more than using a type constructor, as can be seen in \lstref{lst:ant_dicts}.
+
+\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,firstnumber=20,label=lst:ant_dicts,caption=Dictionaries for serialisation.]
+pathDict :: SerializableDict Path
+pathDict = SerializableDict
+
+confDict :: SerializableDict Conf
+confDict = SerializableDict
+\end{lstlisting}
+
+In order to make the basic \textsf{Cloud Haskell} processes and the dictionaries remotely usable, we have to pass their names to \texttt{remotable}, as shown in \lstref{lst:ant_remotable}. \texttt{remotable} creates the closures for the given functions, their decoders and meta information and adds the information to a table of functions that can be used remotely.
+
+\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,firstnumber=25,label=lst:ant_remotable,caption=Making processes and dictionaries remotable.]
+remotable [ 'ant
+          , 'combinePaths
+          , 'extractSolution
+          , 'pathDict
+          , 'confDict
+          ]
+\end{lstlisting}
+
+We can now model the basic \textsc{Hive} processes and make use of the previously defined basic \textsf{Cloud Haskell} processes to wrap them into them. The basic \textsc{Hive} processes can be found in \lstref{lst:ant_hive}.
+
+\texttt{antP} defines a \textsf{Hive} process that takes a configuration and returns a \texttt{Path}, which is immediately obvious from its signature. To create this process, we take use \textsf{Template Haskell} to generate a closure from the \texttt{ant} process and a static value of the according dictionary and wrap them using the \texttt{Simple} constructor. To create the \texttt{combinePathsP} and \texttt{extractSolutionP} processes, we proceed analogously: we use \textsf{Template Haskell} to generate the closures and matching dictionaries and wrap them using the \texttt{Simple} constructor from the \textsc{Hive} process algebra. Note that we explicitly model the type of the input and output values of \textsc{Hive} processes in the function signatures.
+
+\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,firstnumber=31,label=lst:ant_hive,caption={\textsc{Hive} processes, built on top of basic \textsf{Cloud Haskell} processes.}]
+antP :: Process Conf Path
+antP = Simple $(mkStatic 'pathDict)
+              $(mkClosure 'ant)
+
+combinePathsP :: Process (Conf, [Path]) Conf
+combinePathsP = Simple $(mkStatic 'confDict)
+                       $(mkClosure 'combinePaths)
+
+extractSolutionP :: Process Conf Path
+extractSolutionP = Simple $(mkStatic 'pathDict)
+                          $(mkClosure 'extractSolution)
+\end{lstlisting}
+
+Now we have all the pieces prepared we need to put together an ant system: the basic \textsc{Hive} processes (\lstref{lst:ant_hive}), the data model (\lstref{lst:ant_conf}) and the \textsc{Hive} process combinators. We implement a function \texttt{interpret} that takes a configuration for an ant system and generates a \textsc{Hive} process from it that performs the work of the ant system. The implementation of \texttt{interpret} can be found in \lstref{lst:ant_system_complete}.
+
+\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,firstnumber=42,label=lst:ant_system_complete,caption=Transformation of a configuration for an ant system into a process hierarchy.]
+interpret :: Conf -> Process Conf Path
+interpret conf@Conf{..} = do
+  let antProcs  = replicate ants antP
+      innerProc = Multilel antProcs conf (Local combinePathsP)
+      loop      = Loop conf 0 (<iter) id (\_ i -> i+1) innerProc
+  Sequence loop extractSolutionP
+\end{lstlisting}
+
+Conceptually, the ant system we build into a \textsc{Hive} process does its work by running multiple ants in a loop and keeping track of the best solution they find. After a predefined maximum number of iteration, the loop terminates and the found solution is returned. 
+
+\section{Test}
