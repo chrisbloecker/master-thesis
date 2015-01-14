@@ -30,6 +30,9 @@ compile:
 	@$(LATEX) $(FILE)$(TEXEXT)
 	@$(LATEX) $(FILE)$(TEXEXT)
 
+index:
+	@$(INDEX) $(FILE)$(IDXEXT) -g -s index.ist
+
 glossary:
 	@$(INDEX) $(FILE)$(NOMEXT) -s nomencl.ist -o $(FILE)$(GLSEXT)
 
