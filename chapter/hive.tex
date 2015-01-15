@@ -179,7 +179,7 @@ runProcessHelper master p x mvar = do
 \end{lstlisting}
 
 A \texttt{Parallel} process incorporates exactly two processes, \texttt{p1} and \texttt{p2}, that should be run in parallel as well as a combinator process, \texttt{combinator}, that is intended to be used to combine the results from \texttt{p1} and \texttt{p2}. To accomplish parallel execution of \texttt{p1} and \texttt{p2}, we create a new empty \texttt{MVar} and spawn a \texttt{runProcessHelper} in a local thread. Together with its argument \texttt{x} and the \texttt{mvar}, Process \texttt{p1} is passed to the new thread for interpretation. At the same time, we start interpretation of process \texttt{p2} in the current interpreter thread. After execution of \texttt{p2} has finished, we're retrieving the result of \texttt{p1} from \texttt{mvar}. If execution of \texttt{p1} hasn't finished yet, this operation will block until this is the case. Once we have the results of both \texttt{p1} and \texttt{p2}, we start interpretation of \texttt{combinator} that will combine these results into one value. Again, the combinator process is why we can combine \texttt{Hive} processes of arbitrary types in parallel, in contrast to what we saw in the algebraic model in \chpref{chp:algebraic_model}.
-\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Parallel} processes.,numbers=left,frame=bt]
+\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Parallel} processes.,numbers=left,frame=bt,label=lst:runprocess_parallel]
 runProcess master (Parallel p1 p2 combinator) x = do
   mvar <- liftIO newEmptyMVar
   spawnLocal $ runProcessHelper master p1 x mvar
