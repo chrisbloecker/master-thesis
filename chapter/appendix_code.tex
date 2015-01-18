@@ -1,1 +1,37 @@
 \chapter{Code}
+
+\begin{landscape}
+\section{Ant system processes}
+\label{app:ant_system_processes}
+
+\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,caption=Type aliases and the implementation of ants as a \textsf{Cloud Haskell} process that returns a path.]
+type Visited   = [Node]
+type Unvisited = [Node]
+
+ant :: Configuration -> CH.Process Path
+ant Configuration {..} = runAnt graph pheromones [1] (nodes graph \\ [1])
+  where
+    runAnt :: Graph Int -> Pheromones -> Visited -> Unvisited -> CH.Process Path
+    runAnt _ _ visited        [] = return visited
+    runAnt g p visited unvisited = do
+      let tau   = distance' p (last visited)
+      let eta   = (1.0/) . fromIntegral . distance' g (last visited)
+      let probs = [tau u**alpha * eta u**beta | u <- unvisited]
+      rand <- liftIO $ randomRIO (0, sum probs)
+      let next  = fst . head . dropWhile ((< rand) . snd) $ zip unvisited (scanl1 (+) probs)
+      runAnt g p (visited ++ [next]) (unvisited \\ [next])
+\end{lstlisting}
+
+
+\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,caption=Implementation of a combinator process for paths as \textsf{Cloud Haskell} process.,firstnumber=16]
+combinePaths :: (Configuration, [Path]) -> CH.Process Configuration
+combinePaths (conf@(Configuration {..}), ps) = return conf { pheromones = pheromones', path = path' }
+  where
+    pheromones' = depositPheromones ( map (second (fromMaybe undefined))
+                                    . filter (isJust . snd)
+                                    . map (id &&& pathLength graph)
+                                    $ ps) pheromones
+    path'       = foldr (shorterPath graph) path ps
+\end{lstlisting}
+
+\end{landscape}

@@ -16,7 +16,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \usepackage{scrhack}
 \usepackage[top=3cm,bottom=3cm]{geometry}
- 
+
 \usepackage{ifpdf}
 \ifpdf
   \usepackage{ae}               % Fonts für pdfLaTeX, falls keine cm-super-Fonts installiert
@@ -42,8 +42,9 @@
 \usepackage{array, amsmath, amssymb, amsthm}
 \usepackage{lipsum}
 \usepackage[toc,page]{appendix}
-\usepackage{nomencl}
+\usepackage[intoc]{nomencl}
 \usepackage{makeidx}
+\usepackage{lscape}
 
 \theoremstyle{theorem}
 \newtheorem{theorem}{Theorem}[chapter]
@@ -97,6 +98,17 @@
     }
 \else
 \fi
+
+%% shortcuts
+\newcommand{\choice}{\vee}
+\renewcommand{\parallel}{|}
+\newcommand{\sequence}{\triangleright}
+\newcommand{\repetition}{*}
+
+%% layout for nomenclature
+\setlength{\nomlabelwidth}{.20\hsize}
+\renewcommand{\nomlabel}[1]{#1 \dotfill}
+\setlength{\nomitemsep}{-\parsep}
 
 %% Listings %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \usepackage{listings}
