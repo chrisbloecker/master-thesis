@@ -14,11 +14,10 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\include{chapter/preface}
 
 \tableofcontents
 \printnomenclature
-\listoffigures
-\lstlistoflistings
 \cleardoublepage
 
 \pagenumbering{arabic}
@@ -31,13 +30,17 @@
 \include{chapter/test}
 \include{chapter/conclusion}
 \include{chapter/future_work}
-\bibliographystyle{alpha}
-\bibliography{chapter/bib}
 
 \begin{appendices}
 \include{chapter/appendix_proofs}
 \include{chapter/appendix_code}
 \end{appendices}
+
+\listoffigures
+\lstlistoflistings
+
+\bibliographystyle{alpha}
+\bibliography{chapter/bib}
 
 \clearpage
 \addcontentsline{toc}{chapter}{Index}

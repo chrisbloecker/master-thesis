@@ -8,8 +8,8 @@
 type Visited   = [Node]
 type Unvisited = [Node]
 
-ant :: Configuration -> CH.Process Path
-ant Configuration {..} = runAnt graph pheromones [1] (nodes graph \\ [1])
+ant :: Conf -> CH.Process Path
+ant Conf{..} = runAnt graph pheromones [1] (nodes graph \\ [1])
   where
     runAnt :: Graph Int -> Pheromones -> Visited -> Unvisited -> CH.Process Path
     runAnt _ _ visited        [] = return visited
@@ -24,8 +24,8 @@ ant Configuration {..} = runAnt graph pheromones [1] (nodes graph \\ [1])
 
 
 \begin{lstlisting}[language=Haskell,frame=tb,numbers=left,caption=Implementation of a combinator process for paths as \textsf{Cloud Haskell} process.,firstnumber=16]
-combinePaths :: (Configuration, [Path]) -> CH.Process Configuration
-combinePaths (conf@(Configuration {..}), ps) = return conf { pheromones = pheromones', path = path' }
+combinePaths :: (Conf, [Path]) -> CH.Process Conf
+combinePaths (conf@Conf{..}, ps) = return conf { pheromones = pheromones', path = path' }
   where
     pheromones' = depositPheromones ( map (second (fromMaybe undefined))
                                     . filter (isJust . snd)

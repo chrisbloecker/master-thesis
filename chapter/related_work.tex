@@ -43,8 +43,47 @@ We have now seen some basic combinators of \textsc{CSP} and how to use them in o
 %Unfortunately in \textsc{CSP} there exists communication between processes that is implicitly represented as events. Since we want to eliminate explicit communication between processes, \textsc{CSP} is unsuitable for our purposes.
 
 \section{Application in programming}
-Current programming languages usually have tools for parallel and concurrent programming included. These tools might be implemented using a runtime system, a virtual machine or could be found in a library. Syntactically, sequential and parallel composition as well as the choice between processes will look differently in different languages, yet the underlying semantics are the same\footnote{Of course only the semantics concerning process composition. Not so the semantics regarding program evaluation.}. This is why we don't dive into the concrete syntax of a particular programming language, but rather describe how to apply the general principle.
+Current programming languages come with support for parallel and concurrent programming, either by employing a runtime system, a virtual machine or using a library. Syntactically, sequential and parallel composition as well as the choice between processes look differently in different languages, yet the underlying semantics are the same\footnote{Of course only the semantics concerning process composition. Not so the semantics regarding program evaluation.}. %This is why we don't dive into the concrete syntax of a particular programming language, but rather describe how to apply the general principle.
 
-Two processes can be combined sequentially by running one of the processes first, waiting for its termination and then running the other one. Parallel composition can be done by running processes in different threads. A choice between processes can be made using the conventional choice operator from sequential programming. Descriptions made in, e.g. \textsc{CCS} can be resembled using this approach.
+Two processes can be combined sequentially by running one of the processes first, waiting for its termination and then running the other one. Parallel composition can be done by running processes in different threads. A choice between processes can be made using the conventional choice operator (if-then-else) from sequential programming. Descriptions made in, e.g. \textsc{CCS} can be resembled using this approach.
 
 However, in either case it is necessary to explicitly write the desired composition down. There is usually no direct way of composing processes and (re-)using them as first class values. This unfortunately results in lengthy, unmodular code. We would rather wish for a compact method, similar to the syntax of \textsc{CCS} and \textsc{CSP}, of performing process composition.
+
+\subsection{Occam\index{Occam}}
+The programming language \textsf{occam}\footnote{The reference manual for \textsf{occam} can be found at \url{http://www.wotug.org/occam/documentation/oc21refman.pdf}}, which first appeared in 1983, resembles the ideas of CSP closely. It incorporates direct implementations of the operations of choice between processes as well as parallel and sequential combination of processes. Furthermore it introduces named channels and both sending and receiving operations on them.
+
+Sending data on a channel can be done using the sending operator \texttt{!}, receiving data from a channel can be done using the receiving operator \texttt{?}, see \lstref{lst:occam_send_receive}.
+
+\begin{lstlisting}[language=Caml, caption=Sending data over a channel and receiving data from a channel in \textsf{occam}., label=lst:occam_send_receive, numbers=left, frame=bt]
+channel ! out
+channel ? in
+\end{lstlisting}
+
+In contrast to many other programming languages where sequential composition is implicit, \textsf{occam} has an operator for sequential composition of expressions: \texttt{SEQ}. It takes a list of processes and executes them sequentially as shown in \lstref{lst:occam_seq}.
+
+\begin{lstlisting}[language=Caml, caption=Sequential composition of processes in \textsf{occam}., label=lst:occam_seq, numbers=left, frame=bt, firstnumber=3]
+SEQ
+  x := 3 * 7
+  y := x * 2
+\end{lstlisting}
+
+Parallel composition can be done using the \texttt{PAR} combinator in \textsf{occam}. Like \texttt{SEQ}, it takes a list of processes and evaluates them concurrently as shown in \lstref{lst:occam_par}.
+
+\begin{lstlisting}[language=Caml, caption=Parallel composition of processes in \textsf{occam}., label=lst:occam_par, numbers=left, frame=bt, firstnumber=6]
+PAR
+  x := f(a)
+  y := g(b)
+\end{lstlisting}
+
+A non-deterministic\index{Non-determinism} choice between different alternatives of processes can be made using the \texttt{ALT} combinator. It takes a list of guarded processes and non-deterministically selects one of them for execution provided its guard signals readiness for the execution of the process. If none of the guards signals readiness, \texttt{ALT} waits until one of them does. A guard can be either a boolean expression, the action of reading from a channel or the combination of both.
+
+\begin{lstlisting}[language=Caml, caption=Choice between process alternatives in \textsf{occam}., label=lst:occam_par, numbers=left, frame=bt, firstnumber=9]
+ALT
+  x > 3 & chan1 ? msg
+    SEQ
+      ...
+  chan2 ? msg
+    PAR
+      ...
+  ...
+\end{lstlisting}
