@@ -8,7 +8,7 @@ For now we are not interested in \textbf{what} a process does or \textbf{how} it
 
 \section{Syntax\index{Syntax}}
 \label{chp:syntax}
-Let $\mathcal{P}$ be the set of processes\index{Process} and let $P, Q \in \mathcal{P}$ be basic processes. $\mathcal{P}$ represents the set of computable functions\index{Function} in form of processes and hence is countable\footnote{ToDo}. Then syntactically correct processes can be formed inductively by:
+Let $\mathcal{P}$ be the set of processes\index{Process} and let $P, Q \in \mathcal{P}$ be basic processes. $\mathcal{P}$ represents the set of computable functions\index{Function} in form of processes and hence is countable\footnote{For every computable function there is a Turing machine that computes it. There is a Gödel numbering for Turing machines, thus the number of Turing machines and also the number of computable functions is countable.}. Then syntactically correct processes can be formed inductively by:
 \begin{itemize}
   \item $P \vee Q$ \hspace*{2em} (Choice)\index{Operator!choice}
   \vspace*{-0.25em}
@@ -275,10 +275,10 @@ Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_ato
 % ------------------------------------------------------------------------------
 \begin{definition}[Semantics of the parallel operator\index{Semantics!parallel operator}]
 \label{def:sem_parallel}
-Let $Q, R \in \mathcal{P}$ be processes and let them be composed using the parallel operator, i.e. $Q \,\parallel\, R$, with $\rho \left( Q \right) = \rho \left( R \right) = \left( T_a, T_r \right)$. Furthermore, let $\left( T_r, \star \right)$ be a semigroup\footnote{ToDo!}\index{Semigroup} with the commutative binary operation $\star \colon T_r \times T_r \to T_r$. The semantics of the resulting process is given by running both $Q$ and $R$ on the same argument and combining the elements of their result sets using $\star$.
+Let $Q, R \in \mathcal{P}$ be processes and let them be composed using the parallel operator, i.e. $Q \,\parallel\, R$, with $\rho \left( Q \right) = \rho \left( R \right) = \left( T_a, T_r \right)$. Furthermore, let $\left( T_r, \star \right)$ be a semigroup\footnote{A semigroup is an algebraic structure $(S, \cdot)$ where $S$ is a set and $\cdot\colon S \times S \to S$ is a binary operation on the elements of $S$ with associative property.}\index{Semigroup} with the commutative binary operation $\star \colon T_r \times T_r \to T_r $.The semantics of the resulting process is given by running both $Q$ and $R$ on the same argument and combining the elements of their result sets using $\star$.
   \begin{equation}
     \label{eqn:sem_parallel}
-    sem \left\langle Q \,\parallel\, R \right\rangle = \left\{ q \star r \,|\, q \in sem \left\langle Q \right\rangle, r \in \left\langle R \right\rangle \right\}.
+    sem \left\langle Q \,\parallel\, R \right\rangle = \left\{ x \mapsto q \left( x \right) \star r \left( x \right) \,|\, q \in sem \left\langle Q \right\rangle, r \in sem \left\langle R \right\rangle \right\}.
   \end{equation}
   \hfill\qedsymbol
 \end{definition}
@@ -288,14 +288,14 @@ Let $Q, R \in \mathcal{P}$ be processes and let them be composed using the paral
 
 \begin{example}[Semantics of the parallel operator]
 \label{exp:sem_parallel}
-Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_atomic} and use the parallel operator $|$ to compose $D$ and $S$. The semantics of the result process is determined by the concrete $\star$-operation we employ to combine the processes' results.
+Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_atomic} and use the parallel operator $|$ to compose $D$ and $S$. The semantics of the result process is determined by the concrete $\star$-operation we employ to combine the processes' results. Take e.g. $\star = max$.
   \begin{equation}
-    sem \left\langle S \,|\, D \right\rangle = \left\{ \sigma \star \delta \right\}
+    sem \left\langle S \,|\, D \right\rangle = \left\{ x \mapsto max \left( \sigma \left( x \right), \delta \left( x \right) \right) \right\}
   \end{equation}
   \hfill\qedsymbol
 \end{example}
 
-The reason why we need $\star$ to be commutative is the intuition one might have about parallel composition of processes. For two processes $Q, R \in \mathcal{P}$, it is a reasonable expectation that $Q \,\parallel\, R$ and $R \,\parallel\, Q$ behave exactly the same. Since in the definition of the semantics of parallel composition we employ $\star$ to combine the results of the parallel processes, the properties of $\star$ will be transferred to the parallel composition operator $\parallel$. Hence, if we want $\parallel$ to have commutative properties, we have to require this from $\star$.
+The reason why we need $\star$ to be commutative is the intuition one might have about parallel composition of processes. For two processes $Q, R \in \mathcal{P}$, it is a reasonable expectation that $Q \,\parallel\, R$ and $R \,\parallel\, Q$ behave exactly the same. Since in the definition of the semantics of parallel composition we employ $\star$ to combine the results of the parallel processes, the properties of $\star$ are transferred to the parallel composition operator $\parallel$. Hence, if we want $\parallel$ to have commutative properties, we have to require this from $\star$.
 
 Furthermore, for a semigroup\index{Semigroup} $\left(T_r, \star \right)$ that is employed to combine results of processes that are composed using the parallel operator $\parallel$, we require every $t_r \in T_r$, i.e. every concrete value of type $T_r$, to be idempotent\index{Idempotence} respective to $\star$:
 \begin{equation}

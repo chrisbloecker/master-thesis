@@ -139,7 +139,7 @@ Let $P, Q, R \in \mathcal{P}$ be processes with the type signatures $\rho \left(
   & \overset{\defref{def:sem_sequence}}{=} & \left\{ v \star w \,|\, v \in sem \left\langle P \triangleright Q \right\rangle, w \in sem \left\langle P \triangleright R \right\rangle \right\} \\
   & \overset{\defref{def:sem_parallel}}{=} & sem \left\langle \left( P \triangleright Q \right) | \left( P \triangleright R \right) \right\rangle
 \end{eqnarray*}
-ToDo: $\circ$ needs to distribute over $\star$, $\star$ needs to operate on \textbf{functions}!
+ToDo: This proof is broken! $\circ$ needs to distribute over $\star$! $\star$ doesn't operate on functions like make use of in the proof!
 \end{myproof}
 
 \begin{theorem}[Commutativity of the choice operator]
