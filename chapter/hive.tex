@@ -114,6 +114,7 @@ Worker nodes\index{Node!worker} are kept very simple. When started and supplied 
 
 The \textsc{Hive} process interpreter\index{Interpreter}, which we discuss in full detail in \chpref{chp:interpreter}, is run in a new process by the master for every client request\index{Request} that is received. The interpreter inspects the structure of the received process and distributes the incorporated sub-processes\index{Sub-process} to worker\index{Node!worker} nodes or executes them locally if they have been marked for local execution using the \texttt{Local} wrapper. For every basic sub-process, the interpreter asks the master for a worker node where it can run the sub-process. For such a request, the master fetches a worker node from a FIFO queue and returns it to the interpreter. After a sub-process has finished execution on a worker node, the interpreter returns the respective worker node to the master for future allocation to other interpreters. It would very well be possible to employ a more sophisticated scheduling\index{Scheduling} algorithm, but the combination of a FIFO\index{FIFO} queue and a work stealing\index{Work stealing} \cite{} alike behaviour of the process interpreter is fairly efficient and easy to implement. At this time, our primary goal is not to achieve the best possible load balancing or employ the most efficient technique for queueing worker nodes, however this leaves room for future improvement.
 
+
 \subsection{The \textsc{Hive} process interpreter\index{Hive process interpreter}\index{Interpreter}}
 \label{chp:interpreter}
 In this chapter we discuss the \textsc{Hive} process interpreter and how its interpretation of \textsc{Hive} processes works in detail by taking a look at the concrete implementation.
@@ -208,6 +209,46 @@ runProcess master (Loop ib ic pred ba acc p) x =
     return ib
 \end{lstlisting}
 
+\subsection{Handling a request}
+Now that we have taken a look at how our system is structured and how the \textsc{Hive} process interpreter works, we want to take a look at what happens in the system when a client submits a request.
+
+For this purpose, assume that the master node is already running with a set of worker nodes connected. The client has knowledge about the address of the master and the ability to directly send requests to it. \Figref{fig:request_handling} shows the behaviour of the system that follows when a client submits a request.
+
+\begin{figure}[h!]
+  \centering
+  \input{img/request_handling.tex}
+  \caption{Behaviour of the system when a request is submitted by a client.}
+  \label{fig:request_handling}
+\end{figure}
+
+\begin{itemize}
+  \item [\figannotation{1}] The client submits a request to the master node.
+  \vspace*{-0.1em}
+  \item [\figannotation{2}] The master node replies with the assigned ticket to the client.
+  \vspace*{-0.1em}
+  \item [\figannotation{3}] The master node spawns a new process interpreter on its own node and passes the request to it.
+  \vspace*{-0.1em}
+  \item [\figannotation{4}] The interpreter asks the master node for worker nodes for the purpose of spawning processes on them.
+  \vspace*{-0.1em}
+  \item [\figannotation{5}] The master node replies with available worker nodes to the interpreter. If there are no worker nodes available, the master waits with this reply until worker nodes become available.
+  \vspace*{-0.1em}
+  \item [\figannotation{6}] The interpreter spawns processes on the worker nodes.
+  \vspace*{-0.1em}
+  \item [\figannotation{7}] Once a process on a worker node has calculated its result, it sends it back to the interpreter and terminates.
+  \vspace*{-0.1em}
+  \item [\figannotation{8}] The client supplies the previously received ticket number to the master, hoping the request has been processes completely.
+  \vspace*{-0.1em}
+  \item [\figannotation{9}] The master tells the client that its request hasn't been completely processes yet. There is no solution to the client's problem available yet.
+  \vspace*{-0.1em}
+  \item [\figannotation{10}] After execution of processes on the worker nodes, the interpreter returns them to the master node for further allocation to other interpreters. Note that steps \figannotation{4} to \figannotation{10} can, and most likely will, happen multiple times while processing a request.
+  \vspace*{-0.1em}
+  \item [\figannotation{11}] Once the interpreter has finished processing the client's request, it submits the solution to the problem to the master.
+  \vspace*{-0.em}
+  \item [\figannotation{12}] The client supplies the ticket to the master again.
+  \vspace*{-0.1em}
+  \item [\figannotation{13}] The master responds to the client with the calculated solution.
+\end{itemize}
+
 \subsection{Difference to the algebraic model}
 \label{chp:difference_model_implementation}
 Opposed to the situation given in the algebraic model\index{Algebraic!model}, \textsc{Hive} processes are \textbf{not} pure. As mentioned in \chpref{chp:cloud_haskell}, our processes execute in the \textsf{Cloud Haskell} \texttt{Process} monad\index{Monad}, which builds on top of the \texttt{IO} monad.
@@ -287,14 +328,14 @@ valP i = Const $(mkStatic 'intDict) ($(mkClosure 'val) i)
 addP :: Process (Int, Int) Int
 addP = Simple $(mkStatic 'intDict) $(mkClosure 'add)
 
-subtractP :: Process (Int, Int) Int
-subtractP = Simple $(mkStatic 'intDict) $(mkClosure 'subtract)
+subP :: Process (Int, Int) Int
+subP = Simple $(mkStatic 'intDict) $(mkClosure 'subtract)
 
-multiplyP :: Process (Int, Int) Int
-multiplyP = Simple $(mkStatic 'intDict) $(mkClosure 'multiply)
+mulP :: Process (Int, Int) Int
+mulP = Simple $(mkStatic 'intDict) $(mkClosure 'multiply)
 
-divideP :: Process (Int, Int) Int
-divideP = Simple $(mkStatic 'intDict) $(mkClosure 'divide)
+divP :: Process (Int, Int) Int
+divP = Simple $(mkStatic 'intDict) $(mkClosure 'divide)
 \end{lstlisting}
 
 All prerequisites are met now and we can start with the transformations from \texttt{Expr} to \textsc{Hive} processes, which we implement an interpreter for. It can be found in \lstref{lst:arith_transformation}: \texttt{interpret} maps expressions of the form \texttt{Val} to a basic process that simply returns a wrapped value and maps composed expressions to composed processes using the \texttt{Parallel} type constructor. When passing the resulting \textsc{Hive} process to the \textsc{Hive} process interpreter \texttt{runProcess}, it takes care of the distribution of the sub-processes of the \texttt{Parallel} nodes.
@@ -302,9 +343,21 @@ All prerequisites are met now and we can start with the transformations from \te
 interpret :: Expr -> Process () Int
 interpret (Val i)   = valP i
 interpret (Add x y) = Parallel (interpret x) (interpret y) addP
-interpret (Sub x y) = Parallel (interpret x) (interpret y) subtractP
-interpret (Mul x y) = Parallel (interpret x) (interpret y) multiplyP
-interpret (Div x y) = Parallel (interpret x) (interpret y) divideP
+interpret (Sub x y) = Parallel (interpret x) (interpret y) subP
+interpret (Mul x y) = Parallel (interpret x) (interpret y) mulP
+interpret (Div x y) = Parallel (interpret x) (interpret y) divP
 \end{lstlisting}
 
-In this example we have defined a data structure that can be used to represent arithmetic expressions and implemented a conventional interpreter for this data structure. Then, we have defined a mapping from these arithmetic expressions to \textsc{Hive} processes, and used the \textsc{Hive} process interpreter to distribute their interpretation. We did not have to explicitly implement network communication of any kind for this, but only have to make appropriate use of the \textsc{Hive} process algebra to represent our computation as a composed process. As we can clearly see, the goal of making distributed programming transparent has been reached. \textsc{Hive} equips the developer with a framework of reusable process combinators.
+In this example we have defined a data structure that can be used to represent arithmetic expressions and implemented a conventional interpreter for this data structure. Then, we have defined a mapping from these arithmetic expressions to \textsc{Hive} processes, and used the \textsc{Hive} process interpreter to distribute their interpretation. We did not have to explicitly implement network communication of any kind for this, but only have to make appropriate use of the \textsc{Hive} process algebra to represent our computation as a composed process. 
+
+\subsection*{An example expression}
+$\left(7-1\right)\cdot\left(3+4\right)$
+
+\texttt{Mul (Sub (Val 7) (Val 1)) (Add (Val 3) (Val 4))}
+
+\begin{figure}
+  \centering
+  \input{img/example_expression.tex}
+  \label{fig:example_expression}
+  \caption{Some figure...}
+\end{figure}

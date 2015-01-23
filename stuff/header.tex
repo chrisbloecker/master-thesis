@@ -46,6 +46,12 @@
 \usepackage{makeidx}
 \usepackage{lscape}
 
+% for pictures
+\usepackage{tikz}
+\usetikzlibrary{positioning,shadows,arrows,shapes.geometric}
+\newcommand{\figannotation}[1]{\tikz{\node[fill=black, inner sep = 2pt][circle] {\tiny\color{white}{#1}};}}
+\newcommand{\smallfigannotation}[1]{\tikz{\node[fill=black, inner sep = 2pt, minimum size=10pt][circle] {\tiny\color{white}{#1}};}}
+
 \theoremstyle{theorem}
 \newtheorem{theorem}{Theorem}[chapter]
 \newtheorem{definition}[theorem]{Definition}
@@ -82,6 +88,8 @@
 \newcommand{\thmref}[1]{theorem~\ref{#1}}
 \newcommand{\crlref}[1]{corollary~\ref{#1}}
 \newcommand{\appref}[1]{appendix~\ref{#1}}
+\newcommand{\figref}[1]{figure~\ref{#1}}
+\newcommand{\Figref}[1]{Figure~\ref{#1}}
 
 \ifpdf
   \usepackage{hyperref}
