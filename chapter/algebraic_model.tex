@@ -275,10 +275,10 @@ Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_ato
 % ------------------------------------------------------------------------------
 \begin{definition}[Semantics of the parallel operator\index{Semantics!parallel operator}]
 \label{def:sem_parallel}
-Let $Q, R \in \mathcal{P}$ be processes and let them be composed using the parallel operator, i.e. $Q \,\parallel\, R$, with $\rho \left( Q \right) = \rho \left( R \right) = \left( T_a, T_r \right)$. Furthermore, let $\left( T_r, \star \right)$ be a semigroup\footnote{A semigroup is an algebraic structure $(S, \cdot)$ where $S$ is a set and $\cdot\colon S \times S \to S$ is a binary operation on the elements of $S$ with associative property.}\index{Semigroup} with the commutative binary operation $\star \colon T_r \times T_r \to T_r $.The semantics of the resulting process is given by running both $Q$ and $R$ on the same argument and combining the elements of their result sets using $\star$.
+Let $Q, R \in \mathcal{P}$ be processes and let them be composed using the parallel operator, i.e. $Q \,\parallel\, R$, with $\rho \left( Q \right) = \rho \left( R \right) = \left( T_a, T_r \right)$. Furthermore, let $\left( \left( T_a, T_r \right), \star \right)$ be a semigroup\footnote{A semigroup is an algebraic structure $(S, \cdot)$ where $S$ is a set and $\cdot\colon S \times S \to S$ is a binary operation on the elements of $S$ with associative property.}\index{Semigroup} with the commutative binary operation $\star \colon \left( T_a, T_r \right) \times \left( T_a, T_r \right) \to \left( T_a, T_r \right)$. The semantics of $Q \,\parallel\, R$ is then given by %The semantics of the resulting process is given by running both $Q$ and $R$ on the same argument and combining the elements of their result sets using $\star$.
   \begin{equation}
     \label{eqn:sem_parallel}
-    sem \left\langle Q \,\parallel\, R \right\rangle = \left\{ x \mapsto q \left( x \right) \star r \left( x \right) \,|\, q \in sem \left\langle Q \right\rangle, r \in sem \left\langle R \right\rangle \right\}.
+    sem \left\langle Q \,\parallel\, R \right\rangle = \left\{ q \star r \,|\, q \in sem \left\langle Q \right\rangle, r \in sem \left\langle R \right\rangle \right\}.
   \end{equation}
   \hfill\qedsymbol
 \end{definition}
@@ -288,9 +288,9 @@ Let $Q, R \in \mathcal{P}$ be processes and let them be composed using the paral
 
 \begin{example}[Semantics of the parallel operator]
 \label{exp:sem_parallel}
-Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_atomic} and use the parallel operator $|$ to compose $D$ and $S$. The semantics of the result process is determined by the concrete $\star$-operation we employ to combine the processes' results. Take e.g. $\star = max$.
+Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_atomic} and use the parallel operator $|$ to compose $D$ and $S$. The semantics of the result process is determined by the concrete $\star$-operation we employ to combine the processes' results.
   \begin{equation}
-    sem \left\langle S \,|\, D \right\rangle = \left\{ x \mapsto max \left( \sigma \left( x \right), \delta \left( x \right) \right) \right\}
+    sem \left\langle S \,|\, D \right\rangle = \left\{ \sigma \star \delta \right\}
   \end{equation}
   \hfill\qedsymbol
 \end{example}
