@@ -1,0 +1,69 @@
+\begin{tikzpicture}[
+    fact/.style={rectangle, draw=none, rounded corners=1mm, fill=blue, drop shadow,
+        text centered, anchor=north, text=white},
+    comb/.style={rectangle, draw=none, rounded corners=1mm, fill=red, drop shadow,
+        text centered, anchor=north, text=white},
+    base/.style={rectangle, draw=none, rounded corners=1mm, fill=orange, drop shadow,
+        text centered, anchor=north, text=white},
+    leaf/.style={circle, draw=none, fill=yellow, circular drop shadow,
+        text centered, anchor=north, text=black},
+    level distance=0.5cm, growth parent anchor=south
+]
+\node (State00) [fact] {\texttt{Parallel}} [-]
+        child
+        {
+            [sibling distance=6cm]
+            node [comb] {\texttt{mulP}}
+            child
+            {
+                node [fact] {\texttt{Parallel}}
+                child
+                {
+                    [sibling distance=3cm]
+                    node [comb] {\texttt{subP}}
+                    child
+                    {
+                        node [base] {\texttt{valP}}
+                        child
+                        {
+                            node [leaf] {$7$}
+                        }
+                    }
+                    child
+                    {
+                        node [base] {\texttt{valP}}
+                        child
+                        {
+                            node [leaf] {$1$}
+                        }
+                    }
+                }
+            }
+            child
+            {
+                [sibling distance=3cm]
+                node [fact] {\texttt{Parallel}}
+                child
+                {
+                    node [comb] {\texttt{addP}}
+                    child
+                    {
+                        node [base] {\texttt{valP}}
+                        child
+                        {
+                            node [leaf] {$3$}
+                        }
+                    }
+                    child
+                    {
+                        node [base] {\texttt{valP}}
+                        child
+                        {
+                            node [leaf] {$4$}
+                        }
+                    }
+                }
+            }
+        }
+;
+\end{tikzpicture}
