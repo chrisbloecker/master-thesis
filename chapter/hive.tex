@@ -104,15 +104,43 @@ With the \texttt{Loop}\index{Hive process algebra!Loop} data constructor, we can
 We kindly want to remind the reader about the goal we set in \chpref{chp:goal}, i.e. the automatic distribution of processes in a distributed system while hiding the fact that a distributed system is involved and thereby making distributed programming transparent and easy. As mentioned earlier, we are going to employ the interpreter\index{Interpreter} pattern \cite{Gamma:1995:DPE:186897} for this purpose. But to do so, first we need some kind of infrastructure and nodes where we can delegate the work to.
 
 \subsection{Architecture\index{Architecture}}
-The architecture of our system's infrastructure is intentionally kept simple. It involves a designated \textbf{master}\index{Node!master} node and a collection of \textbf{worker}\index{Node!worker} nodes. In addition to that, we need an interface\index{Interface} through which we can insert processes into the system. The easiest way to do so is a command line interface, however, a web interface would be much more convenient and easier to use. We employ Yesod\footnote{Yesod is a Haskell web framework. More information about Yesod can be found at \url{http://www.yesodweb.com/} and \url{https://github.com/yesodweb/yesod}}\index{Yesod} to build a RESTful\index{REST} web interface.
+\begin{figure}[h!]
+  \centering
+  \begin{tikzpicture} [every node/.style={fill=black, circle, inner sep = 2pt}]
+    \pgftext{
+      \includegraphics[width=\textwidth]{img/architecture.pdf}
+    }
+    \node at (-4.25, 0.25) {\tiny \color{white} 1};
+    \node at (-3.75, 0.25) {\tiny \color{white} 2};
+    \node at ( 1.50, 0.25) {\tiny \color{white} 3};
+    \node at (-0.10, 1.75) {\tiny \color{white} 4};
+    \node at (-3.25, 0.25) {\tiny \color{white} 5};
+    \node at ( 2.00, 0.25) {\tiny \color{white} 6};
+    \node at (-0.10, 1.25) {\tiny \color{white} 7};
+    \node at (-2.75, 0.25) {\tiny \color{white} 8};
+    \node at (-0.10, 0.75) {\tiny \color{white} 9};
+    \node at (-2.30,-1.25) {\tiny \color{white} 10};
+    \node at (-0.80,-1.25) {\tiny \color{white} 10};
+    \node at ( 2.50,-1.25) {\tiny \color{white} 10};
+    \node at ( 1.00,-3.60) {\tiny \color{white} 11};
+    \node at ( 6.10, 0.65) {\tiny \color{white} 12};
+    \node at ( 2.50, 0.30) {\tiny \color{white} 13};
+    \node at ( 3.10, 0.30) {\tiny \color{white} 14};
+    \node at ( 3.70, 0.30) {\tiny \color{white} 15};
+  \end{tikzpicture}
+  \caption{Architecture of the infrastructure }
+  \label{fig:architecture}
+\end{figure}
 
-When a client\index{Client} wants to submit a request\index{Request}, it has to make use of the web interface and supply a JSON\footnote{JavaScript Object Notation \url{http://www.json.org/}}\index{JSON} document in an appropriate format. In a productive environment, there would be a parser that reads a submitted JSON document, generates a corresponding process structure from its content and passes it on to the process interpreter if the document is valid. For simplicity, we assume for now that a request equals a valid process description that can be interpreted.
+The architecture of our system's infrastructure is intentionally kept simple as shown in \figref{fig:architecture}. It involves a designated \textbf{master}\index{Node!master} node and a collection of \textbf{worker}\index{Node!worker} nodes. In addition to that, we need an interface\index{Interface} through which we can insert processes into the system. The easiest way to do so is a command line interface, however, a web interface would be much more convenient and easier to use. We employ Yesod\footnote{Yesod is a Haskell web framework. More information about Yesod can be found at \url{http://www.yesodweb.com/} and \url{https://github.com/yesodweb/yesod}}\index{Yesod} to build a RESTful\index{REST} web interface.
 
-The master\index{Node!master} node is responsible for handling client\index{Client} requests, logging information related to the received requests and managing connected nodes. When a request is received, the master spawns a new \texttt{CH.Process} that runs the \textsc{Hive} process interpreter\index{Interpreter} and passes the request to the new process where it will be interpreted. At the same time, the master assigns a ticket id to the request, logs the request together with its id to a database\footnote{For this purpose, we make use the \texttt{acid-state} library. \texttt{acid-state} allows to save Haskell values into a file-based database if their type has an instance of \texttt{SafeCopy}. Further information on \texttt{acid-state} can be found at \url{http://acid-state.seize.it/} and \url{https://github.com/acid-state/acid-state}} and reports the id to the client. When the interpreter finishes interpreting the process structure from the request, it reports the result to the master. The master then updates the database by logging the result to the database and linking it to the according id. At any time, a client can try to retrieve the result to its request by supplying the request's ticket id to the master through the RESTful web interface. The master then tries to read the result from the database, but only replies to the client's satisfaction after the interpretation of its request has been finished and logged to the database.
+When a client\index{Client} wants to submit a request\index{Request} \figannotation{1}, it has to make use of the web interface and supply a JSON\footnote{JavaScript Object Notation \url{http://www.json.org/}}\index{JSON} document in an appropriate format. In a productive environment, there would be a parser that reads a submitted JSON document, generates a corresponding process structure from its content and passes it on to the process interpreter if the document is valid. For simplicity, we assume for now that a request equals a valid process description that can be interpreted.
 
-Worker nodes\index{Node!worker} are kept very simple. When started and supplied with the master's address, they report their availability to the master and wait for further instruction.
+The master\index{Node!master} node is responsible for handling client\index{Client} requests, logging information related to the received requests and managing connected nodes. When a request is received \figannotation{2}, the master spawns a new \textsf{Cloud Haskell} \texttt{Process} that runs the \textsc{Hive} process interpreter\index{Interpreter} and passes the request to the new process where it is interpreted \figannotation{3}. At the same time, the master assigns a ticket id to the request, logs the request together with its id to a database\footnote{For this purpose, we make use the \texttt{acid-state} library. \texttt{acid-state} allows to save Haskell values into a file-based database if their type has an instance of \texttt{SafeCopy}. Further information on \texttt{acid-state} can be found at \url{http://acid-state.seize.it/} and \url{https://github.com/acid-state/acid-state}} \figannotation{4} and reports the ticket id to the client \figannotation{5}. When the interpreter finishes interpreting the process structure from the request, it reports the result to the master \figannotation{6}. The master then updates the database \figannotation{7} by logging the result to the database and linking it to the according id. At any time, a client can try to retrieve the result to its request by supplying the request's ticket id to the master through the interface \figannotation{8}. The master then tries to read the result from the database \figannotation{9}, but only replies to the client's satisfaction after the interpretation of its request has been finished and logged to the database.
 
-The \textsc{Hive} process interpreter\index{Interpreter}, which we discuss in full detail in \chpref{chp:interpreter}, is run in a new process by the master for every client request\index{Request} that is received. The interpreter inspects the structure of the received process and distributes the incorporated sub-processes\index{Sub-process} to worker\index{Node!worker} nodes or executes them locally if they have been marked for local execution using the \texttt{Local} wrapper. For every basic sub-process, the interpreter asks the master for a worker node where it can run the sub-process. For such a request, the master fetches a worker node from a FIFO queue and returns it to the interpreter. After a sub-process has finished execution on a worker node, the interpreter returns the respective worker node to the master for future allocation to other interpreters. It would very well be possible to employ a more sophisticated scheduling\index{Scheduling} algorithm, but the combination of a FIFO\index{FIFO} queue and a work stealing\index{Work stealing} \cite{} alike behaviour of the process interpreter is fairly efficient and easy to implement. At this time, our primary goal is not to achieve the best possible load balancing or employ the most efficient technique for queueing worker nodes, however this leaves room for future improvement.
+Worker nodes\index{Node!worker} are kept very simple. When started and supplied with the master's address, they report their availability to the master \figannotation{10} and wait for further instruction.
+
+The \textsc{Hive} process interpreter\index{Interpreter}, which we discuss in full detail in \chpref{chp:interpreter}, is run in a new process by the master for every client request\index{Request} that is received. The interpreter inspects the structure of the received request, transforms it into a \textsc{Hive} process structure and distributes the incorporated sub-processes\index{Sub-process} to worker\index{Node!worker} nodes \figannotation{11} or executes them locally \figannotation{12} if they have been marked for local execution using the \texttt{Local} wrapper. For every basic sub-process, the interpreter asks the master for a worker node \figannotation{13} where it can run the sub-process. For such a request, the master fetches a worker node from a FIFO queue and returns it to the interpreter \figannotation{14}. After a sub-process has finished execution on a worker node, the interpreter returns the respective worker node to the master \figannotation{15} for future allocation to other interpreters. It would very well be possible to employ a more sophisticated scheduling\index{Scheduling} algorithm, but the combination of a FIFO\index{FIFO} queue and a work stealing\index{Work stealing} \cite{} alike behaviour of the process interpreter is fairly efficient and easy to implement. At this time, our primary goal is not to achieve the best possible load balancing or employ the most efficient technique for queueing worker nodes, however this leaves room for future improvement.
 
 
 \subsection{The \textsc{Hive} process interpreter\index{Hive process interpreter}\index{Interpreter}}
@@ -212,7 +240,7 @@ runProcess master (Loop ib ic pred ba acc p) x =
 \subsection{Handling a request}
 Now that we have taken a look at how our system is structured and how the \textsc{Hive} process interpreter works, we want to take a look at what happens in the system when a client submits a request.
 
-For this purpose, assume that the master node is already running with a set of worker nodes connected. The client has knowledge about the address of the master and the ability to directly send requests to it. \Figref{fig:request_handling} shows the behaviour of the system that follows when a client submits a request.
+For this purpose, assume that the master node is already running with a set of worker nodes connected. The client has knowledge about the address of the master and the ability to directly send requests to it. \Figref{fig:request_handling} shows the behaviour of the system that follows when a client submits a request. Note that we do not explicitly show all the worker nodes involved but symbolically combine them as \enquote{Worker}.
 
 \begin{figure}[h!]
   \centering
@@ -223,29 +251,17 @@ For this purpose, assume that the master node is already running with a set of w
 
 \begin{itemize}
   \item [\figannotation{1}] The client submits a request to the master node.
-  \vspace*{-0.1em}
   \item [\figannotation{2}] The master node replies with the assigned ticket to the client.
-  \vspace*{-0.1em}
   \item [\figannotation{3}] The master node spawns a new process interpreter on its own node and passes the request to it.
-  \vspace*{-0.1em}
   \item [\figannotation{4}] The interpreter asks the master node for worker nodes for the purpose of spawning processes on them.
-  \vspace*{-0.1em}
   \item [\figannotation{5}] The master node replies with available worker nodes to the interpreter. If there are no worker nodes available, the master waits with this reply until worker nodes become available.
-  \vspace*{-0.1em}
   \item [\figannotation{6}] The interpreter spawns processes on the worker nodes.
-  \vspace*{-0.1em}
   \item [\figannotation{7}] Once a process on a worker node has calculated its result, it sends it back to the interpreter and terminates.
-  \vspace*{-0.1em}
   \item [\figannotation{8}] The client supplies the previously received ticket number to the master, hoping the request has been processes completely.
-  \vspace*{-0.1em}
   \item [\figannotation{9}] The master tells the client that its request hasn't been completely processes yet. There is no solution to the client's problem available yet.
-  \vspace*{-0.1em}
   \item [\figannotation{10}] After execution of processes on the worker nodes, the interpreter returns them to the master node for further allocation to other interpreters. Note that steps \figannotation{4} to \figannotation{10} can, and most likely will, happen multiple times while processing a request.
-  \vspace*{-0.1em}
   \item [\figannotation{11}] Once the interpreter has finished processing the client's request, it submits the solution to the problem to the master.
-  \vspace*{-0.em}
   \item [\figannotation{12}] The client supplies the ticket to the master again.
-  \vspace*{-0.1em}
   \item [\figannotation{13}] The master responds to the client with the calculated solution.
 \end{itemize}
 
@@ -355,9 +371,9 @@ $\left(7-1\right)\cdot\left(3+4\right)$
 
 \texttt{Mul (Sub (Val 7) (Val 1)) (Add (Val 3) (Val 4))}
 
-\begin{figure}
+\begin{figure}[h!]
   \centering
   \input{img/example_expression.tex}
-  \label{fig:example_expression}
   \caption{Some figure...}
+  \label{fig:example_expression}
 \end{figure}

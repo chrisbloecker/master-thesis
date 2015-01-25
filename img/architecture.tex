@@ -1,0 +1,42 @@
+\documentclass[class=minimal,border=0pt]{standalone}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric}
+\begin{document}
+\pagestyle{empty}
+
+% Diagram
+\begin{tikzpicture}[every node/.style={font=\normalsize,minimum height=0.5cm,minimum width=0.5cm},]
+
+% Matrix
+\node [matrix, very thin,column sep=0.6cm,row sep=0.5cm] (matrix) at (0,0) {
+  \node(0,0)       (00) {};       & \node(0,0) (10) {}; & \node(0,0)       (20) {};       & \node(0,0)       (30) {};         & \node(0,0) (40) {};         & \node(0,0)       (50) {};       & \node(0,0)       (60) {}; \\
+  \node(0,0)       (01) {};       & \node(0,0) (11) {}; & \node(0,0)       (21) {};       & \node(0,0)[draw] (31) {Database}; & \node(0,0) (41) {};         & \node(0,0)       (51) {};       & \node(0,0)       (61) {}; \\
+  \node(0,0)       (02) {};       & \node(0,0) (12) {}; & \node(0,0)       (22) {};       & \node(0,0)       (32) {};         & \node(0,0) (42) {};         & \node(0,0)       (52) {};       & \node(0,0)       (62) {}; \\
+  \node(0,0)[draw] (03) {Client}; & \node(0,0) (13) {}; & \node(0,0)       (23) {};       & \node(0,0)[draw] (33) {Master};   & \node(0,0) (43) {};         & \node(0,0)       (53) {};       & \node(0,0)[draw] (63) {Interpreter}; \\
+  \node(0,0)       (04) {};       & \node(0,0) (14) {}; & \node(0,0)       (24) {};       & \node(0,0)       (34) {};         & \node(0,0) (44) {};         & \node(0,0)       (54) {};       & \node(0,0)       (64) {}; \\
+  \node(0,0)       (05) {};       & \node(0,0) (15) {}; & \node(0,0)[draw] (25) {Worker}; & \node(0,0)[draw] (35) {Worker};   & \node(0,0) (45) {$\ldots$}; & \node(0,0)[draw] (55) {Worker}; & \node(0,0)       (65) {}; \\
+  \node(0,0)       (06) {};       & \node(0,0) (16) {}; & \node(0,0)       (26) {};       & \node(0,0)       (36) {};         & \node(0,0) (46) {};         & \node(0,0)       (56) {};       & \node(0,0)       (66) {}; \\
+};
+
+\fill (10) node {Interface};
+
+\draw [dashed]
+  (10) -- (16.south)
+;
+
+\draw [style=<->] (03.east)  -- (33.west);  % Client <-> Master
+\draw [style=<->] (33.north) -- (31.south); % Master <-> Database
+\draw [style=<->] (33.east)  -- (63.west);  % Master <-> Interpreter
+\draw [style=<->] (33.south) -- (25.north); % Master <-> Worker
+\draw [style=<->] (33.south) -- (35.north); % Master <-> Worker
+\draw [style=<->] (33.south) -- (55.north); % Master <-> Worker
+
+\draw [style=-] (26.north) -- (66.north);
+
+\draw [style=->] (26.north) -- (25.south);
+\draw [style=->] (36.north) -- (35.south);
+\draw [style=->] (56.north) -- (55.south);
+\draw [style=->] (66.north) -- (63.south);
+
+\end{tikzpicture}
+\end{document}
