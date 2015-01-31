@@ -1,6 +1,6 @@
 \chapter{An algebraic model\index{Algebraic!model}}
 \label{chp:algebraic_model}
-In the previous chapter we have seen two examples of process calculi\index{Process!calculus} and how they work. Before we start to define our own calculus for distributed programming, we develop a yet more abstract algebraic model, similar to the one presented in \cite{Hoare:2012:LPU:2368298.2368301}. We use it to define the semantics\index{Semantics} of our calculus, which implements the algebraic model.
+In the previous chapter we have seen two examples of process calculi\index{Process!calculus} and how they work. Before we start to define our own calculus for parallel and distributed programming, we develop an abstract algebraic model, similar to the one presented in \cite{Hoare:2012:LPU:2368298.2368301} and use it to define the semantics\index{Semantics} of our calculus.
 
 First, let us define what we mean by \textit{process}\index{Process} a process is (a piece of) a computer program. It can run concurrently with other processes. A process receives an input\index{Input} and produces an output\index{Output}. Essentially, a process can be seen as a function\index{Function} and just like that, it is pure and free of side-effects\index{Side-effect}, it does not have any other state\index{State} than the input it receives upon creation.
 
@@ -8,16 +8,16 @@ For now we are not interested in \textbf{what} a process does or \textbf{how} it
 
 \section{Syntax\index{Syntax}}
 \label{chp:syntax}
-Let $\mathcal{P}$ be the set of processes\index{Process} and let $P, Q \in \mathcal{P}$ be basic processes. $\mathcal{P}$ represents the set of computable functions\index{Function} in form of processes and hence is countable\footnote{For every computable function there is a Turing machine that computes it. There is a Gödel numbering for Turing machines, thus the number of Turing machines and also the number of computable functions is countable.}. Then syntactically correct processes can be formed inductively by:
+Let $\mathcal{P}$ be the set of processes\index{Process} and let $P, Q \in \mathcal{P}$ be basic processes. $\mathcal{P}$ represents the set of computable functions\index{Function} in form of processes and hence, is countable\footnote{For every computable function there is a Turing machine that computes it. There is a Gödel numbering for Turing machines, thus the number of Turing machines and the number of computable functions is countable.}. Then syntactically correct processes can be formed inductively by:
 \begin{itemize}
   \item $P \vee Q$ \hspace*{2em} (Choice)\index{Operator!choice}
-  \vspace*{-0.25em}
+  \vspace*{-0.4em}
   \item $P \,|\, Q$ \hspace*{2.5em} (Parallel)\index{Operator!parallel}
-  \vspace*{-0.25em}
+  \vspace*{-0.4em}
   \item $P \sequence Q$ \hspace*{2.2em} (Sequence)\index{Operator!sequence}
-  \vspace*{-0.25em}
+  \vspace*{-0.4em}
   \item $P^*$ \hspace*{3.5em} (Repetition)\index{Operator!repetition}
-  \vspace*{-0.25em}
+  \vspace*{-0.4em}
   \item $\left( P \right)$.
 \end{itemize}
 
