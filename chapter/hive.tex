@@ -9,14 +9,15 @@ Ideally, we want the two implementations to be usable interchangeably, however w
 \label{chp:local}
 In the implementation for local parallelisation on only one computer, we make use of \textsf{Haskell}'s \texttt{IO} monad and the \texttt{Control.Concurrent} package. Basic processes are represented as computations in the \texttt{IO} monad. Parallelisation is achieved by running processes that have been modelled for parallel execution in lightweight threads using \texttt{forkIO}, synchronisation is done using \texttt{MVars}.
 
-We do not discuss the basic principles of the \texttt{IO} monad here, an introduction can be found in standard \textsf{Haskell} literature such as \cite{Hutton} or \cite{Bird}. We start by discussing our data model for processes, followed by the implementation of the process interpreter.
+We do not discuss the basic principles of the \texttt{IO} monad here, an introduction can be found in standard \textsf{Haskell} literature such as \cite{Hutton} or \cite{Bird}. However, the fact that we use the \texttt{IO} monad has immediate consequences: we \textbf{can not} force processes to be free of side-effects\index{Side-effect}. Actually processes can perform any kind of action they like, including reading from or writing to the file system, executing queries on databases or accessing web resources. As we will see later, this motivates us not to implement an automated process optimiser.
 
 \subsection{Data model}
 \label{chp:local_model}
-Our implementation\index{Implementation} resembles the structure of the algebraic model\index{Algebraic!model} given in \chpref{chp:algebraic_model}. We aim to prevent the creation of erroneous processes and check for their validity at compile time. To achieve this, we employ a generalised algebraic data type\index{Generalised algebraic data type} and leverage the power of \textsf{Haskell}'s type system. 
+Our data model resembles the structure of the algebraic model\index{Algebraic!model} given in \chpref{chp:algebraic_model}. We aim to prevent the creation of erroneous processes and check for their validity at compile time. To achieve this, we employ a generalised algebraic data type\index{Generalised algebraic data type} and leverage the power of \textsf{Haskell}'s type system. 
 
-As mention in the introduction of this chapter, we run basic processes as computations in the \texttt{IO} monad.
+As mention in the introduction of this chapter, we run basic processes as computations in the \texttt{IO} monad. For later, we also introduce how we represent predicates.
 \begin{lstlisting}[language=Haskell,caption=Representation of basic processes as computations in the \texttt{IO} monad.,label=fig:local_computation,numbers=left,frame=bt]
+type Predicate    a = a	 -> Bool
 type BasicProcess b = IO b
 \end{lstlisting}
 
@@ -41,10 +42,10 @@ Simple :: (a -> BasicProcess b)
 
 \texttt{Const} and \texttt{Simple} are data constructors just for wrapping basic processes into the \texttt{Process} data type. Essentially they represent what we calles atomic processes in \chpref{chp:algebraic_model}. All other data constructors\index{Constructor} operate on existing processes and resemble the algebraic operations from \chpref{chp:algebraic_model}, such as choice, parallel composition, sequential composition and \textsc{Kleene} star. However, as we will see, some of the data constructors are more general and thus more expressive and flexible than the operators presented in \chpref{chp:algebraic_model}.
 
-Regardless of how complex a \texttt{BasicProcess} wrapped into a \texttt{Process} of type \texttt{Const} or \texttt{Simple} actually is, we consider them to be ... since they do not involve process combinators.
+Regardless of how complex a \texttt{BasicProcess} wrapped into a \texttt{Process} of type \texttt{Const} or \texttt{Simple} actually is, we consider them to be ... since they do not involve process combinators. ToDo!
 
-The \texttt{Choice}\index{Data constructor!Choice} data constructor is used to build a process that makes a choice between two processes and represents the choice operator $\choice$. Unlike in the algebraic model from \chpref{chp:algebraic_model}, this choice is not made non-deterministically by an oracle\index{Oracle}, but based on a predicate\index{Predicate}. The introduced predicate makes sure the behaviour of a process that involves the \texttt{Choice} combinator is always determined and exactly one result is produced. \texttt{Choice} takes a value of type \texttt{c}, a function of type \texttt{a $\to$ c $\to$ d}, a predicate \texttt{Predicate d} and two processes of type \texttt{Process a b}. The exact interplay of the additional parameters will become clear in \chpref{chp:implementation}.
-\begin{lstlisting}[language=Haskell,caption=Signature of the \texttt{Choice} type constructor.,numbers=left,frame=bt,firstnumber=7]
+The \texttt{Choice}\index{Data constructor!Choice} data constructor is used to build a process that makes a choice between two processes and represents the choice operator $\choice$. Unlike in the algebraic model from \chpref{chp:algebraic_model}, this choice is not made non-deterministically by an oracle\index{Oracle}, but based on a predicate\index{Predicate}. The introduced predicate makes sure the behaviour of a process that involves the \texttt{Choice} combinator is always determined and exactly one result is produced. \texttt{Choice} takes a value of type \texttt{c}, a function of type \texttt{a $\to$ c $\to$ d}, a predicate \texttt{Predicate d} and two processes of type \texttt{Process a b}. The exact interplay of the additional parameters will become clear in \chpref{chp:implementation}. ToDo!
+\begin{lstlisting}[language=Haskell,caption=Signature of the \texttt{Choice} data constructor.,numbers=left,frame=bt,firstnumber=7]
 Choice :: c
        -> (a -> c -> d)
        -> Predicate d
@@ -54,14 +55,14 @@ Choice :: c
 \end{lstlisting}
 
 The \texttt{Sequence}\index{Data constructor!Sequence} data constructor takes two processes and composes them sequentially, it represents the sequence operator $\sequence$. Similar to conventional function composition, the result type of the first process and the input type of the second process must coincide.
-\begin{lstlisting}[language=Haskell,caption=Signature of the \texttt{Seqeuence} type constructor.,numbers=left,frame=bt,firstnumber=13]
+\begin{lstlisting}[language=Haskell,caption=Signature of the \texttt{Seqeuence} data constructor.,numbers=left,frame=bt,firstnumber=13]
 Sequence :: Process a c
          -> Process c b
          -> Process a b
 \end{lstlisting}
 
 With the \texttt{Parallel}\index{Data constructor!Parallel} data constructor, we can create a \texttt{Process} that runs two processes in parallel. As the signature of \texttt{Parallel} shows, our model for parallel composition of processes is more general than the one introduced in \chpref{chp:algebraic_model}. Where in the algebraic model, we can only combine two processes with the parallel combinator $\parallel$ iff they have the same type signature and their result type forms a semigroup\index{Semigroup} with a commutative binary operation, we can use arbitrary processes for parallel composition in our implementation. However, they need to accept the same input type. \texttt{Parallel} takes two processes, with types \texttt{Process a c} and \texttt{Process a d}, that are to be composed in a parallel way. In addition to that, it takes a third process of type \texttt{Process (c, d) b}, and uses it to combine the results of the other two processes after they have finished execution and returned their results. Note that using an explicit process to combine the results is exactly what enables us to compose processes of different types in parallel. At the same time we eliminate the required structure of a semigroup on their result type.
-\begin{lstlisting}[language=Haskell,caption=Signature of the \texttt{Parallel} type constructor.,numbers=left,frame=bt,firstnumber=16]
+\begin{lstlisting}[language=Haskell,caption=Signature of the \texttt{Parallel} data constructor.,numbers=left,frame=bt,firstnumber=16]
 Parallel :: Process a c
          -> Process a d
          -> Process (c, d) b
@@ -69,15 +70,33 @@ Parallel :: Process a c
 \end{lstlisting}
 
 \texttt{Multilel}\index{Data constructor!Multilel} represents the generalisation of parallel composition of two processes to parallel composition of an arbitrary number of processes. It takes a list of processes of type \texttt{Process a c}, a value of type \texttt{b} and a process of type \texttt{Process (b, [c]) b}. The list of processes contains the processes that should be composed in parallel, the additional process together with the value of type \texttt{b} is used to fold the results of the processes together.
-\begin{lstlisting}[language=Haskell,caption=Signature of the \texttt{Multilel} type constructor.,numbers=left,frame=bt,firstnumber=20]
+\begin{lstlisting}[language=Haskell,caption=Signature of the \texttt{Multilel} data constructor.,numbers=left,frame=bt,firstnumber=20]
 Multilel :: [Process a c]
          -> b
          -> Process (b, [c]) b
          -> Process a b
 \end{lstlisting}
 
+While \texttt{Parallel} is used to create a \texttt{Process} that runs two sub-processes in parallel with the same argument passed on to both of them, \texttt{Split}\index{Data constructor!Split} generalises this behaviour. It takes a function of type \texttt{a $\to$ (c, d)} and uses it to split its argument into two pieces, each of which it passes on one to each of its sub-processes. The remaining arguments are analogous to the parameters of \texttt{Parallel}: two processes that should be run in parallel with types \texttt{Process c e} and \texttt{Process d f} as well as a combinator process of type \texttt{Process (e, f) b} that is used to combine the results of the sub-processes into a single value.
+\begin{lstlisting}[language=Haskell,caption=Signature of the \texttt{Split} data constructor.,numbers=left,frame=bt,firstnumber=24]
+Split :: (a -> (c, d))
+      -> Process c e
+      -> Process d f
+      -> Process (e, f) b
+      -> Process a b
+\end{lstlisting}
+
+The \texttt{Slice}\index{Data constructor!Slice} data constructor is a generalisation of \texttt{Split}: rather than splitting it into exactly two pieces, it takes a function of type \texttt{a $\to$ [c]} to split its input into a list of pieces. The rest of the parameters are analogous to the parameters of \texttt{Multilel}: a list of processes of type \texttt{[Process c d]}, each of which receives one slice\footnote{Given, there are equally many input slices as there are sub-processes. This potential problem motivates to a defensive implementation for the interpretation of \texttt{Slice} processes.} of input, a value of type \texttt{b} and a combinator process of type \texttt{Process (b, [d]) b} that is used to fold the result values together.
+\begin{lstlisting}[language=Haskell,caption=Signature of the \texttt{Slice} data constructor.,numbers=left,frame=bt,firstnumber=29]
+Slice :: (a -> [c])
+      -> [Process c d]
+      -> b
+      -> Process (b, [d]) b
+      -> Process a b
+\end{lstlisting}
+
 With the \texttt{Loop}\index{Data constructor!Loop} data constructor, we can wrap a process for repeated execution, resembling the \textsc{Kleene} star $\repetition$. However, we provide a much more sophisticated and more general version than the \texttt{Kleene} star does. First, \texttt{Loop} takes a value of type \texttt{b}, which serves as a default output value in case the loop is executed exactly zero times. In imperative programming, this corresponds to the implicitly unchanged global state of the program. Then it takes a value of type \texttt{c}, a predicate \texttt{Predicate c} and a function of type \texttt{a $\to$ c $\to$ c}. The combination of these three control the termination of the \texttt{Loop}'s execution. The function of type \texttt{b $\to$ a} is used to convert the result of the process of type \texttt{Process a b} back to a value of type \texttt{a}, so it can be fed into the next execution of the \texttt{Loop}. Note that a \texttt{Loop} process does not necessarily behave like the identity process $Id$ if it runs zero times. Responsible for this is the explicit default value of type \texttt{b} which is returned in this case.
-\begin{lstlisting}[language=Haskell,caption=Signature of the \texttt{Loop} type constructor.,numbers=left,frame=bt,firstnumber=24]
+\begin{lstlisting}[language=Haskell,caption=Signature of the \texttt{Loop} data constructor.,numbers=left,frame=bt,firstnumber=34]
 Loop :: b
      -> c
      -> Predicate d
@@ -91,14 +110,14 @@ Loop :: b
 \subsection{Process interpreter}
 In this chapter we discuss how the \texttt{Process} interpreter works in detail by taking a look at the implementation.
 
-\texttt{Process}es can be run using the \texttt{runProcess} function, which is the \texttt{Process} interpreter. It takes a value of type \texttt{Process a b} and an argument of type \texttt{a} for the process. It runs in the \texttt{IO} monad and produces a result of type \texttt{b}.
+\texttt{Process}es can be run using the \texttt{runProcess} function. It takes a value of type \texttt{Process a b} and an argument of type \texttt{a} for the process. It runs in the \texttt{IO} monad and produces a result of type \texttt{b}.
 \begin{lstlisting}[language=Haskell,caption=Signature of the process interpreter.,label=lst:local_runprocess_signature,numbers=left,frame=bt]
 runProcess :: Process a b -> a -> IO b
 \end{lstlisting}
 
 The interpretation of a \texttt{Const}\index{Process interpreter!Const} process is straightforward. Since \texttt{Const} processes don't take an argument, we simply discard it and run the wrapped basic process \texttt{bp}, as shown in \lstref{lst:local_runprocess_const}.
 \begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter of \texttt{Const} processes.,label=lst:local_runprocess_const,numbers=left,frame=bt,firstnumber=2]
-runProcess (Const bp) x =
+runProcess (Const bp) _ =
   bp
 \end{lstlisting}
 
@@ -143,10 +162,32 @@ The interpretation of a \texttt{Multilel}\index{Process interpreter!Multilel} pr
 \begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Multilel} processes.,label=lst:local_runprocess_multilel,numbers=left,frame=bt,firstnumber=16]
 runProcess (Multilel ps ib fold) x = do
   mvars <- forM ps $ const newEmptyMVar
-  mapM_ (\(comp, mvar) -> forkIO $ runProcessHelper comp x mvar) (ps `zip` mvars)
+  mapM_ (\(p, m) -> forkIO $ runProcessHelper p x m) (ps `zip` mvars)
   ress  <- forM mvars takeMVar
   runProcess fold (ib, ress)
 \end{lstlisting}
+
+\lipsum[1]
+\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Split} processes.,label=lst:local_runprocess_multilel,numbers=left,frame=bt,firstnumber=16]
+runProcess master (Split split p1 p2 combinator) x = do
+  let (xl, xr) = split x
+  mvar <- liftIO newEmptyMVar
+  _ <- spawnLocal $ runProcessHelper master p1 xl mvar
+  r2 <- runProcess master p2 xr
+  r1 <- liftIO $ takeMVar mvar
+  runProcess master combinator (r1, r2)
+\end{lstlisting}
+
+\lipsum[2]
+\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Slice} processes.,label=lst:local_runprocess_multilel,numbers=left,frame=bt,firstnumber=16]
+runProcess master (Slice slice ps ib fold) x = do
+  let pairs = ps `zip` slice x
+  mvars <- forM pairs $ \_ -> liftIO newEmptyMVar
+  mapM_ (\((proc, x'), mvar) -> spawnLocal $ runProcessHelper master proc x' mvar) (pairs `zip` mvars)
+  ress  <- forM mvars $ \mvar -> liftIO . takeMVar $ mvar
+  runProcess master fold (ib, ress)
+\end{lstlisting}
+
 
 Finally, there is the \texttt{Loop}\index{Process interpreter!Loop} process that is used to resemble the semantics of the \textsc{Kleene} star, i.e. repeated execution of a process. However, we're altering the semantics slightly: as we did for the \texttt{Choice} process, we want to eliminate non-determinism here as well and end up with a determined number of repetitions of a process. To do so, we replace the oracle\index{Oracle} that selects how often the process should be run with a predicate\index{Predicate} that decides whether execution should terminate or continue. The structure of the interpreter function for a \texttt{Loop} process reminds of a \texttt{while} loop in imperative programming, however its behaviour in case of zero time execution is explicitly defined. A \texttt{Loop} process contains six values: \texttt{ib} of type \texttt{b}, \texttt{ic} of type \texttt{c}, a predicate\index{Predicate} \texttt{pred} of type \texttt{Predicate c}, a function \texttt{ba} of type \texttt{b $\to$ a}, a function \texttt{acc} of type \texttt{a $\to$ c $\to$ c} and a process \texttt{p} of type \texttt{Process a b}. The value \texttt{ib} defines the result value of the \texttt{Loop} process in case it is executed zero times. In imperative programming, this is the implicit program state that is unaltered whenever a loop executed zero times. In order to decide whether the process wrapped into the \texttt{Loop} should be executed, the previously mentioned predicate \texttt{pred} is evaluated. It takes its decision based on an initial value \texttt{ic} and the argument for the process \texttt{x}, combined together by \texttt{acc}. If the predicate holds, the process \texttt{p} is executed once and its result is bound to the name \texttt{x'}. Then, a new \texttt{Loop} process is created and the \texttt{runProcess} interpreter is called tail-recursively on it. The argument for the new \texttt{Loop} process is given by \texttt{x'}, converted from type \texttt{b} to a value of the correct type \texttt{a} by function \texttt{ba}. Remember that in \defref{def:static_kleene}, the definition of the static semantics of the \textsc{Kleene} star, we had required that a process that should be run repeatedly, needs to have the same input and output type. However, by employing a function, namely \texttt{ba}, that converts the result of a process back to the type of its argument, we can get rid of this requirement. Once again, the semantics of the \texttt{Loop} process in our process calculus is more general than the one of the \textsc{Kleene} star from the algebraic model.
 \begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Loop} processes.,numbers=left,frame=bt,firstnumber=21]
@@ -160,97 +201,58 @@ runProcess (Loop ib ic pr ba acc p) x = do
 
 \section{Implementation in the Cloud Haskell Process monad}
 \label{chp:distributed}
+In the implementation for distributed parallelisation of process interpretation, we use \textsf{Cloud Haskell}'s \texttt{Process} monad. The involvement of network communication requires that we provide instances of specific type classes for the types that are to be sent over network. Furthermore, we need to adapt our representation of basic processes and some process types to the specifics of \textsf{Cloud Haskell}. 
 
 \subsection{\index{Cloud Haskell}Cloud Haskell}
 \label{chp:cloud_haskell}
-We base our implementation on \textsf{Cloud Haskell} \cite{Epstein:2011:THC:2034675.2034690}, a domain specific language for distributed programming in Haskell. Cloud Haskell is highly inspired by Erlang\index{Erlang} and uses message passing\index{Message passing} for communication between processes, there is no implicitly shared memory.
+\textsf{Cloud Haskell} \cite{Epstein:2011:THC:2034675.2034690} is a domain specific language for distributed programming in Haskell. It is highly inspired by Erlang\index{Erlang} and its message passing\index{Message passing} mechanism for communication between processes. Like it is typical for \textsf{Haskell}, there is no implicitly shared memory involved.
 
-A Cloud Haskell process is a function\index{Function} that runs in the \texttt{Process} monad\index{Monad} and can be spawned on a local\index{Node!local} or remote\index{Node!remote} node. Processes can send messages to other processes if they have knowledge about their process identifier, which serves as an address. The fact that we use \textsf{Cloud Haskell} processes in the \textsf{Cloud Haskell} \texttt{Process} monad, which is built on top of the \texttt{IO} monad, has immediate consequences: we can not force processes to be free of side-effects\index{Side-effect}. Actually processes can perform any kind of action they like, including reading from or writing to the file system, executing queries on databases or accessing web resources.
+A \textsf{Cloud Haskell} process is essentially a function\index{Function} that is evaluated in the \texttt{Process} monad\index{Monad} and can be spawned on a local\index{Node!local} or remote\index{Node!remote} node. Processes can send messages to other processes if they have knowledge about their process identifier, which serves as an address. The \texttt{Process} monad builds on top of the \texttt{IO} monad and thus, as mentioned in \chpref{chp:local}, we can not force processes to be free of side-effects.
 
-While Erlang\index{Erlang} uses atoms as tags for messages, \textsf{Cloud Haskell} uses data types that need to be an instance of \texttt{Serializable}. \texttt{Serializable} itself is only a combination of both \texttt{Binary} and \texttt{Typeable}. \texttt{Binary} is neccessary to serialise a message into a \texttt{ByteString}, \texttt{Typeable} is used to identify the type of a message. This way, serialisation\index{Serialisation} is made explicit, in contrast to Erlang where it is implicit \cite{Epstein:2011:THC:2034675.2034690}.
+While Erlang\index{Erlang} uses atoms as tags for messages, \textsf{Cloud Haskell} uses data types that need to have an instance of \texttt{Serializable}. \texttt{Serializable} itself is only a combination of both \texttt{Binary} and \texttt{Typeable}. \texttt{Binary} is neccessary to serialise a message into a \texttt{ByteString}, \texttt{Typeable} is used to identify the type of a value. This way, serialisation\index{Serialisation} is made explicit, in contrast to Erlang where it is implicit \cite{Epstein:2011:THC:2034675.2034690}.
 
-In Haskell, functions can only be executed, composed and passed as arguments, they cannot be serialised. However, this would be necessary in order to send a function to a remote\index{Node!remote} node and execute it there. \textsf{Cloud Haskell} avoids this problem by using a table of static code pointers, i.e. fully qualified top level names of functions that are known at compile time, to refer to functions by a name. For remote execution, a function's name is put into a \texttt{Closure}\index{Closure}, together with its serialised environment\index{Environment}, i.e. its argument, and sent to a remote node where it is deserialised and executed. A \texttt{Closure} is nothing more than just mentioned: a function (name) together with its argument \cite{Epstein:2011:THC:2034675.2034690} and can be created using the \textsf{Cloud Haskell} function \texttt{mkClosure} and \textsf{Template Haskell}. \texttt{mkClosure} takes the top level name of a function and returns a closure generator. The function supplied to \texttt{mkClosure} needs to be of type \texttt{a $\to$ Process b}, i.e. has to be of arity one and return a \textsf{Cloud Haskell} process. For a function \texttt{f} of type \texttt{a $\to$ Process b}, the type of \texttt{\$(mkClosure 'f)} will be \texttt{a $\to$ Closure (Process b)}, i.e. it is a closure generator that generates a closure when supplied with a value of type \texttt{a}.
+In \textsf{Haskell}, functions can only be executed, composed and passed as arguments, they cannot be serialised. However, this is be necessary in order to send a function to a remote\index{Node!remote} node and execute it there. \textsf{Cloud Haskell} avoids this problem by using a table of static code pointers, i.e. fully qualified top level names of functions that are known at compile time, to refer to functions by a name. For remote execution, a function's name is put into a \texttt{Closure}\index{Closure}, together with its serialised environment\index{Environment}, i.e. its argument, and sent to a remote node where it is deserialised and executed. A \texttt{Closure} is nothing more than just mentioned: a function (name) together with its argument \cite{Epstein:2011:THC:2034675.2034690} and can be created using \textsf{Cloud Haskell}'s function \texttt{mkClosure} and \textsf{Template Haskell}. \texttt{mkClosure} takes the top level name of a function and returns a closure generator. The function supplied to \texttt{mkClosure} needs to be of 1-ary type \texttt{a $\to$ Process b} and return a \textsf{Cloud Haskell} process. For a function \texttt{f} of type \texttt{a $\to$ Process b}, the type of \texttt{\$(mkClosure 'f)} resolves to \texttt{a $\to$ Closure (Process b)}, i.e. it is a closure generator that generates a closure when supplied with a value of type \texttt{a}.
 
 After a \texttt{Closure} has been executed, the result is serialised and sent back to the caller. However, in some cases, the type system cannot infer the serialisability of the result type and therefore additional information needs to be provided\footnote{Specifically, the problem is that the type constructors can be constrained with required type class instances for parameters. On deconstruction, this information is not available and therefore needs to be added explicitly again.}. For a type \texttt{a}, serialisation information can be provided with a value of type \texttt{Static (SerializableDict a)}. Essentially this is only an explicit type tag that enables the selection of the correct serialisation function for type \texttt{a}.
 
-\subsection{The Hive process algebra\index{Hive process algebra}}
+\subsection{Data model}
+\label{chp:distributed_model}
+The data model for the representation of processes in the \textsf{Cloud Haskell} \texttt{Process} monad is essentially the same as what we saw in \chpref{chp:local_model}. Predicates are still functions that return a \textsc{Bool}ean value and basic processes are computations in the \textsf{Cloud Haskell} \texttt{Process} monad. In the following \texttt{CH} is the name for the qualified import of \texttt{Control.Distributed.Process}.
+\begin{lstlisting}[language=Haskell,caption=Representation of basic processes as computations in the \texttt{Process} monad.,numbers=left,frame=bt]
+import qualified Control.Distributed.Process as CH
 
-\begin{lstlisting}[language=Haskell,caption=Signature of the \texttt{Const} type constructor.,numbers=left,frame=bt]
-Const :: (Serializable b) 
-      => CH.Static (SerializableDict b)
-      -> CH.Closure (CH.Process b)
+type BasicProcess b = CH.Process b
+\end{lstlisting}
+
+The signature of our representation of processes remains unchanged, only the data constructors need to be changed slightly.
+\begin{lstlisting}[language=Haskell,caption=Data type for the representation of processes.,label=fig:distributed_datatypes,numbers=left,frame=bt,firstnumber=4]
+data Process a b where
+\end{lstlisting}
+
+The wrappers for basic processes, i.e. \texttt{Const} and \texttt{Simple} reflect the necessary adaptations that come with \textsf{Cloud Haskell}: they constrain the result type of the wrapped basic process to be an instance of the type class \texttt{Serializable} and require a static \texttt{SerializableDict} for the same type. As mentioned in \chpref{chp:cloud_haskell}, this is necessary so remotely\footnote{This is true for locally spawned processes as well, as we can conceptually not distinguish between them: \textsf{Cloud Haskell} transparently takes care of that we can use both local and remote processes in the same way. Technically, however, we could inspect the process identifier and tell if the respective process is running on the same or a different node.} spawned processes know how to serialise their result and send it back to the caller. Instead of a value of type \texttt{BasicProcess} as before, \texttt{Const} takes a closure that contains a basic process. Similarly, \texttt{Simple} takes a closure generator, i.e. a function that, supplied with a value of the appropriate type, generates a closure. %ToDo
+\begin{lstlisting}[language=Haskell,caption=Signature of the \texttt{Const} and \texttt{Simple} data constructors.,numbers=left,frame=bt,firstnumber=5]
+Const  :: (Serializable b) 
+       => CH.Static (SerializableDict b)
+       -> CH.Closure (BasicProcess b)
+       -> Process a b
+
+Simple :: (Serializable b)
+       => CH.Static (SerializableDict b)
+       -> (a -> CH.Closure (BasicProcess b))
+       -> Process a b
+\end{lstlisting}
+
+We extend our model for processes and add the \texttt{Local}\index{Data constructor!Local} data constructor. \texttt{Local} is a simple decorator\index{Decorator} \cite{Gamma:1995:DPE:186897}, with the purpose to give an indication to the process interpreter that the wrapped process should be executed locally. Typically, the reason for this arises from the expectation that serialising a closure, sending it to a remote node, executing it there and obtaining the result is more expensive\footnote{Expensive in terms of the necessary amount of time to run the process.} than executing the respective process locally. Since there is no general approach to estimate the necessary amount of time to run a process, we decide to equip the user with a tool to force local execution of a process and burden him with the obligation to make appropriate use of it.
+\begin{lstlisting}[language=Haskell,caption=Signature of the additional \texttt{Local} data constructor.,numbers=left,frame=bt,firstnumber=14]
+Local :: Process a b
       -> Process a b
 \end{lstlisting}
 
-In the following \texttt{CH} is short for \textsf{Cloud Haskell} and is the name for the qualified import of \texttt{Control.Distributed.Process}. 
+The signature of the rest of the data constructors, i.e. \texttt{Sequence}, \texttt{Parallel}, \texttt{Multilel} and \texttt{Loop}, remain unchanged.
 
-For every data constructor\index{Constructor} of \texttt{Process}, we need to constrain the output type to have an instance of \texttt{Serializable} so the result can be serialised and sent back to the caller. The \textsc{Hive} \texttt{Process} data type however, does not have an instance of \texttt{Serializable}. This means that \textsc{Hive} processes can \textbf{not} be serialized and sent over the network for remote execution. However, as we will see, basic processes contain a closure\index{Closure} that can be serialized and sent over the network.
-
-
-However, maintaining a consistent environment across multiple nodes is troublesome and not part of our goal, but leaves room for future work and improvements.
-
-
-\begin{lstlisting}[language=Haskell,caption=Signature of the \texttt{Local} type constructor.,numbers=left,frame=bt]
-Local :: (Serializable b) 
-      => Process a b
-      -> Process a b
-\end{lstlisting}
-\texttt{Local}\index{Hive process algebra!Local} simply wraps a \textsc{Hive} process without altering its semantics. The structure of \texttt{Local} is that of a decorator\index{Decorator} \cite{Gamma:1995:DPE:186897}, its purpose is to give an indication to the process interpreter\footnote{We will have a closer look at the interpreter in \chpref{chp:implementation}. For now, the reader is invited to accept the existence of an interpreter that takes care of the distribution and execution of Hive process structures.} that the wrapped process should be executed locally. Typically, the reason for this arises from the expectation that serialising a closure, sending it to a remote node, executing it there and obtaining the result is more expensive\footnote{Expensive in terms of the neccessary amount of time to run the process.} than executing the respective process locally. Since there is no general approach to estimate the necessary amount of time to run a process, we decide to equip the user with the \texttt{Local} type constructor and burden him with the obligation to make appropriate use of it.
-
-\begin{lstlisting}[language=Haskell,caption=Signature of the \texttt{Choice} type constructor.,numbers=left,frame=bt]
-Choice :: (Serializable b)
-       => c
-       -> (a -> c -> d)
-       -> (d -> Bool)
-       -> Process a b
-       -> Process a b
-       -> Process a b
-\end{lstlisting}
-The \texttt{Choice}\index{Hive process algebra!Choice} data constructor is used to build a process that makes a choice between two processes and represents the choice operator $\choice$. Unlike in the algebraic model from \chpref{chp:algebraic_model}, this choice is not made non-deterministically by an oracle\index{Oracle}, but based on a predicate\index{Predicate}. This changes the semantics of \texttt{Choice} in contrast to $\choice$: we do not create a process that non-deterministically\index{Non-determinism} behaves like two processes at the same time. The introduced predicate makes sure that the process' behaviour is always determined and the environment is always in exactly one state. \texttt{Choice} takes a value of type \texttt{c}, a function of type \texttt{a $\to$ c $\to$ d}, a predicate \texttt{d $\to$ Bool} and two processes of type \texttt{Process a b}. The interplay of the additional parameters will become clear in \chpref{chp:implementation}. For now, it will suffice to say that they enable process choice based on determined values.
-
-\begin{lstlisting}[language=Haskell,caption=Signature of the \texttt{Seqeuence} type constructor.,numbers=left,frame=bt]
-Sequence :: (Serializable b, Serializable c)
-         => Process a c
-         -> Process c b
-         -> Process a b
-\end{lstlisting}
-The \texttt{Sequence}\index{Hive process algebra!Sequence} data constructor takes two processes and composes them sequentially, it represents the sequence operator $\sequence$. The result types of both processes need to have an instance of \texttt{Serializable} and the input type of the second process must correspond to the output type of the first process.
-
-\begin{lstlisting}[language=Haskell,caption=Signature of the \texttt{Parallel} type constructor.,numbers=left,frame=bt]
-Parallel :: (Serializable b, Serializable c, Serializable d)
-         => Process a c
-         -> Process a d
-         -> Process (c, d) bs
-         -> Process a b
-\end{lstlisting}
-With the \texttt{Parallel}\index{Hive process algebra!Parallel} data constructor we can create a \texttt{Process} that runs two processes in parallel. As the signature of \texttt{Parallel} shows, our model for parallel composition of processes is more general than the one introduced in \chpref{chp:algebraic_model}. Where in the algebraic model from \chpref{chp:algebraic_model}, we can only combine two processes with the parallel combinator $\parallel$ iff they have the same type signature and their result type forms a semigroup\index{Semigroup} with a commutative binary operation, we can use arbitrary processes for parallel composition in the \textsc{Hive} process algebra, however, they need to accept the same input type. \texttt{Parallel} takes two processes, with types \texttt{Process a c} and \texttt{Process a d}, that are to be composed in a parallel way. In addition to that, it takes a third process of type \texttt{Process (c, d) b}, and uses it to combine the results of the other two processes after they have finished their execution and returned their results. The user may be well advised to consider wrapping the combinator process into a \texttt{Local} process since this may potentially be a cheap operation. Note that using an explicit process to combine the results is exactly what enables us to compose processes of different types in parallel. At the same time we eliminate the required structure of a semigroup on their result type.
-
-\begin{lstlisting}[language=Haskell,caption=Signature of the \texttt{Multilel} type constructor.,numbers=left,frame=bt]
-Multilel :: (Serializable b, Serializable c)
-         => [Process a c]
-         -> b
-         -> Process (b, [c]) b
-         -> Process a b
-\end{lstlisting}
-\texttt{Multilel}\index{Hive process algebra!Multilel} represents the generalisation of parallel composition of two processes to parallel composition of an arbitrary number of processes. It takes a list of processes of type \texttt{Process a c}, a value of type \texttt{b} and a process of type \texttt{Process (b, [c]) b}. The list of processes contains the processes that should be composed in parallel, the additional process together with the value of type \texttt{b} is used to fold the results of the processes together. Again, the user may be well advised to wrap the combinator process into a \texttt{Local} process in order to save runtime that would be spent for serialisation and sending data over a network. 
-
-\begin{lstlisting}[language=Haskell,caption=Signature of the \texttt{Loop} type constructor.,numbers=left,frame=bt]
-Loop :: (Serializable b)
-     => b
-     -> c
-     -> (c -> Bool)
-     -> (b -> a)
-     -> (a -> c -> c)
-     -> Process a b
-     -> Process a b
-\end{lstlisting}
-With the \texttt{Loop}\index{Hive process algebra!Loop} data constructor, we can wrap a process for repeated execution, resembling the \textsc{Kleene} star $\repetition$. However, we provide a much more sophisticated and general version than the \texttt{Kleene} star does or than can be found in imperative programming languages. First, \texttt{Loop} takes a value of type \texttt{b}, which serves as a default output value in case the loop is executed exatly zero times. In imperative programming, this is the implicitly unchanged global state of the program. Then it takes a value of type \texttt{c}, a predicate of type \texttt{c $\to$ Bool} and a function of type \texttt{a $\to$ c $\to$ c}. The combination of these three controls the termination of the \texttt{Loop}'s execution. The function of type \texttt{b $\to$ a} is used to convert the result of the process of type \texttt{Process a b} back to a value of type \texttt{a}, so it can be fed into the next execution of the \texttt{Loop}. Note that our \texttt{Loop} does not necessarily behave like the identity process $Id$ if it runs zero times. Responsible for this is the explicit default value of type \texttt{b} that will be returned in this case. However, if this value represents the \texttt{Loop}'s environment before execution, the \texttt{Loop} process would behave like the \texttt{Id} process in case it runs zero times. 
-
-\subsection{Implementation\index{Implementation}}
-\label{chp:implementation}
-We kindly want to remind the reader about the goal we set in \chpref{chp:goal}, i.e. the automatic distribution of processes in a distributed system while hiding the fact that a distributed system is involved and thereby making distributed programming transparent and easy. As mentioned earlier, we are going to employ the interpreter\index{Interpreter} pattern \cite{Gamma:1995:DPE:186897} for this purpose. But to do so, first we need some kind of infrastructure and nodes where we can delegate the work to.
-
-\subsubsection{Architecture\index{Architecture}}
+\subsection{Architecture of the infrastructure\index{Architecture}}
+\label{chp:infrastructure}
+For the interpretation of process structures in a distributed system, we need some kind of infrastructure and management of involved nodes, so we can delegate process execution to them. In this chapter, we describe the architecture and functioning of our system.
 \begin{figure}[h!]
   \centering
   \begin{tikzpicture} [every node/.style={fill=black, circle, inner sep = 2pt}]
@@ -281,7 +283,7 @@ We kindly want to remind the reader about the goal we set in \chpref{chp:goal}, 
 
 The architecture of our system's infrastructure is intentionally kept simple as shown in \figref{fig:architecture}. It involves a designated \textbf{master}\index{Node!master} node and a collection of \textbf{worker}\index{Node!worker} nodes. In addition to that, we need an interface\index{Interface} through which we can insert processes into the system. The easiest way to do so is a command line interface, however, a web interface would be much more convenient and easier to use. We employ Yesod\footnote{Yesod is a Haskell web framework. More information about Yesod can be found at \url{http://www.yesodweb.com/} and \url{https://github.com/yesodweb/yesod}}\index{Yesod} to build a RESTful\index{REST} web interface.
 
-When a client\index{Client} wants to submit a request\index{Request} \figannotation{1}, it has to make use of the web interface and supply a JSON\footnote{JavaScript Object Notation \url{http://www.json.org/}}\index{JSON} document in an appropriate format. In a productive environment, there would be a parser that reads a submitted JSON document, generates a corresponding process structure from its content and passes it on to the process interpreter if the document is valid. For simplicity, we assume for now that a request equals a valid process description that can be interpreted.
+When a client\index{Client} wants to submit a request\index{Request} \figannotation{1}, it has to make use of the web interface and supply a JSON\footnote{JavaScript Object Notation \url{http://www.json.org/}}\index{JSON} document in an appropriate format. In a productive environment, there would be a parser that reads a submitted JSON document, generates a corresponding process structure from its content and passes it on to the process interpreter if the document is valid. For simplicity, we assume for now that a request equals a valid process description and can be interpreted.
 
 The master\index{Node!master} node is responsible for handling client\index{Client} requests, logging information related to the received requests and managing connected nodes. When a request is received \figannotation{2}, the master spawns a new \textsf{Cloud Haskell} \texttt{Process} that runs the \textsc{Hive} process interpreter\index{Interpreter} and passes the request to the new process where it is interpreted \figannotation{3}. At the same time, the master assigns a ticket id to the request, logs the request together with its id to a database\footnote{For this purpose, we make use the \texttt{acid-state} library. \texttt{acid-state} allows to save Haskell values into a file-based database if their type has an instance of \texttt{SafeCopy}. Further information on \texttt{acid-state} can be found at \url{http://acid-state.seize.it/} and \url{https://github.com/acid-state/acid-state}} \figannotation{4} and reports the ticket id to the client \figannotation{5}. When the interpreter finishes interpreting the process structure from the request, it reports the result to the master \figannotation{6}. The master then updates the database \figannotation{7} by logging the result to the database and linking it to the according id. At any time, a client can try to retrieve the result to its request by supplying the request's ticket id to the master through the interface \figannotation{8}. The master then tries to read the result from the database \figannotation{9}, but only replies to the client's satisfaction after the interpretation of its request has been finished and logged to the database.
 
@@ -290,28 +292,28 @@ Worker nodes\index{Node!worker} are kept very simple. When started and supplied 
 The \textsc{Hive} process interpreter\index{Interpreter}, which we discuss in full detail in \chpref{chp:interpreter}, is run in a new process by the master for every client request\index{Request} that is received. The interpreter inspects the structure of the received request, transforms it into a \textsc{Hive} process structure and distributes the incorporated sub-processes\index{Sub-process} to worker\index{Node!worker} nodes \figannotation{11} or executes them locally \figannotation{12} if they have been marked for local execution using the \texttt{Local} wrapper. For every basic sub-process, the interpreter asks the master for a worker node \figannotation{13} where it can run the sub-process. For such a request, the master fetches a worker node from a FIFO queue and returns it to the interpreter \figannotation{14}. After a sub-process has finished execution on a worker node, the interpreter returns the respective worker node to the master \figannotation{15} for future allocation to other interpreters. It would very well be possible to employ a more sophisticated scheduling\index{Scheduling} algorithm, but the combination of a FIFO\index{FIFO} queue and a work stealing\index{Work stealing} \cite{} alike behaviour of the process interpreter is fairly efficient and easy to implement. At this time, our primary goal is not to achieve the best possible load balancing or employ the most efficient technique for queueing worker nodes, however this leaves room for future improvement.
 
 
-\subsubsection{The \textsc{Hive} process interpreter\index{Hive process interpreter}\index{Interpreter}}
+\subsection{Process interpreter\index{Process interpreter}\index{Interpreter}}
 \label{chp:interpreter}
-In this chapter we discuss the \textsc{Hive} process interpreter and how its interpretation of \textsc{Hive} processes works in detail by taking a look at the concrete implementation.
+With the involvement of a distributed system, we need to change the implementation of the process interpreter. Where there was only local parallelisation in the \texttt{IO} monad involved before, we have to adapt process interpretation to the specifics of the \textsf{Cloud Haskell} \texttt{Process} monad. This particularly involves remote execution of processes.
 
-When the master\index{Node!master} node receives a client\index{Client} request\index{Request}, it starts a process interpreter in a new process on the node it is running on itself and passes the process structure from the request to the interpreter. The interpreter then inspects the process structure and distributes the incorporated sub-processes\index{Sub-process} to connected worker nodes accordingly. To do so, the interpreter asks the master node for an available worker node for every sub-process that has to be executed. We represent the master\index{Node!master} node by a \texttt{ProcessId} that is wrapped into a value of type \texttt{Master}.
+When the master\index{Node!master} node receives a client\index{Client} request\index{Request}, it spawns a process interpreter on its local node and passes the process structure from the request to the interpreter. The interpreter then inspects the process structure and distributes the incorporated sub-processes\index{Sub-process} to connected worker nodes accordingly. To do so, the interpreter asks the master node for an available worker node for every sub-process that has to be executed\footnote{Except for processes wrapped into a \texttt{Local} process, of course.}. We represent the master\index{Node!master} node by a \texttt{ProcessId} that is wrapped into a value of type \texttt{Master}.
 \begin{lstlisting}[language=Haskell,caption=Data type for the address of a master node.,numbers=left,frame=bt]
 newtype Master = Master ProcessId
 \end{lstlisting}
 
-In our implementation, the name of the interpreter function is \texttt{runProcess} and its type signature is as shown in \lstref{lst:interpreter_signature}. It takes a value of type \texttt{Master}, a \textsc{Hive} process of type \texttt{Process a b}, an argument for the \textsc{Hive} process of type \texttt{a} and behaves like a \textsf{Cloud Haskell} process, i.e. when executed in the \textsf{Cloud Haskell} \texttt{CH.Process} Monad\index{Monad}, it produces a value of type \texttt{b}.
-\begin{lstlisting}[language=Haskell,caption=Signature of the process interpreter.,label=lst:interpreter_signature,numbers=left,frame=bt]
+We have to adapt the signature of \texttt{runProcess} and introduce an additional parameter, as shown in \lstref{lst:interpreter_signature}. As before, \texttt{runProcess} takes a process of type \texttt{Process a b}, an argument for the process of type \texttt{a} and returns a value of type \texttt{b}. Furthermore, for process distribution, \texttt{runProcess} requires a value of type \texttt{Master}, so it can request worker nodes to run processes on.
+\begin{lstlisting}[language=Haskell,caption=Signature of the process interpreter.,label=lst:interpreter_signature,numbers=left,frame=bt,firstnumber=2]
 runProcess :: Master -> Process a b -> a -> CH.Process b
 \end{lstlisting}
 
-For the interpretation of a \texttt{Const}\index{Hive process interpreter!Const} process, we take the \texttt{sDict} value of type \texttt{SerializableDict b} and the \texttt{closure} of type \texttt{CH.Closure (CH.Process b)} from the \texttt{Const} process and create a new \texttt{Simple} process out of that. For that we can simply keep the \texttt{sDict} as it is but need to turn the \texttt{closure} into a closure generator\index{Closure!generator}, i.e. a function that takes a value of type \texttt{a} and generates a closure\index{Closure} from it. Since we're dealing with a \texttt{Const} process which simply discards its input value and always behaves the same, we have to respect this when creating the closure generator for the new \texttt{Simple} process. This can be done by using Haskell's standard function \texttt{const} which takes two values, discards the second one and always returns the first one. Then, all we have to do is pass the new \texttt{Simple} process into the process interpreter.
-\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter of \texttt{Const} processes.,label=lst:runprocess_const,numbers=left,frame=bt]
+For the interpretation of a \texttt{Const}\index{Process interpreter!Const} process, we take the \texttt{sDict} value of type \texttt{SerializableDict b} and the \texttt{closure} of type \texttt{CH.Closure (BasicProcess b)} from the \texttt{Const} process and create a new \texttt{Simple} process out of that. For that we can simply keep the \texttt{sDict} as it is but need to turn the \texttt{closure} into a closure generator\index{Closure!generator}, i.e. a function that takes a value of type \texttt{a} and generates a closure\index{Closure} from it. Since we're dealing with a \texttt{Const} process which simply discards its input value and always behaves the same, we have to respect this when creating the closure generator for the new \texttt{Simple} process. This can be done by using Haskell's standard function \texttt{const} which takes two values, discards the second one and always returns the first one. Then, all we have to do is pass the new \texttt{Simple} process into the process interpreter.
+\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter of \texttt{Const} processes.,label=lst:runprocess_const,numbers=left,frame=bt,firstnumber=3]
 runProcess master (Const sDict closure) x =
   runProcess master (Simple sDict (const closure)) x
 \end{lstlisting}
 
-When encountering a \texttt{Simple}\index{Hive process interpreter!Simple} process in a process structure, the process interpreter asks the master node for an available worker node where it can run this basic process, as shown in line 2 of \lstref{lst:runprocess_simple}. This operation will block until the master node is able to satisfy the request for an available worker node and supplies it to the interpreter. The interpreter then uses the closure generator \texttt{closureGen}, which has type \texttt{a $\to$ CH.Closure (CH.Process b)}, to generate a closure that is then serialised and sent to the available worker node for execution, as shown in line 3 of \lstref{lst:runprocess_simple}. This operation blocks the interpreter until execution of the remotely spawned process on the worker node has terminated and a result value has been obtained. After that, the worker node is returned to the master node and the result value that has been calculated on it is returned by the process interpreter.
-\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Simple} processes.,label=lst:runprocess_simple,numbers=left,frame=bt]
+When encountering a \texttt{Simple}\index{Process interpreter!Simple} process in a process structure, the process interpreter asks the master node for an available worker node where it can run this basic process, as shown in line 2 of \lstref{lst:runprocess_simple}. This operation blocks until the master node is able to satisfy the request for an available worker node and supplies it to the interpreter. The interpreter then uses the closure generator \texttt{closureGen}, which has type \texttt{a $\to$ CH.Closure (BasicProcess b)}, to generate a closure that is then serialised and sent to the available worker node for execution. This operation blocks the interpreter until execution of the remotely spawned process on the worker node has terminated and a result value is obtained. The interpreter then returns the worker node to the master and the remotely calculated result to its caller.
+\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Simple} processes.,label=lst:runprocess_simple,numbers=left,frame=bt,firstnumber=5]
 runProcess master (Simple sDict closureGen) x = do
   node <- getNode master =<< getSelfPid
   res  <- call sDict node (closureGen x)
@@ -319,7 +321,7 @@ runProcess master (Simple sDict closureGen) x = do
   return res
 \end{lstlisting}
 
-When the process interpreter encounters a process that is wrapped into a \texttt{Local}\index{Hive process interpreter!Local} wrapper, it is supposed to execute it locally on the same node it is running on itself instead of distributing it or possibly involved sub-processes to remote notes. To accomplish this behaviour, we apply a little trick: we create a fake master, as shown in line 2 of \lstref{lst:runprocess_local}, that always answers with the local node when asked for an available worker node and we're discarding the real master node that is passed as first argument to \texttt{runProcess}. We use this fake master to pass it to a recursive call of \texttt{runProcess} that interprets the process that is wrapped by the \texttt{Local} wrapper at hand. Thereby, we're making sure that for the interpretation of the tree of sub-process the fake master is used and and the sub-processes are interpreted locally. After the interpretation of the process structure has been finished, we terminate the fake master we had created before.
+Processes that are wrapped into a \texttt{Local}\index{Process interpreter!Local} wrapper are supposed to be executed locally on the same node by the process interpreter instead of being distributed to remote nodes, this also includes sub-processes. To accomplish this behaviour, we apply a little trick: we create a fake master that always returns the local node when asked for an available worker node and we're discarding the real master node that is passed as first argument to \texttt{runProcess}, as shown in \lstref{lst:runprocess_local}. We use the fake master to pass it to a recursive call of \texttt{runProcess} that interprets the process that is wrapped into the \texttt{Local} wrapper at hand. Thereby, we're making sure that for the interpretation of the tree of sub-process the fake master is used and all sub-processes are interpreted locally. When the interpretation of the process structure has been finished, we terminate the fake master we had created before.
 \begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Local} processes.,label=lst:runprocess_local,numbers=left,frame=bt]
 runProcess _ (Local p) x = do
   fakeMaster <- getFakeMaster =<< getSelfPid
@@ -328,22 +330,36 @@ runProcess _ (Local p) x = do
   return res
 \end{lstlisting}
 
-Unlike in our algebraic model\index{Algebraic!model}, specifically \defref{def:static_choice} and \defref{def:sem_choice}, a \texttt{Choice} process in the \textsc{Hive} process algebra do not introduce non-determinism\index{Non-determinism}. Earlier we used an optimistic oracle\index{Oracle} to make the choice between two processes, but didn't have any control over the oracle's behaviour, thus introducing non-determinism. In order to get rid of the non-determinism we replace the non-deterministic oracle with a deterministic predicate\index{Predicate} \texttt{p} of type \texttt{d $\to$ Bool} that makes the choice between processes, as shown in \lstref{lst:runprocess_choice}. The predicate's choice is based on a value \texttt{c} and the arguments for the process \texttt{x} of type \texttt{a}. These two values are combined using a function \texttt{acd :: a $\to$ c $\to$ d} and the result is presented to the predicate \texttt{p}. If \texttt{p (acd x c)} holds, the first process \texttt{p1} is selected for execution and the second process \texttt{p2} otherwise. Note that we have eliminated one of the two places where there was non-determinism introduced in the algebraic model.  % ToDo: mention intention of deterministic processes
+The adaptation we have to make for the interpretation of \texttt{Choice} and \texttt{Sequence} processes are tiny: Other than satisfying the need for the additional parameter \texttt{master}, the implementation is unchanged.
 \index{Hive process interpreter!Choice}
-\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Choice} processes.,label=lst:runprocess_choice,numbers=left,frame=bt]
+\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Choice} and \texttt{Sequence} processes.,label=lst:runprocess_choice,numbers=left,frame=bt]
 runProcess master (Choice c acd p p1 p2) x =
   runProcess master (if p (acd x c) then p1 else p2) x
-\end{lstlisting}
 
-For the interpretation of a \texttt{Sequence}\index{Hive process interpreter!Sequence} process, we have to run the first process \texttt{p1} on the argument \texttt{x} first by making use of the interpreter function \texttt{runProcess}. Then, using the result from \texttt{p1}, we run the second process \texttt{p2}. The implementation of this is straightforward, using the bind operator \texttt{>}\texttt{>=} from the \texttt{CH.Process} monad\index{Monad}, as shown in \lstref{lst:runprocess_sequence}.
-\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Sequence} processes.,label=lst:runprocess_sequence,numbers=left,frame=bt]
 runProcess master (Sequence p1 p2) x =
   runProcess master p1 x >>= runProcess master p2
+
+runProcess master (Parallel p1 p2 combinator) x = do
+  mvar <- liftIO newEmptyMVar
+  _ <- spawnLocal $ runProcessHelper master p1 x mvar
+  r2 <- runProcess master p2 x
+  r1 <- liftIO $ takeMVar mvar
+  runProcess master combinator (r1, r2)
+
+runProcess master (Multilel ps ib fold) x = do
+  mvars <- forM ps $ \_ -> liftIO newEmptyMVar
+  mapM_ (\(proc,mvar) -> spawnLocal $ runProcessHelper master proc x mvar) (ps `zip` mvars)
+  ress  <- forM mvars $ \m -> (liftIO . takeMVar $ m)
+  runProcess master fold (ib, ress)
+
+runProcess master (Loop ib ic pred ba acc p) x =
+  if pred (acc x ic) then do
+    x' <- runProcess master p x
+    runProcess master (Loop x' (acc x ic) pred ba acc p) (ba x')
+  else
+    return ib
 \end{lstlisting}
 
-In the implementation of the interpreter function \texttt{runProcess} for the previous \textsc{Hive} process types, i.e. \texttt{Const}, \texttt{Simple}, \texttt{Local}, \texttt{Choice} and \texttt{Sequence}, there has been no parallelism introduced. This was exactly the desired behaviour and we could simple made use of the blocking behaviour of the underlying \textsf{Cloud Haskell} framework. However, the purpose of the \textsc{Hive} process algebra is to make distributed programming easy and intuitive. Hence, we need a mechanism to introduce parallelism. This is done with the \texttt{Parallel} and \texttt{Multilel} combinators for processes. Whereas \texttt{Parallel} allows for parallel composition of two \textsc{Hive} processes with arbitrary types, \texttt{Multilel} allows for parallel composition of arbitrary many \textsc{Hive} processes of a common type.
-
-So far, we could simply perform the interpretation of processes in the interpreter thread\footnote{We are going to use the word \textbf{thread} intentionally here to avoid confusion about which \textbf{process} would be meant otherwise. Strictly technically speaking, this use of words is even correct. In \textsf{Cloud Haskell}, spawning a local \textbf{process} is done by forking a new \textbf{thread}.} because we only had one program flow. This changes in the case of the \texttt{Parallel} and \texttt{Multilel} processes where we explicitly have two or more program flows. That means we have to fork at least one more local thread for parallel interpretation of the processes. Remember that \textsc{Hive} processes do not have a \texttt{Serializable} instance and therefore process interpretation needs to happen locally and can \textbf{not} be done remotely. We introduce an auxiliary process \texttt{runProcessHelper} for this. It takes a \texttt{Master}, a \textsc{Hive} process of type \texttt{Process a b}, an argument of type \texttt{a} for the process and an \texttt{MVar b} that is used to communicate the result to the caller. \texttt{runProcessHelper} runs in the \textsf{Cloud Haskell} \texttt{CH.Process} monad and its behaviour is fairly simple: it runs the process interpreter \texttt{runProcess} for the submitted process by passing process \texttt{p} and argument \texttt{x} to it and saving the obtained result in \texttt{mvar}, then it terminates. The implementation of \texttt{runProcessHelper} can be found in \lstref{lst:runprocesshelper}.
 \begin{lstlisting}[language=Haskell,caption=Auxiliary process for the interpretation of \texttt{Parallel} and \texttt{Multilel} processes.,label=lst:runprocesshelper,numbers=left,frame=bt]
 runProcessHelper :: Master
                  -> Process a b
@@ -355,36 +371,8 @@ runProcessHelper master p x mvar = do
   liftIO $ putMVar mvar r
 \end{lstlisting}
 
-A \texttt{Parallel}\index{Hive process interpreter!Parallel} process incorporates exactly two processes, \texttt{p1} and \texttt{p2}, that should be run in parallel as well as a combinator process, \texttt{combinator}, that is intended to be used to combine the results from \texttt{p1} and \texttt{p2}. To accomplish parallel execution of \texttt{p1} and \texttt{p2}, we create a new empty \texttt{MVar} and spawn a \texttt{runProcessHelper} in a local thread. Together with its argument \texttt{x} and the \texttt{mvar}, Process \texttt{p1} is passed to the new thread for interpretation. At the same time, we start interpretation of process \texttt{p2} in the current interpreter thread. After execution of \texttt{p2} has finished, we're retrieving the result of \texttt{p1} from \texttt{mvar}. If execution of \texttt{p1} hasn't finished yet, this operation blocks until this is the case. Once we have the results of both \texttt{p1} and \texttt{p2}, we start interpretation of \texttt{combinator} that combines these results into one value. Again, the combinator process is why we can combine \texttt{Hive} processes of arbitrary types in parallel, in contrast to what we saw in the algebraic model in \chpref{chp:algebraic_model}.
-\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Parallel} processes.,numbers=left,frame=bt,label=lst:runprocess_parallel]
-runProcess master (Parallel p1 p2 combinator) x = do
-  mvar <- liftIO newEmptyMVar
-  spawnLocal $ runProcessHelper master p1 x mvar
-  r2 <- runProcess master p2 x
-  r1 <- liftIO $ takeMVar mvar
-  runProcess master combinator (r1, r2)
-\end{lstlisting}
 
-The interpretation of a \texttt{Multilel}\index{Hive process interpreter!Multilel} process follows the same principles as the interpretation of a \texttt{Parallel} process. The difference only lies in that we have to deal with a list of processes that should be run in parallel instead of exactly two. This has some consequences: we require all of these processes to have the same type, otherwise we would potentially end up with $n-1$ combinator processes for the combination of the results from $n$ processes. By requiring the same type for every process and thus, the same result type, we can reduce the requirement for combinator processes to only one process, namely \texttt{fold}, and one value, namely \texttt{ib}, as can be seen in \lstref{lst:runprocess_multilel}. As the name \texttt{fold} suggests, this process behaves like a fold. It takes a pair that contains the initial fold value \texttt{ib} and a sequence of values, namely \texttt{ress}, that should be folded together in one result value. For parallel execution of all the processes in \texttt{ps}, we create a new empty \texttt{MVar} for each of them and start a \texttt{runProcessHelper} in a new thread for each of them, supplying one of the \texttt{mvars} per thread. Then we're waiting for all of the processes to finish execution by reading their results from the \texttt{mvars}. Should there be even a single process that hasn't finished execution, the according \texttt{MVar} will block the reading action until a value has been saved into it. Finally, the \texttt{fold} process is run, folding the results together and returning a single result.
-\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Multilel} processes.,label=lst:runprocess_multilel,numbers=left,frame=bt]
-runProcess master (Multilel ps ib fold) x = do
-  mvars <- forM ps $ \_ -> liftIO newEmptyMVar
-  mapM_ (\(proc,mvar) -> spawnLocal $ runProcessHelper master proc x mvar) (ps `zip` mvars)
-  ress  <- forM mvars $ \m -> (liftIO . takeMVar $ m)
-  runProcess master fold (ib, ress)
-\end{lstlisting}
-
-Finally, there is the \texttt{Loop}\index{Hive process interpreter!Loop} process that is used to resemble the semantics of the \textsc{Kleene} star, i.e. repeated execution of a process. However, we're altering the semantics slightly: as we did for the \texttt{Choice} process, we want to eliminate non-determinism here as well and end up with a determined number of repetitions of a process. To do so, we replace the oracle\index{Oracle} that selects how often the process should be run with a predicate\index{Predicate} that decides whether execution should terminate or continue. The structure of the interpreter function for a \texttt{Loop} process reminds of a \texttt{while} loop in imperative programming, however its behaviour in case of zero time execution is explicitly defined. A \texttt{Loop} process contains six values: \texttt{ib} of type \texttt{b}, \texttt{ic} of type \texttt{c}, a predicate\index{Predicate} \texttt{pred} of type \texttt{c $\to$ Bool}, a function \texttt{ba} of type \texttt{b $\to$ a}, a function \texttt{acc} of type \texttt{a $\to$ c $\to$ c} and a \textsc{Hive} process \texttt{p} of type \texttt{Process a b}. The value \texttt{ib} defines the result value of the \texttt{Loop} process in case it is executed zero times. In imperative programming, this is the implicitly program state that is unaltered whenever a loop executed zero times. In order to decide whether the process wrapped into the \texttt{Loop} should be executed, the previously mentioned predicate \texttt{pred} is evaluated. It makes its decision based on an initial value \texttt{ic} and the argument for the process \texttt{x}, combined together by \texttt{acc}. If the predicate holds, the process \texttt{p} is executed once and its result is bound to the name \texttt{x'}. Then a new \texttt{Loop} process is created and the \texttt{runProcess} interpreter is called tail recursively on it. The argument for the new \texttt{Loop} process is given by \texttt{x'}, converted from type \texttt{b} to a value of the correct type \texttt{a} by function \texttt{ba}. Remember that in the \defref{def:static_kleene}, the definition of the static semantics of the \textsc{Kleene} star, we had required that a process that should be run repeatedly, needs to have the same input and output type. However, by employing a function, namely \texttt{bc}, that converts the result of a process back to the type of its argument, we can get rid of this requirement. Once again, the semantics of the \texttt{Loop} process in the \textsc{Hive} process algebra is more general than the one of the \textsc{Kleene} star from the algebraic model.
-\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Loop} processes.,numbers=left,frame=bt]
-runProcess master (Loop ib ic pred ba acc p) x =
-  if pred (acc x ic) then do
-    x' <- runProcess master p x
-    runProcess master (Loop x' (acc x ic) pred ba acc p) (ba x')
-  else
-    return ib
-\end{lstlisting}
-
-\subsubsection{Handling a request}
+\subsection{Handling a request}
 Now that we have taken a look at how our system is structured and how the \textsc{Hive} process interpreter works, we want to take a look at what happens in the system when a client submits a request.
 
 For this purpose, assume that the master node is already running with a set of worker nodes connected. The client has knowledge about the address of the master and the ability to directly send requests to it. \Figref{fig:request_handling} shows the behaviour of the system that follows when a client submits a request. Note that we do not explicitly show all the worker nodes involved but symbolically combine them as \enquote{Worker}.
@@ -412,7 +400,7 @@ For this purpose, assume that the master node is already running with a set of w
   \item [\figannotation{13}] The master responds to the client with the calculated solution.
 \end{itemize}
 
-\subsubsection{Difference to the algebraic model}
+\section{Difference to the algebraic model}
 \label{chp:difference_model_implementation}
 Opposed to the situation given in the algebraic model\index{Algebraic!model}, \textsc{Hive} processes are \textbf{not} pure. As mentioned in \chpref{chp:cloud_haskell}, our processes execute in the \textsf{Cloud Haskell} \texttt{Process} monad\index{Monad}, which builds on top of the \texttt{IO} monad.
 
@@ -425,7 +413,7 @@ We have mentioned earlier that we can use the laws given in \chpref{chp:laws} to
 
 But as discussed in \chpref{chp:difference_model_implementation}, a developer might make use of side-effects intentionally. He might construct a process that performs random walks in the solution space of a computationally hard problem, based on a random number generator and then run multiple instances of that process in parallel. A process optimiser would optimise this set of parallel running processes to only one process, not knowing that the processes would behave differently at runtime because they are not pure. This is why we do not provide an automated process optimiser and trust the developer to make appropriate use of the laws given in \chpref{chp:laws} whenever applicable.
 
-\subsection{Example: arithmetic expressions - hello world for interpreters\index{Example}}
+\section{Example: arithmetic expressions - hello world for interpreters\index{Example}}
 \label{chp:example}
 After introducing the \textsc{Hive} process algebra and discussing the interpreter that takes care of the distribution of \textsc{Hive} processes, we give an example of how to make use of it. To do so, we employ the typical hello world program for interpreters, i.e. an interpreter\index{Interpreter} for arithmetic expressions\index{Arithmetic expression}. Except for imports from the \textsf{Cloud Haskell} library and the \textsc{Hive} process algebra, this example will be self-contained. It is intentionally kept very simple and the necessity for a distributed interpreter for arithmetic expressions is certainly not given. However, an interpreter for arithmetic expressions is fairly simple and thus, well suited to illustrate how to apply the \texttt{Hive} process algebra for distribution without distracting from it.
 
@@ -512,15 +500,3 @@ interpret (Div x y) = Parallel (interpret x) (interpret y) divP
 \end{lstlisting}
 
 In this example we have defined a data structure that can be used to represent arithmetic expressions and implemented a conventional interpreter for this data structure. Then, we have defined a mapping from these arithmetic expressions to \textsc{Hive} processes, and used the \textsc{Hive} process interpreter to distribute their interpretation. We did not have to explicitly implement network communication of any kind for this, but only have to make appropriate use of the \textsc{Hive} process algebra to represent our computation as a composed process. 
-
-\subsubsection*{An example expression}
-$\left(7-1\right)\cdot\left(3+4\right)$
-
-\texttt{Mul (Sub (Val 7) (Val 1)) (Add (Val 3) (Val 4))}
-
-\begin{figure}[h!]
-  \centering
-  \input{img/example_expression.tex}
-  \caption{Some figure...}
-  \label{fig:example_expression}
-\end{figure}
