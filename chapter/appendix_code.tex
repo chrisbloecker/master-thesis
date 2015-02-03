@@ -1,7 +1,22 @@
 \chapter{Code}
 
-\section{Implementation of the process interpreter for Split and Slice processes in the Cloud Haskell Process monad}
-\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,caption=Implementation of \texttt{runProcess} for \texttt{Split} and \texttt{Slice} in the \textsf{Cloud Haskell} \texttt{Process} monad.]
+\clearpage
+
+\section{Implementation of the process interpreter in the Cloud Haskell Process monad}
+\label{app:distributed_split_slice}
+\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,caption=Implementation of \texttt{runProcess} in the \textsf{Cloud Haskell} \texttt{Process} monad.]
+runProcess master (Choice c acd p p1 p2) x =
+  runProcess master (if p (acd x c) then p1 else p2) x
+
+runProcess master (Sequence p1 p2) x =
+  runProcess master p1 x >>= runProcess master p2
+
+runProcess master (Parallel p1 p2 combinator) x = do
+  runProcess master (Split (id &&& id) p1 p2 combinator) x
+
+runProcess master (Multilel ps ib fold) x = do
+  runProcess master (Slice repeat ps ib fold) x
+
 runProcess master (Split split p1 p2 combinator) x = do
   let (xl, xr) = split x
   mvar <- liftIO newEmptyMVar
@@ -16,6 +31,18 @@ runProcess master (Slice slice ps ib fold) x = do
   mapM_ (\((proc, x'), mvar) -> spawnLocal $ runProcessHelper master proc x' mvar) (pairs `zip` mvars)
   ress  <- forM mvars $ \mvar -> liftIO . takeMVar $ mvar
   runProcess master fold (ib, ress)
+
+runProcess master (Loop ib ic pred ba acc p) x =
+  if pred (acc x ic) then do
+    x' <- runProcess master p x
+    runProcess master (Loop x' (acc x ic) pred ba acc p) (ba x')
+  else
+    return ib
+
+runProcessHelper :: Master -> Process a b -> a -> MVar b -> CH.Process ()
+runProcessHelper master p x mvar = do
+  r <- runProcess master p x
+  liftIO $ putMVar mvar r
 \end{lstlisting}
 
 \begin{landscape}
