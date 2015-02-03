@@ -1,37 +1,55 @@
 \chapter{Code}
 
+\section{Implementation of the process interpreter for Split and Slice processes in the Cloud Haskell Process monad}
+\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,caption=Implementation of \texttt{runProcess} for \texttt{Split} and \texttt{Slice} in the \textsf{Cloud Haskell} \texttt{Process} monad.]
+runProcess master (Split split p1 p2 combinator) x = do
+  let (xl, xr) = split x
+  mvar <- liftIO newEmptyMVar
+  _ <- spawnLocal $ runProcessHelper master p1 xl mvar
+  r2 <- runProcess master p2 xr
+  r1 <- liftIO $ takeMVar mvar
+  runProcess master combinator (r1, r2)
+
+runProcess master (Slice slice ps ib fold) x = do
+  let pairs = ps `zip` slice x
+  mvars <- forM pairs $ \_ -> liftIO newEmptyMVar
+  mapM_ (\((proc, x'), mvar) -> spawnLocal $ runProcessHelper master proc x' mvar) (pairs `zip` mvars)
+  ress  <- forM mvars $ \mvar -> liftIO . takeMVar $ mvar
+  runProcess master fold (ib, ress)
+\end{lstlisting}
+
 \begin{landscape}
 \section{Ant system processes}
 \label{app:ant_system_processes}
 
-\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,caption=Type aliases and the implementation of ants as a \textsf{Cloud Haskell} process that returns a path.]
-type Visited   = [Node]
-type Unvisited = [Node]
+\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,caption=Type aliases and the implementation of ants as a \textsf{BasicProcess}.]
+type Visited     = [Node]
+type Unvisited   = [Node]
+type AntSolution = (Path, Int)
 
-ant :: Conf -> CH.Process Path
-ant Conf{..} = runAnt graph pheromones [1] (nodes graph \\ [1])
-  where
-    runAnt :: Graph Int -> Pheromones -> Visited -> Unvisited -> CH.Process Path
-    runAnt _ _ visited        [] = return visited
-    runAnt g p visited unvisited = do
-      let tau   = distance' p (last visited)
-      let eta   = (1.0/) . fromIntegral . distance' g (last visited)
-      let probs = [tau u**alpha * eta u**beta | u <- unvisited]
-      rand <- liftIO $ randomRIO (0, sum probs)
-      let next  = fst . head . dropWhile ((< rand) . snd) $ zip unvisited (scanl1 (+) probs)
-      runAnt g p (visited ++ [next]) (unvisited \\ [next])
+ant :: Configuration -> BasicProcess AntSolution
+ant Configuration {..} = do
+  path <- runAnt graph pheromones [1] (nodes graph \\ [1])
+  return (path, pathLength' graph path)
+    where
+      runAnt :: Graph Int -> Pheromones -> Visited -> Unvisited -> BasicProcess Path
+      runAnt _ _ visited        [] = return visited
+      runAnt g p visited unvisited = do
+        let tau   = distance' p (last visited)
+        let eta   = (1.0/) . fromIntegral . distance' g (last visited)
+        let probs = [tau u**alpha * eta u**beta | u <- unvisited]
+        rand <- liftIO $ randomRIO (0, sum probs)
+        let next  = fst . head . dropWhile ((< rand) . snd) $ zip unvisited (scanl1 (+) probs)
+        runAnt g p (visited ++ [next]) (unvisited \\ [next])
 \end{lstlisting}
 
 
-\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,caption=Implementation of a combinator process for paths as \textsf{Cloud Haskell} process.,firstnumber=16]
-combinePaths :: (Conf, [Path]) -> CH.Process Conf
-combinePaths (conf@Conf{..}, ps) = return conf { pheromones = pheromones', path = path' }
+\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,caption=Implementation of a combinator process for ant solutions as \textsf{BasicProcess}.,firstnumber=16]
+combinePaths :: (Configuration, [AntSolution]) -> BasicProcess Configuration
+combinePaths (conf@(Configuration {..}), ass) = return conf { pheromones = pheromones', path = path', pathLen = len' }
   where
-    pheromones' = depositPheromones ( map (second (fromMaybe undefined))
-                                    . filter (isJust . snd)
-                                    . map (id &&& pathLength graph)
-                                    $ ps) pheromones
-    path'       = foldr (shorterPath graph) path ps
+    pheromones'   = depositPheromones ass pheromones
+    (path', len') = minimumBy (compare `on` snd) ass
 \end{lstlisting}
 
 \end{landscape}

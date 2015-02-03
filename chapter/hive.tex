@@ -1,4 +1,4 @@
-\chapter{Implementation\index{Implementation}}
+\chapter{Implementation of the model\index{Implementation}}
 In this chapter we describe two concrete implementations\index{Implementation} of the algebraic model from \chpref{chp:algebraic_model} in \textsf{Haskell}\index{Haskell}. For one of the implementations, we use \textsf{Haskell}'s \texttt{IO} monad and fork local threads for local parallelisation on one computer. For the other one, we use \textsf{Cloud Haskell} to distribute processes into a distributed system and run them in \textsf{Cloud Haskell}'s \texttt{Process} monad.
 
 Ideally, we want the two implementations to be usable interchangeably, however we cannot achieve this at the moment. When using the implementation based on the \textsf{Cloud Haskell} \texttt{Process} monad, we need to require additional properties of the data types that are transmitted over the network as arguments and results of processes. Furthermore, in order to run code remotely, the code has to be known on the remote node since ghc\footnote{The Glasgow Haskell Compiler, c.f. \url{https://www.haskell.org/ghc/}.} doesn't support serialising and transmitting functions over the network \cite{Epstein:2011:THC:2034675.2034690}. To solve this problem, a trick is used that requires us to change the model of basic processes slightly.
@@ -77,24 +77,6 @@ Multilel :: [Process a c]
          -> Process a b
 \end{lstlisting}
 
-While \texttt{Parallel} is used to create a \texttt{Process} that runs two sub-processes in parallel with the same argument passed on to both of them, \texttt{Split}\index{Data constructor!Split} generalises this behaviour. It takes a function of type \texttt{a $\to$ (c, d)} and uses it to split its argument into two pieces, each of which it passes on one to each of its sub-processes. The remaining arguments are analogous to the parameters of \texttt{Parallel}: two processes that should be run in parallel with types \texttt{Process c e} and \texttt{Process d f} as well as a combinator process of type \texttt{Process (e, f) b} that is used to combine the results of the sub-processes into a single value.
-\begin{lstlisting}[language=Haskell,caption=Signature of the \texttt{Split} data constructor.,numbers=left,frame=bt,firstnumber=24]
-Split :: (a -> (c, d))
-      -> Process c e
-      -> Process d f
-      -> Process (e, f) b
-      -> Process a b
-\end{lstlisting}
-
-The \texttt{Slice}\index{Data constructor!Slice} data constructor is a generalisation of \texttt{Split}: rather than splitting it into exactly two pieces, it takes a function of type \texttt{a $\to$ [c]} to split its input into a list of pieces. The rest of the parameters are analogous to the parameters of \texttt{Multilel}: a list of processes of type \texttt{[Process c d]}, each of which receives one slice\footnote{Given, there are equally many input slices as there are sub-processes. This potential problem motivates to a defensive implementation for the interpretation of \texttt{Slice} processes.} of input, a value of type \texttt{b} and a combinator process of type \texttt{Process (b, [d]) b} that is used to fold the result values together.
-\begin{lstlisting}[language=Haskell,caption=Signature of the \texttt{Slice} data constructor.,numbers=left,frame=bt,firstnumber=29]
-Slice :: (a -> [c])
-      -> [Process c d]
-      -> b
-      -> Process (b, [d]) b
-      -> Process a b
-\end{lstlisting}
-
 With the \texttt{Loop}\index{Data constructor!Loop} data constructor, we can wrap a process for repeated execution, resembling the \textsc{Kleene} star $\repetition$. However, we provide a much more sophisticated and more general version than the \texttt{Kleene} star does. First, \texttt{Loop} takes a value of type \texttt{b}, which serves as a default output value in case the loop is executed exactly zero times. In imperative programming, this corresponds to the implicitly unchanged global state of the program. Then it takes a value of type \texttt{c}, a predicate \texttt{Predicate c} and a function of type \texttt{a $\to$ c $\to$ c}. The combination of these three control the termination of the \texttt{Loop}'s execution. The function of type \texttt{b $\to$ a} is used to convert the result of the process of type \texttt{Process a b} back to a value of type \texttt{a}, so it can be fed into the next execution of the \texttt{Loop}. Note that a \texttt{Loop} process does not necessarily behave like the identity process $Id$ if it runs zero times. Responsible for this is the explicit default value of type \texttt{b} which is returned in this case.
 \begin{lstlisting}[language=Haskell,caption=Signature of the \texttt{Loop} data constructor.,numbers=left,frame=bt,firstnumber=34]
 Loop :: b
@@ -143,13 +125,13 @@ runProcess (Sequence p1 p2) x =
 In the implementation of the interpreter function \texttt{runProcess} so far, there has been no parallelism introduced. However, the purpose of our process calculus is to make parallel programming easy and intuitive. Hence, we need a mechanism to introduce parallelism. This is done with the \texttt{Parallel} and \texttt{Multilel} combinators for processes. Whereas \texttt{Parallel} allows for parallel composition of two \texttt{Process}es with arbitrary types, \texttt{Multilel} allows for parallel composition of arbitrary many processes of a common type.
 
 So far, we could simply perform the interpretation of processes in the interpreter thread because we only had one program flow. This changes in the case of the \texttt{Parallel} and \texttt{Multilel} processes where we explicitly have two or more program flows. That means we have to fork at least one more thread for parallel interpretation of the processes. We introduce an auxiliary interpreter function \texttt{runProcessHelper} for this. It takes a process of type \texttt{Process a b}, an argument of type \texttt{a} for the process and an \texttt{MVar b} that is used to communicate the result back to the caller. \texttt{runProcessHelper} runs in the \texttt{IO} monad and its behaviour is fairly simple: it runs the process interpreter \texttt{runProcess} for the submitted process by passing process \texttt{p} and argument \texttt{x} to it and saving the obtained result in \texttt{mvar}, then it terminates. The implementation of \texttt{runProcessHelper} can be found in \lstref{lst:local_runprocesshelper}.
-\begin{lstlisting}[language=Haskell,caption=Auxiliary process for the interpretation of \texttt{Parallel} and \texttt{Multilel} processes.,label=lst:local_runprocesshelper,numbers=left,frame=bt,firstnumber=27]
+\begin{lstlisting}[language=Haskell,caption=Auxiliary process for the interpretation of \texttt{Parallel} and \texttt{Multilel} processes.,label=lst:local_runprocesshelper,numbers=left,frame=bt,firstnumber=10]
 runProcessHelper :: Process a b -> a -> MVar b -> IO ()
 runProcessHelper p x mvar = putMVar mvar =<< runProcess p x
 \end{lstlisting}
 
 A \texttt{Parallel}\index{Process interpreter!Parallel} process incorporates exactly two processes, \texttt{p1} and \texttt{p2}, that should be run in parallel as well as a combinator process, \texttt{combinator}, that is intended to be used to combine the results from \texttt{p1} and \texttt{p2}. To accomplish parallel execution of \texttt{p1} and \texttt{p2}, we create a new empty \texttt{MVar} and use \texttt{forkIO} to fork a new thread which we run \texttt{runProcessHelper} in. Together with its argument \texttt{x} and the \texttt{mvar}, Process \texttt{p1} is passed to the new thread for interpretation. At the same time, we start interpretation of process \texttt{p2} in the current interpreter thread. After the interpretation of \texttt{p2} has finished, we retrieve the result of the interpretation of \texttt{p1} from \texttt{mvar}. If execution of \texttt{p1} hasn't finished yet, this operation blocks until this is the case and the result has been saved to \texttt{mvar}. Once we have the results of both \texttt{p1} and \texttt{p2}, we start the interpretation of \texttt{combinator} that combines these results into one value. Again, the combinator process is why we can combine processes of arbitrary types in parallel, in contrast to what we saw in the algebraic model in \chpref{chp:algebraic_model}.
-\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Parallel} processes.,numbers=left,frame=bt,label=lst:local_runprocess_parallel,firstnumber=10]
+\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Parallel} processes.,numbers=left,frame=bt,label=lst:local_runprocess_parallel,firstnumber=12]
 runProcess (Parallel p1 p2 combinator) x = do
   mvar <- newEmptyMVar
   _ <- forkIO $ runProcessHelper p1 x mvar
@@ -159,7 +141,7 @@ runProcess (Parallel p1 p2 combinator) x = do
 \end{lstlisting}
 
 The interpretation of a \texttt{Multilel}\index{Process interpreter!Multilel} process follows the same principles as the interpretation of a \texttt{Parallel} process. The difference only lies in that we have to deal with a list of processes that should be run in parallel instead of exactly two. This has some consequences: we require all of these processes to have the same type, otherwise we would end up with $n-1$ combinator processes for the combination of the results from $n$ processes. By requiring the same type for every process and thus, the same result type, we can reduce the requirement for combinator processes to only one process, namely \texttt{fold}, and one value, namely \texttt{ib}, as can be seen in \lstref{lst:local_runprocess_multilel}. As the name \texttt{fold} suggests, this process behaves like a fold: it takes a pair that contains the initial fold value \texttt{ib} and a sequence of values, namely \texttt{ress}, that should be folded together into one result value. For parallel execution of all the processes in \texttt{ps}, we create a new empty \texttt{MVar} for each of them and start a \texttt{runProcessHelper} in a new thread for each of them, supplying one of the \texttt{mvars} per thread. Then we wait for all of the processes to finish execution by reading their results from the \texttt{mvars}. Should there be even a single process that hasn't finished execution, the according \texttt{MVar} blocks the reading action until a value has been saved into it. Finally, the \texttt{fold} process is run, folding the results together and returning a single result.
-\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Multilel} processes.,label=lst:local_runprocess_multilel,numbers=left,frame=bt,firstnumber=16]
+\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Multilel} processes.,label=lst:local_runprocess_multilel,numbers=left,frame=bt,firstnumber=18]
 runProcess (Multilel ps ib fold) x = do
   mvars <- forM ps $ const newEmptyMVar
   mapM_ (\(p, m) -> forkIO $ runProcessHelper p x m) (ps `zip` mvars)
@@ -167,30 +149,8 @@ runProcess (Multilel ps ib fold) x = do
   runProcess fold (ib, ress)
 \end{lstlisting}
 
-\lipsum[1]
-\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Split} processes.,label=lst:local_runprocess_multilel,numbers=left,frame=bt,firstnumber=16]
-runProcess master (Split split p1 p2 combinator) x = do
-  let (xl, xr) = split x
-  mvar <- liftIO newEmptyMVar
-  _ <- spawnLocal $ runProcessHelper master p1 xl mvar
-  r2 <- runProcess master p2 xr
-  r1 <- liftIO $ takeMVar mvar
-  runProcess master combinator (r1, r2)
-\end{lstlisting}
-
-\lipsum[2]
-\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Slice} processes.,label=lst:local_runprocess_multilel,numbers=left,frame=bt,firstnumber=16]
-runProcess master (Slice slice ps ib fold) x = do
-  let pairs = ps `zip` slice x
-  mvars <- forM pairs $ \_ -> liftIO newEmptyMVar
-  mapM_ (\((proc, x'), mvar) -> spawnLocal $ runProcessHelper master proc x' mvar) (pairs `zip` mvars)
-  ress  <- forM mvars $ \mvar -> liftIO . takeMVar $ mvar
-  runProcess master fold (ib, ress)
-\end{lstlisting}
-
-
 Finally, there is the \texttt{Loop}\index{Process interpreter!Loop} process that is used to resemble the semantics of the \textsc{Kleene} star, i.e. repeated execution of a process. However, we're altering the semantics slightly: as we did for the \texttt{Choice} process, we want to eliminate non-determinism here as well and end up with a determined number of repetitions of a process. To do so, we replace the oracle\index{Oracle} that selects how often the process should be run with a predicate\index{Predicate} that decides whether execution should terminate or continue. The structure of the interpreter function for a \texttt{Loop} process reminds of a \texttt{while} loop in imperative programming, however its behaviour in case of zero time execution is explicitly defined. A \texttt{Loop} process contains six values: \texttt{ib} of type \texttt{b}, \texttt{ic} of type \texttt{c}, a predicate\index{Predicate} \texttt{pred} of type \texttt{Predicate c}, a function \texttt{ba} of type \texttt{b $\to$ a}, a function \texttt{acc} of type \texttt{a $\to$ c $\to$ c} and a process \texttt{p} of type \texttt{Process a b}. The value \texttt{ib} defines the result value of the \texttt{Loop} process in case it is executed zero times. In imperative programming, this is the implicit program state that is unaltered whenever a loop executed zero times. In order to decide whether the process wrapped into the \texttt{Loop} should be executed, the previously mentioned predicate \texttt{pred} is evaluated. It takes its decision based on an initial value \texttt{ic} and the argument for the process \texttt{x}, combined together by \texttt{acc}. If the predicate holds, the process \texttt{p} is executed once and its result is bound to the name \texttt{x'}. Then, a new \texttt{Loop} process is created and the \texttt{runProcess} interpreter is called tail-recursively on it. The argument for the new \texttt{Loop} process is given by \texttt{x'}, converted from type \texttt{b} to a value of the correct type \texttt{a} by function \texttt{ba}. Remember that in \defref{def:static_kleene}, the definition of the static semantics of the \textsc{Kleene} star, we had required that a process that should be run repeatedly, needs to have the same input and output type. However, by employing a function, namely \texttt{ba}, that converts the result of a process back to the type of its argument, we can get rid of this requirement. Once again, the semantics of the \texttt{Loop} process in our process calculus is more general than the one of the \textsc{Kleene} star from the algebraic model.
-\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Loop} processes.,numbers=left,frame=bt,firstnumber=21]
+\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Loop} processes.,numbers=left,frame=bt,firstnumber=23]
 runProcess (Loop ib ic pr ba acc p) x = do
   if pr (acc x ic) then do
     x' <- runProcess p x
@@ -198,6 +158,7 @@ runProcess (Loop ib ic pr ba acc p) x = do
   else
     return ib
 \end{lstlisting}
+
 
 \section{Implementation in the Cloud Haskell Process monad}
 \label{chp:distributed}
@@ -399,6 +360,56 @@ For this purpose, assume that the master node is already running with a set of w
   \item [\figannotation{12}] The client supplies the ticket to the master again.
   \item [\figannotation{13}] The master responds to the client with the calculated solution.
 \end{itemize}
+
+
+\section{Extension for practical use}
+In this chapter, we introduce an extension to the data model and process interpreter that is of relevance for practical application. The expressiveness of remains unchanged.
+
+In the interpretation of all process combinators we pass the process' argument on to all sub-processes without altering it, all sub-processes receive the same argument. However, in some situations we might want to pass different portions of the argument to parallel sub-processes. We could achieve this behaviour by prepending some kind of projection process to each of the parallel processes: when receiving an argument it performs a projection on the value it receives and reduces it to the desired portion. In an environment where it is cheap to duplicate values, e.g. by using shared memory, this approach might be acceptable. In a situation where there is network communication involved and the same value needs to be serialised and sent to a set of remote processes though, there is potentially a high amount of communication overhead created. For this purpose, we extend our data model for processes and add two new data constructors for processes that explicitly incorporate splitting their argument and passing on \textit{different} arguments to their sub-processes. 
+
+\subsection{Data model}
+While \texttt{Parallel} is used to create a \texttt{Process} that runs two sub-processes in parallel with the same argument passed on to both of them, \texttt{Split}\index{Data constructor!Split} generalises this behaviour. It takes a function of type \texttt{a $\to$ (c, d)} and uses it to split its argument into two pieces, each of which is passed on to one of its sub-processes. The remaining arguments are analogous to the parameters of \texttt{Parallel}: two processes that should be run in parallel with types \texttt{Process c e} and \texttt{Process d f} as well as a combinator process of type \texttt{Process (e, f) b} that is used to combine the results of the sub-processes into a single value.
+\begin{lstlisting}[language=Haskell,caption=Signature of the \texttt{Split} data constructor.,numbers=left,frame=bt,firstnumber=24]
+Split :: (a -> (c, d))
+      -> Process c e
+      -> Process d f
+      -> Process (e, f) b
+      -> Process a b
+\end{lstlisting}
+
+The \texttt{Slice}\index{Data constructor!Slice} data constructor is a generalisation of \texttt{Split}: rather than splitting it into exactly two pieces, it takes a function of type \texttt{a $\to$ [c]} to split its input into a list of pieces. The rest of the parameters are analogous to the parameters of \texttt{Multilel}: a list of processes of type \texttt{[Process c d]}, each of which receives one slice\footnote{Given, there are equally many input slices as there are sub-processes. This potential problem motivates to do a defensive implementation for the interpretation of \texttt{Slice} processes.} of input, a value of type \texttt{b} and a combinator process of type \texttt{Process (b, [d]) b} that is used to fold the result values together. The same argument for requiring all sub-processes to be of the same type given in the discussion of \texttt{Multilel} still applies.
+\begin{lstlisting}[language=Haskell,caption=Signature of the \texttt{Slice} data constructor.,numbers=left,frame=bt,firstnumber=29]
+Slice :: (a -> [c])
+      -> [Process c d]
+      -> b
+      -> Process (b, [d]) b
+      -> Process a b
+\end{lstlisting}
+
+\subsection{Process interpreter}
+We give the implementation of the process interpreter \texttt{runProcess} for interpretation of \texttt{Split} and \texttt{Slice} processes locally in the \texttt{IO} monad. The implementation for interpretation in the \textsf{Cloud Haskell} \texttt{Process} monad is very similar again and only involves adding the necessary \texttt{master} parameter and lifting \texttt{MVar} action from the \texttt{IO} monad into the \texttt{Process} monad, it can be found in \appref{app:distributed_split_slice}.
+
+The interpretation of \texttt{Split}\index{Process interpreter!Split} processes is very similar to the interpretation of \texttt{Parallel} processes.
+\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Split} processes.,label=lst:local_runprocess_multilel,numbers=left,frame=bt,firstnumber=16]
+runProcess (Split split p1 p2 combinator) x = do
+  let (xl, xr) = split x
+  mvar <- newEmptyMVar
+  _ <- forkIO $ runProcessHelper p1 xl mvar
+  r2 <- runProcess p2 xr
+  r1 <- takeMVar mvar
+  runProcess combinator (r1, r2)
+\end{lstlisting}
+
+\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Slice} processes.,label=lst:local_runprocess_multilel,numbers=left,frame=bt,firstnumber=16]
+runProcess (Slice slice ps ib fold) x = do
+  let pairs = ps `zip` slice x
+  mvars <- forM pairs $ const newEmptyMVar
+  mapM_ (\((proc, x'), mvar) -> forkIO $ runProcessHelper proc x' mvar) (pairs `zip` mvars)
+  ress  <- forM mvars $ \mvar -> takeMVar mvar
+  runProcess fold (ib, ress)
+\end{lstlisting}
+
+
 
 \section{Difference to the algebraic model}
 \label{chp:difference_model_implementation}

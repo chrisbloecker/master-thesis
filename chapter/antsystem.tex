@@ -104,14 +104,18 @@ The \texttt{combinePaths} process receives a configuration and a list of candida
 
 The \texttt{extractSolution} process is fairly simple and doesn't do anything else than extracting the best known solution from the configuration it is supplied with.
 
-\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,firstnumber=12,label=lst:ant_basic,caption=Basic \textsf{Cloud Haskell} processes.]
-ant :: Conf -> CH.Process Path
+\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,firstnumber=12,label=lst:ant_basic,caption=Basic processes.]
+ant :: Conf -> BasicProcess AntSolution
 ant conf = ...
 
-combinePaths :: (Conf, [Path]) -> CH.Process Conf
+combinePaths :: (Conf, [AntSolution]) -> BasicProcess Conf
 combinePaths (conf, ps) = ...
 
-extractSolution :: Conf -> CH.Process Path
+evaporations :: Configuration -> BasicProcess Configuration
+evaporations (conf@Configuration {..}) =
+  return conf { pheromones = evaporation rho pheromones }
+
+extractSolution :: Conf -> BasicProcess AntSolution
 extractSolution = return . path
 \end{lstlisting}
 
