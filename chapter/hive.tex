@@ -42,9 +42,9 @@ Simple :: (a -> BasicProcess b)
 
 \texttt{Const} and \texttt{Simple} are data constructors just for wrapping basic processes into the \texttt{Process} data type. Essentially they represent what we calles atomic processes in \chpref{chp:algebraic_model}. All other data constructors\index{Constructor} operate on existing processes and resemble the algebraic operations from \chpref{chp:algebraic_model}, such as choice, parallel composition, sequential composition and \textsc{Kleene} star. However, as we will see, some of the data constructors are more general and thus more expressive and flexible than the operators presented in \chpref{chp:algebraic_model}.
 
-Regardless of how complex a \texttt{BasicProcess} wrapped into a \texttt{Process} of type \texttt{Const} or \texttt{Simple} actually is, we consider them to be ... since they do not involve process combinators. ToDo!
+Regardless of how complex a \texttt{BasicProcess} wrapped into a \texttt{Process} of type \texttt{Const} or \texttt{Simple} actually is, we consider them to be atomic for the following discussions since they do not involve process combinators.
 
-The \texttt{Choice}\index{Data constructor!Choice} data constructor is used to build a process that makes a choice between two processes and represents the choice operator $\choice$. Unlike in the algebraic model from \chpref{chp:algebraic_model}, this choice is not made non-deterministically by an oracle\index{Oracle}, but based on a predicate\index{Predicate}. The introduced predicate makes sure the behaviour of a process that involves the \texttt{Choice} combinator is always determined and exactly one result is produced. \texttt{Choice} takes a value of type \texttt{c}, a function of type \texttt{a $\to$ c $\to$ d}, a predicate \texttt{Predicate d} and two processes of type \texttt{Process a b}. The exact interplay of the additional parameters will become clear in \chpref{chp:implementation}. ToDo!
+The \texttt{Choice}\index{Data constructor!Choice} data constructor is used to build a process that makes a choice between two processes and represents the choice operator $\choice$. Unlike in the algebraic model from \chpref{chp:algebraic_model}, this choice is not made non-deterministically by an oracle\index{Oracle}, but based on a predicate\index{Predicate}. The introduced predicate makes sure the behaviour of a process that involves the \texttt{Choice} combinator is always determined and exactly one result is produced. \texttt{Choice} takes a value of type \texttt{c}, a function of type \texttt{a $\to$ c $\to$ d}, a predicate \texttt{Predicate d} and two processes of type \texttt{Process a b}.
 \begin{lstlisting}[language=Haskell,caption=Signature of the \texttt{Choice} data constructor.,numbers=left,frame=bt,firstnumber=7]
 Choice :: c
        -> (a -> c -> d)
@@ -291,7 +291,8 @@ runProcess _ (Local p) x = do
   return res
 \end{lstlisting}
 
-The adaptation we have to make for the interpretation of \texttt{Choice} and \texttt{Sequence} processes are tiny: Other than satisfying the need for the additional parameter \texttt{master}, the implementation is unchanged. ToDo: only slight changes for Process monad
+The adaptations that have to be made for the remaining process types, i.e. \texttt{Choice}, \texttt{Sequence}, \texttt{Parallel}, \texttt{Multilel} and \texttt{Loop} are minimal. They involve adding the necessary \texttt{master} parameter and adaptations specific to the \textsf{Cloud Haskell} \texttt{Process} monad, i.e. using \texttt{spawnLocal} instead of \texttt{forkIO} and lifting action on MVars from the \texttt{IO} monad into the \texttt{Process} monad using \texttt{liftIO}. The implementation can be found in \appref{app:distributed_split_slice}.
+
 \index{Hive process interpreter!Choice}
 
 \subsection{Handling a request}
@@ -371,8 +372,17 @@ runProcess (Slice slice ps ib fold) x = do
   runProcess fold (ib, ress)
 \end{lstlisting}
 
-ToDo: now we can do Parallel and Multilel more elegantly...
+Now with the \texttt{Split} process available, we can give an alternative implementation of the process interpreter for the interpretation of \texttt{Parallel} processes. Structurally and semantically, \texttt{Parallel} and \texttt{Split} are very similar, the only difference is the function that is used to split the argument into pieces in the case of \texttt{Split}. To preserve \texttt{Parallel}'s semantics, we create a function that \enquote{splits} the argument by returning a pair of the same value, and thereby duplicating it. Together with this function, we use the parameters of \texttt{Parallel} to create a \texttt{Slice} process and run \texttt{runProcess} on it.
+\begin{lstlisting}[language=Haskell,caption=Alternative implementation of the interpreter for \texttt{Parallel} processes.,label=lst:local_runprocess_split,numbers=left,frame=bt,firstnumber=16]
+runProcess (Parallel p1 p2 combinator) x = do
+  runProcess (Split (\x -> (x,x)) p1 p2 combinator) x
+\end{lstlisting}
 
+Similarly, we can convert \texttt{Multilel} processes into \texttt{Slice} processes. Again, the semantic and structural properties are very similar, we only need to provide a function that slices the argument into the appropriate slices. Since all sub-processes from \texttt{ps} should be supplied with the argument \texttt{x}, we can simply choose \texttt{repeat} to carry out the slicing. \texttt{repeat} takes a value and returns an infinite list with each element equal to the supplied value. Together with the parameters of \texttt{Multilel}, we use \texttt{repeat} to create a \texttt{Slice} process and run \texttt{runProcess} on it.
+\begin{lstlisting}[language=Haskell,caption=Alternative implementation of the interpreter for \texttt{Multilel} processes.,label=lst:local_runprocess_slice,numbers=left,frame=bt,firstnumber=16]
+runProcess (Multilel ps ib fold) x = do
+  runProcess (Slice repeat ps ib fold) x
+\end{lstlisting}
 
 \section{Difference to the algebraic model}
 \label{chp:difference_model_implementation}
