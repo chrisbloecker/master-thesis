@@ -1,5 +1,5 @@
 \chapter{A real world example\index{Example}}
-In this chapter we use the \textsc{Hive} process algebra to build a distributed system that finds solutions for the travelling salesman problem\index{Travelling Salesman Problem}. Since the travelling salesman problem is considered to be a computationally hard optimisation problem, we don't have extended hopes in finding optimal solutions and therefore apply a meta-heuristic\index{Meta-heuristic} approach to solve it.
+In this chapter we use the previously developed process calculus to build a distributed program that finds solutions for the travelling salesman problem\index{Travelling Salesman Problem}. Since the travelling salesman problem is considered to be a computationally hard optimisation problem, we don't have extended hopes in finding optimal solutions and therefore apply a meta-heuristic\index{Meta-heuristic} approach to solve it.
 
 \section{The travelling salesman problem\index{Travelling Salesman Problem}}
 \label{chp:tsp}
@@ -77,100 +77,109 @@ Ant systems perform their work in three phases:
 \end{enumerate}
 Phase (1) takes place exactly once. Phases (2) and (3) take place in turn until either a predefined maximum execution time is reached or a solution of sufficient quality has been found. Other criteria to abort the computation can be applied as well.
 
-\section{A prototype of an ant system using \textsc{Hive}}
-Having introduced the principles of ant systems, we use the \textsc{Hive} process algebra to implement a distributed ant system. Most notably, we do so without specifying any explicit communication between processes, illustrating that \textsc{Hive} fulfils its purpose.
+\section{A prototype of a distributed ant system}
+Having introduced the principles of ant systems, we use the our process calculus to implement a distributed ant system. Most notably, we do so without specifying any explicit communication between processes, illustrating that the process calculus fulfils its purpose.
 
-We begin by modelling the configuration for the ant system, including the previously mentioned necessary parameters, the data model for a configuration can be found in \lstref{lst:ant_conf}. The actual problem input is given by \texttt{graph}, \texttt{ants} specifies how many ants should be concurrently used to explore solutions and \texttt{alpha} and \texttt{beta} are used by the ants when exploring solutions (cf. \chpref{chp:ant_system}). The configuration also includes the current pheromones as well as the best solution to the problem that has been found so far, both kept up to date by the ant system. Furthermore, it must be possible to send the configuration over the network to ants running on other nodes in a distributed system. Therefore we need to add instances for the type classes \texttt{Generic}, \texttt{Typeable} and \texttt{Binary}.
+We begin by modelling the configuration for the ant system, including the previously mentioned necessary parameters, the data model for a configuration can be found in \lstref{lst:ant_conf}. The actual problem input is given by \texttt{graph}, \texttt{ants} specifies how many ants should be concurrently used to explore solutions, \texttt{alpha} and \texttt{beta} are used by the ants when exploring solutions and \texttt{rho} is the evaporation factor (cf. \chpref{chp:ant_system}). The configuration also includes the current pheromones as well as the best solution to the problem that has been found so far, both kept up to date by the ant system. Furthermore, it must be possible to send the configuration over the network to ants running on other nodes in a distributed system. Therefore we need to add instances for the type classes \texttt{Generic}, \texttt{Typeable} and \texttt{Binary}.
 
 \begin{lstlisting}[language=Haskell,frame=tb,numbers=left,label=lst:ant_conf,caption=Configuration for the ant system.]
-data Conf = Conf { graph      :: Graph Int
+type Solution = (Path, Int)
+
+data Conf = Conf { graph      :: !(Graph Int)
                  , pheromones :: !Pheromones
-                 , path       :: !Path
+                 , solution   :: !Solution
                  , ants       :: Int
                  , iter       :: Int
                  , alpha      :: Double
                  , beta       :: Double
+                 , rho        :: Double
                  }
   deriving (Generic, Typeable)
 
 instance Binary Conf where
 \end{lstlisting}
 
-Next we define the basic \textsf{Cloud Haskell} processes which we wrap into \textsc{Hive} processes later. The basic \textsf{Cloud Haskell} processes can be found in \lstref{lst:ant_basic}, but note that we don't show the implementation details of these processes here, they can be found in \appref{app:ant_system_processes}. For now, only the existence and how we work with them is important.
-
-The \texttt{ant} process resembles the work of an ant that is supplied with a configuration and return exactly one solution candidate to the presented problem.
-
-The \texttt{combinePaths} process receives a configuration and a list of candidate solutions and returns a new configuration. To do so, it inspects the list of solution candidates and updates both the pheromone concentrations for the graph stored in the configuration and the best known solution so far.
-
-The \texttt{extractSolution} process is fairly simple and doesn't do anything else than extracting the best known solution from the configuration it is supplied with.
+Next we define the basic processes which we wrap into processes later. The basic processes can be found in \lstref{lst:ant_basic}, but note that we don't show the implementation details of these processes here, they can be found in \appref{app:ant_system_processes}. For now, only the existence and how we work with them is important.
 
 \begin{lstlisting}[language=Haskell,frame=tb,numbers=left,firstnumber=12,label=lst:ant_basic,caption=Basic processes.]
-ant :: Conf -> BasicProcess AntSolution
+ant :: Conf -> BasicProcess Solution
 ant conf = ...
 
 combinePaths :: (Conf, [AntSolution]) -> BasicProcess Conf
 combinePaths (conf, ps) = ...
 
 evaporations :: Configuration -> BasicProcess Configuration
-evaporations (conf@Configuration {..}) =
-  return conf { pheromones = evaporation rho pheromones }
+evaporations (conf@Configuration {..}) = ...
 
-extractSolution :: Conf -> BasicProcess AntSolution
-extractSolution = return . path
+extractSolution :: Conf -> BasicProcess Solution
+extractSolution = return . solution
 \end{lstlisting}
 
-As discussed in \chpref{chp:cloud_haskell}, we need to provide a \texttt{SerializableDict} for every data type that we want to be able to send over the network to another process. In this case, we need to do this for \texttt{Path} and \texttt{Conf} since values of these types are returned by remotely run processes. As a brief reminder: a \texttt{SerializableDict} is basically just an explicit type tag and doesn't involve anything more than using a type constructor, as can be seen in \lstref{lst:ant_dicts}.
+The basic process \texttt{ant} resembles the work of an ant that is supplied with a configuration and returns exactly one solution candidate for the presented problem.
+
+The basic process \texttt{combinePaths} receives a configuration and a list of candidate solutions and returns a new configuration. To do so, it takes list of solution candidates and updates the pheromone concentrations for the graph stored in the configuration and the best known solution so far.
+
+The basic process \texttt{evaporations} takes the configuration and updates the pheromone values by reducing the pheromone concentration on every edge according to the evaporation parameter \texttt{rho}.
+
+The basic process \texttt{extractSolution} is fairly simple and doesn't do anything else than extracting the best known solution from the configuration it is supplied with.
+
+As discussed in \chpref{chp:cloud_haskell}, we need to provide a \texttt{SerializableDict} for every data type that we want to be able to send over the network to another process. In this case, we need to do this for \texttt{Solution} and \texttt{Conf} since values of these types are returned by remotely run processes. As a brief reminder: a \texttt{SerializableDict} is basically just an explicit type tag and doesn't involve anything more than using a type constructor, as can be seen in \lstref{lst:ant_dicts}.
 
 \begin{lstlisting}[language=Haskell,frame=tb,numbers=left,firstnumber=20,label=lst:ant_dicts,caption=Dictionaries for serialisation.]
-pathDict :: SerializableDict Path
-pathDict = SerializableDict
+solutionDict :: SerializableDict Solution
+solutionDict = SerializableDict
 
 confDict :: SerializableDict Conf
 confDict = SerializableDict
 \end{lstlisting}
 
-In order to make the basic \textsf{Cloud Haskell} processes and the dictionaries remotely usable, we have to pass their names to \texttt{remotable}, as shown in \lstref{lst:ant_remotable}. \texttt{remotable} creates the closures for the given functions, their decoders and meta information and adds the information to a table of functions that can be used remotely.
+In order to make the basic \textsf{Cloud Haskell} processes and the dictionaries remotely usable, we have to pass their names to \texttt{remotable}, as shown in \lstref{lst:ant_remotable}. \texttt{remotable} creates the closures for the given functions, their decoders and meta information and adds the information to a table of functions that can be used remotely. More specifically this is a table of static code pointers to functions that are known at compile time, which explains the need for top level names.
 
 \begin{lstlisting}[language=Haskell,frame=tb,numbers=left,firstnumber=25,label=lst:ant_remotable,caption=Making processes and dictionaries remotable.]
 remotable [ 'ant
           , 'combinePaths
+          , 'evaporations
           , 'extractSolution
-          , 'pathDict
+          , 'solutionDict
           , 'confDict
           ]
 \end{lstlisting}
 
-We can now model the basic \textsc{Hive} processes and make use of the previously defined basic \textsf{Cloud Haskell} processes to wrap them into them. The basic \textsc{Hive} processes can be found in \lstref{lst:ant_hive}.
+We can now take the basic processes and wrap them into processes using the wrappers for basic processes \texttt{Const} and \texttt{Simple}. However we have no need to use \texttt{Const} here. The resulting processes processes can be found in \lstref{lst:ant_hive}.
 
-\texttt{antP} defines a \textsf{Hive} process that takes a configuration and returns a \texttt{Path}, which is immediately obvious from its signature. To create this process, we take use \textsf{Template Haskell} to generate a closure from the \texttt{ant} process and a static value of the according dictionary and wrap them using the \texttt{Simple} constructor. To create the \texttt{combinePathsP} and \texttt{extractSolutionP} processes, we proceed analogously: we use \textsf{Template Haskell} to generate the closures and matching dictionaries and wrap them using the \texttt{Simple} constructor from the \textsc{Hive} process algebra. Note that we explicitly model the type of the input and output values of \textsc{Hive} processes in the function signatures.
+\texttt{antP} defines a process that takes a configuration and returns a \texttt{Solution}, which is immediately obvious from its signature. To create this process, we take use \textsf{Template Haskell} to generate a closure from the \texttt{ant} process and a static value of the according dictionary and wrap them using the \texttt{Simple} constructor. To create the \texttt{combinePathsP} and \texttt{extractSolutionP} processes, we proceed analogously: we use \textsf{Template Haskell} to generate the closures and matching dictionaries and wrap them using the \texttt{Simple} constructor from our process calculus. Note that we explicitly model the type of the input and output values of processes in the function signatures.
 
-\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,firstnumber=31,label=lst:ant_hive,caption={\textsc{Hive} processes, built on top of basic \textsf{Cloud Haskell} processes.}]
-antP :: Process Conf Path
+\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,firstnumber=31,label=lst:ant_hive,caption={Processes, built up from previously defined basic processes.}]
+antP :: Process Conf Solution
 antP = Simple $(mkStatic 'pathDict)
               $(mkClosure 'ant)
 
-combinePathsP :: Process (Conf, [Path]) Conf
+combinePathsP :: Process (Conf, [Solution]) Conf
 combinePathsP = Simple $(mkStatic 'confDict)
                        $(mkClosure 'combinePaths)
 
-extractSolutionP :: Process Conf Path
+evaporationP :: Process Conf Conf
+evaporationP = Simple $(mkStatic 'confDict)
+                      $(mkClosure 'evaporations)
+
+extractSolutionP :: Process Conf Solution
 extractSolutionP = Simple $(mkStatic 'pathDict)
                           $(mkClosure 'extractSolution)
 \end{lstlisting}
 
-Now we have all the pieces prepared we need to put together an ant system: the basic \textsc{Hive} processes (\lstref{lst:ant_hive}), the data model (\lstref{lst:ant_conf}) and the \textsc{Hive} process combinators. We implement a function \texttt{interpret} that takes a configuration for an ant system and generates a \textsc{Hive} process from it that performs the work of the ant system. The implementation of \texttt{interpret} can be found in \lstref{lst:ant_system_complete}.
+Now we have all the pieces prepared we need to put together an ant system: the processes (\lstref{lst:ant_hive}), the data model (\lstref{lst:ant_conf}) and the process combinators. We implement a function \texttt{interpret} that takes a configuration for an ant system and generates a process structure from it that performs the work of the ant system when executed. The implementation of \texttt{interpret} can be found in \lstref{lst:ant_system_complete}.
 
 \begin{lstlisting}[language=Haskell,frame=tb,numbers=left,firstnumber=42,label=lst:ant_system_complete,caption=Transformation of a configuration for an ant system into a process hierarchy.]
 interpret :: Conf -> Process Conf Path
 interpret conf@Conf{..} = do
-  let antProcs  = replicate ants antP
-      innerProc = Multilel antProcs conf (Local combinePathsP)
+  let antRuns   = Multilel (replicate ants antP) conf (Local combinePathsP)
+      innerProc = Sequence antRuns (Local evaporationP)
       loop      = Loop conf 0 (<iter) id (\_ i -> i+1) innerProc
-  Sequence loop extractSolutionP
+  Sequence loop (Local extractSolutionP)
 \end{lstlisting}
 
-Conceptually, the ant system we build into a \textsc{Hive} process does its work by running multiple ants in a loop and keeping track of the best solution they find. After a predefined maximum number of iterations, the loop terminates and the found solution is returned. Exactly this structure can be seen in the composition of \texttt{loop} and \texttt{extractSolutionP} using the \texttt{Sequence} combinator in last line of \lstref{lst:ant_system_complete}. \texttt{extractSolutionP} is a basic \textsc{Hive} process, \texttt{loop} is a composed process, defined locally in \texttt{interpret}. As \lstref{lst:ant_system_complete} shows, \texttt{loop} is a loop process, created using \texttt{Loop}, that contains an inner process, i.e. \texttt{innerProc}, which in turn is a composition using the \texttt{Multilel} combinator of basic ant processes \texttt{antP}.
+Conceptually, the ant system we build into a process does its work by running multiple ants in a loop and keeping track of the best solution they find. After a predefined maximum number of iterations, the loop terminates and the found solution is returned. Exactly this structure can be seen in the composition of \texttt{loop} and \texttt{extractSolutionP} using the \texttt{Sequence} combinator in last line of \lstref{lst:ant_system_complete}.  As \lstref{lst:ant_system_complete} shows, \texttt{loop} is a loop process, created using \texttt{Loop}, that contains an inner process, i.e. \texttt{innerProc}, which in turn is a composition using the \texttt{Multilel} combinator of basic ant processes \texttt{antP}.
 
-To create a set of concurrently running ant processes for the inside of the loop, we simply create a list containing the desired number of processes that should run in parallel. Then we wrap them into a \texttt{Multilel} process together with an input value, i.e. \texttt{conf}, and a process to combine the solutions that will be found. Since the overhead for combining the solutions on a remote node would most likely be very high, we wrap the combinator process \texttt{combinePathsP} into a \texttt{Local} process so the process interpreter will carry out this computation locally. Note that instead of \texttt{Multilel}, we could also have used a hierarchy of \texttt{Parallel} processes to achieve the same semantics. The runtime however would be significantly worse due to the way the interpretation of \texttt{Parallel} processes has been implemented (cf. \lstref{lst:runprocess_parallel}). In a hierarchy of \texttt{Parallel} processes, we would have to wait for the processes furthest down in the hierarchy to terminate and run the combinator process multiple times on the way back up to the root, once for every \texttt{Parallel} node.
+To create a set of concurrently running ant processes for the inside of the loop, we simply create a list containing the desired number of processes that should run in parallel. Then we wrap them into a \texttt{Multilel} process together with an initial fold value, i.e. \texttt{conf}, and a process to combine the solutions that from the ants. Since the overhead for combining the solutions on a remote node would most likely be very high, we wrap the combinator process \texttt{combinePathsP} into a \texttt{Local} process so the process interpreter will carry out this computation locally. Note that instead of \texttt{Multilel}, we could also have used a hierarchy of \texttt{Parallel} processes to achieve the same semantics. The runtime however would be significantly worse due to the way the interpretation of \texttt{Parallel} processes is implemented. In a hierarchy of \texttt{Parallel} processes, we would have to wait for the processes furthest down in the hierarchy to terminate and run the combinator process multiple times on the way back up to the root, once for every \texttt{Parallel} node.
 
 The loop is created by wrapping the process that describes the parallel execution of the ant processes using the \texttt{Loop} decorator and adding control information about when to terminate the loop. In this case, we want to terminate the loop after a predefined maximum number of iterations: we initialise a counter with value \texttt{0} and provide a function that increases this value after each iteration by $1$, i.e. \texttt{\textbackslash\_ i -> i+1}. Furthermore we need to provide a value that defines the result of the loop in case it is executed $0$ times, i.e. \texttt{conf}, and a function that transforms the result of the process inside the loop back into a form that can be used as the input value for the next iteration, i.e. \texttt{id}.

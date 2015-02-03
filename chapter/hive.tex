@@ -384,22 +384,26 @@ runProcess (Multilel ps ib fold) x = do
   runProcess (Slice repeat ps ib fold) x
 \end{lstlisting}
 
-\section{Difference to the algebraic model}
-\label{chp:difference_model_implementation}
-Opposed to the situation given in the algebraic model\index{Algebraic!model}, \textsc{Hive} processes are \textbf{not} pure. As mentioned in \chpref{chp:cloud_haskell}, our processes execute in the \textsf{Cloud Haskell} \texttt{Process} monad\index{Monad}, which builds on top of the \texttt{IO} monad.
+\section{Remarks}
+\label{chp:implementation_remarks}
+The elegance of the algebraic model developed in \chpref{chp:algebraic_model} doesn't stay untouched. In this chapter we give a brief overview and some remarks on where the implementation differs from the algebraic model.
 
-For many real world applications this comes in handy. When implementing a software that solves computationally hard problems, like e.g. the travelling salesman problem\index{Traveling Salesman Problem} which will be discussed in \chpref{chp:tsp}, usually there are meta-heuristic\footnote{Meta-heuristics will be discussed in \chpref{chp:meta_heuristics}}\index{Meta-heuristic} approaches or approximation algorithms\index{Approximation algorithm} \cite{rolf2006approximationsalgorithmen} used, which make use of random number generators. Using random number generators in pure processes is not impossible, but would require to always provide a process with a seed for the random number generator.
+\subsection{Difference to the algebraic model}
+\label{chp:difference_model_implementation}
+Opposed to the situation given in the algebraic model\index{Algebraic!model}, the implemented processes are \textbf{not} pure. As mentioned, our processes execute in the \textsf{Haskell}'s \texttt{IO} monad and \textsf{Cloud Haskell}'s \texttt{Process} monad\index{Monad}, respectively.
+
+For many real world applications this comes in handy. When implementing a software that solves computationally hard problems, like e.g. the travelling salesman problem\index{Travelling Salesman Problem} which will be discussed in \chpref{chp:tsp}, usually there are meta-heuristic\footnote{Meta-heuristics will be discussed in \chpref{chp:meta_heuristics}}\index{Meta-heuristic} approaches or approximation algorithms\index{Approximation algorithm} \cite{rolf2006approximationsalgorithmen} used, which make use of random number generators. Using random number generators in pure processes is not impossible, but would require to always provide a process with a seed for the random number generator.
 
 In fact, using non-pure processes gives the developer more freedom to optimise processes manually. Instead of transmitting data structures of possibly several megabyte or even gigabyte over the network every time a process is spawned, the data could be stored in a local file on the nodes or in a database that is accessible over the network. However, this means that processes can perform operations that yield different results when executed several times, which has immediate implications for a process optimiser.
 
-\subsubsection{Process optimiser\index{Process!optimiser}}
+\subsection{Process optimiser\index{Process!optimiser}}
 We have mentioned earlier that we can use the laws given in \chpref{chp:laws} to build a process optimiser that would automatically transform processes into an equivalent representation, based on defined criteria. One of such criteria might be the memory the representation of a process tree takes up or the runtime that a process will need to execute. Unfortunately it's hard to predict the runtime of a process, so the user would need to supply the optimiser with a heuristic that is capable of estimating the runtime of processes. However, based on the laws from \chpref{chp:laws} there are some situations where it seems very reasonable to optimise a composed process, such as $P \choice P$ or $P \,\parallel\, P$ for a process $P$.
 
 But as discussed in \chpref{chp:difference_model_implementation}, a developer might make use of side-effects intentionally. He might construct a process that performs random walks in the solution space of a computationally hard problem, based on a random number generator and then run multiple instances of that process in parallel. A process optimiser would optimise this set of parallel running processes to only one process, not knowing that the processes would behave differently at runtime because they are not pure. This is why we do not provide an automated process optimiser and trust the developer to make appropriate use of the laws given in \chpref{chp:laws} whenever applicable.
 
 \section{Example: arithmetic expressions - hello world for interpreters\index{Example}}
 \label{chp:example}
-After introducing the \textsc{Hive} process algebra and discussing the interpreter that takes care of the distribution of \textsc{Hive} processes, we give an example of how to make use of it. To do so, we employ the typical hello world program for interpreters, i.e. an interpreter\index{Interpreter} for arithmetic expressions\index{Arithmetic expression}. Except for imports from the \textsf{Cloud Haskell} library and the \textsc{Hive} process algebra, this example will be self-contained. It is intentionally kept very simple and the necessity for a distributed interpreter for arithmetic expressions is certainly not given. However, an interpreter for arithmetic expressions is fairly simple and thus, well suited to illustrate how to apply the \texttt{Hive} process algebra for distribution without distracting from it.
+After discussing the process model and the interpreter that takes care of processes interpretation, we give an example of how to apply our calculus. To do so, we develop the typical hello world program for interpreters, i.e. an interpreter\index{Interpreter} for arithmetic expressions\index{Arithmetic expression} with parallel evaluation of sub-expressions. Except for some imports of standard \textsf{Haskell} libraries, this example is self-contained. It is intentionally kept very simple and the necessity for a parallelised interpreter for arithmetic expressions is certainly not given. However, an interpreter for arithmetic expressions is fairly simple and thus well suited to illustrate how to apply the our process calculus to it.
 
 First, we need an appropriate data type to represent arithmetic expressions. An arithmetic expression \texttt{Expr} is either a value \texttt{Val} containing an \texttt{Int} or a combination of two arithmetic expressions. The combinators we want to support are addition \texttt{Add}, subtraction \texttt{Sub}, multiplication \texttt{Mul} and division \texttt{Div}. The relevant data type together with the data constructors can be found in \lstref{lst:arith_model} 
 \begin{lstlisting}[language=Haskell, caption=Data model for the representation of arithmetic expressions., label=lst:arith_model, numbers=left, frame=bt]
@@ -420,61 +424,61 @@ eval (Mul x y) = eval x * eval y
 eval (Div x y) = eval x `div` eval y
 \end{lstlisting}
 
-Now, if we want to make use of the \textsc{Hive} process interpreter \texttt{runProcess} to distribute the interpretation of arithmetic expressions, we need to define a transformation from the category of arithmetic expressions \texttt{Expr} to the category of \textsc{Hive} processes \texttt{Process a b}. Arithmetic expressions of type \texttt{Expr} do not take any parameter, they are fully defined by the values incorporated into \texttt{Val} values and yield a value of type \texttt{Int} when interpreted and hence need to be mapped to \textsc{Hive} processes of type \texttt{Process () Int}.
+Now, if we want to make use of the process interpreter \texttt{runProcess} to parallelise the interpretation of arithmetic expressions, we need to define a transformation from arithmetic expressions \texttt{Expr} to processes \texttt{Process a b}. Arithmetic expressions of type \texttt{Expr} do not take any parameter, they are fully defined by the values incorporated into \texttt{Val} values and yield a value of type \texttt{Int} when interpreted and hence need to be mapped to processes of type \texttt{Process () Int}.
 
-For the representation of arithmetic expressions that have the form of \texttt{Val}, we implement a generator \texttt{val} for \textsf{Cloud Haskell} processes that are used to create basic \textsc{Hive} processes by wrapping them into a \texttt{Const} wrapper. The implementation of \texttt{val} can be found in \lstref{lst:arith_val}.
-\begin{lstlisting}[language=Haskell, caption=A generator for \textsf{Cloud Haskell} process for the representation of \texttt{Val} nodes., label=lst:arith_val, numbers=left, frame=bt, firstnumber=12]
-val :: Int -> CH.Process Int
+For the representation of arithmetic expressions that have the form of \texttt{Val}, we implement a function \texttt{val} that returns a basic processes that can be turned into a process by wrapping it into a \texttt{Const} wrapper. The implementation of \texttt{val} can be found in \lstref{lst:arith_val}.
+\begin{lstlisting}[language=Haskell, caption=A function that generates basic processes for the representation of \texttt{Val} nodes., label=lst:arith_val, numbers=left, frame=bt, firstnumber=12]
+val :: Int -> BasicProcess Int
 val i = return i
 \end{lstlisting}
 
-Arithmetic expressions of the form \texttt{Add}, \texttt{Sub}, \texttt{Mul} and \texttt{Div} can be interpreted in parallel since their sub-expressions are independent from each other. We can exploit \texttt{Parallel} processes from the \textsc{Hive} process algebra to interpret the sub-expressions in parallel. To do so, we need to supply combinator processes for the \texttt{Parallel} processes, so the obtained results from the sub-processes can be combined into a single value. The implementation of the relevant combinator processes can be found in \lstref{lst:arith_combinators}, they all have the same type \texttt{(Int, Int) $\to$ CH.Process Int}. Remember that functions that should be wrapped into a closure need to be of arity one and return a \textsf{Cloud Haskell} process.
-\begin{lstlisting}[language=Haskell, caption=\textsf{Cloud Haskell} processes for the combination of results from processes that have been executed in parallel., label=lst:arith_combinators,numbers=left, frame=bt, firstnumber=14]
-add :: (Int, Int) -> CH.Process Int
+Arithmetic expressions of the form \texttt{Add}, \texttt{Sub}, \texttt{Mul} and \texttt{Div} can be interpreted in parallel since their sub-expressions are independent from each other. We can exploit \texttt{Parallel} processes to interpret the sub-expressions in parallel. To do so, we need to supply combinator processes for the \texttt{Parallel} processes, so the obtained results from the sub-processes can be combined into a single value. The implementation of the relevant combinator processes can be found in \lstref{lst:arith_combinators}, they all have the same type \texttt{(Int, Int) $\to$ BasicProcess Int}.
+\begin{lstlisting}[language=Haskell, caption=Basic processes for the combination of results from processes that have been executed in parallel., label=lst:arith_combinators,numbers=left, frame=bt, firstnumber=14]
+add :: (Int, Int) -> BasicProcess Int
 add (x, y) = return (x + y)
 
-subtract :: (Int, Int) -> CH.Process Int
+subtract :: (Int, Int) -> BasicProcess Int
 subtract (x, y) = return (x - y)
 
-multiply :: (Int, Int) -> CH.Process Int
+multiply :: (Int, Int) -> BasicProcess Int
 multiply (x, y) = return (x * y)
 
-divide :: (Int, Int) -> CH.Process Int
+divide :: (Int, Int) -> BasicProcess Int
 divide (_, 0) = undefined
 divide (x, y) = return (x `div` y)
 \end{lstlisting}
 
-In addition, we need a \texttt{SerializableDict} for each type that we want to send back as a result over the network. Since the only type involved in this is \texttt{Int}, we only need a dictionary of type \texttt{SerializableDict Int}, which is shown in \lstref{lst:arith_dict}.
-\begin{lstlisting}[language=Haskell, caption=\texttt{SerializableDict} for values of type \texttt{Int}., label=lst:arith_dict, numbers=left, frame=bt, firstnumber=26]
-intDict :: SerializableDict Int
-intDict = SerializableDict
-\end{lstlisting}
+%In addition, we need a \texttt{SerializableDict} for each type that we want to send back as a result over the network. Since the only type involved in this is \texttt{Int}, we only need a dictionary of type \texttt{SerializableDict Int}, which is shown in \lstref{lst:arith_dict}.
+%\begin{lstlisting}[language=Haskell, caption=\texttt{SerializableDict} for values of type \texttt{Int}., label=lst:arith_dict, numbers=left, frame=bt, firstnumber=26]
+%intDict :: SerializableDict Int
+%intDict = SerializableDict
+%\end{lstlisting}
 
-Now we need to pass the list of names of all the functions that shall be able to be called remotely to the \textsf{Cloud Haskell} function \texttt{remotable}. Their names are then entered into a table of static code pointers to make the function remotely callable. They can be called on any node that shares the relevant entries in its table of static code pointers.
-\begin{lstlisting}[language=Haskell, caption=Making functions remotely callable., label=lst:arith_remotable, numbers=left, frame=bt, firstnumber=28]
-remotable ['val, 'add, 'subtract, 'multiply, 'divide, 'intDict]
-\end{lstlisting}
+%Now we need to pass the list of names of all the functions that shall be able to be called remotely to the \textsf{Cloud Haskell} function \texttt{remotable}. Their names are then entered into a table of static code pointers to make the function remotely callable. They can be called on any node that shares the relevant entries in its table of static code pointers.
+%\begin{lstlisting}[language=Haskell, caption=Making functions remotely callable., label=lst:arith_remotable, numbers=left, frame=bt, firstnumber=28]
+%remotable ['val, 'add, 'subtract, 'multiply, 'divide, 'intDict]
+%\end{lstlisting}
 
-To turn the previously defined functions into \textsc{Hive} processes, we need to wrap them using the type constructors for basic processes, i.e. \texttt{Const} and \texttt{Simple}. For that, we need to supply a closure\index{Closure} and a matching dictionary for the serialisation\index{Serialisation} of the result value of the respective closure per process. Since the only result type involved here is \texttt{Int}, we're fine with \texttt{SerializableDict Int}, which is created by \texttt{\$(mkStatic 'intDict)} from the previously defined \texttt{intDict} using \textsf{Template Haskell}. The dictionary itself is not sent over network and since it is a static value, i.e. it is known at compile time and doesn't need to be sent over network. It can be looked up in the table of static code pointers by its name since it has been added by supplying its top level name to \texttt{remotable}, as shown in \lstref{lst:arith_remotable}. The wrapping into \textsc{Hive} processes is shown in \lstref{lst:arith_wrapping}.
-\begin{lstlisting}[language=Haskell, caption=Creating function closures and wrapping them into \textsc{Hive} processes., label=lst:arith_wrapping, numbers=left, frame=bt, firstnumber=29]
+To turn the previously defined functions into processes, we need to wrap them using the data constructors for basic processes, i.e. \texttt{Const} and \texttt{Simple}. The wrapping into processes is shown in \lstref{lst:arith_wrapping}.
+\begin{lstlisting}[language=Haskell, caption=Creation of processes by wrapping them into \texttt{Simple} processes., label=lst:arith_wrapping, numbers=left, frame=bt, firstnumber=29]
 valP :: Int -> Process () Int
-valP i = Const $(mkStatic 'intDict) ($(mkClosure 'val) i)
+valP i = Const (val i)
 
 addP :: Process (Int, Int) Int
-addP = Simple $(mkStatic 'intDict) $(mkClosure 'add)
+addP = Simple add
 
 subP :: Process (Int, Int) Int
-subP = Simple $(mkStatic 'intDict) $(mkClosure 'subtract)
+subP = Simple subtract
 
 mulP :: Process (Int, Int) Int
-mulP = Simple $(mkStatic 'intDict) $(mkClosure 'multiply)
+mulP = Simple multiply
 
 divP :: Process (Int, Int) Int
-divP = Simple $(mkStatic 'intDict) $(mkClosure 'divide)
+divP = Simple divide
 \end{lstlisting}
 
-All prerequisites are met now and we can start with the transformations from \texttt{Expr} to \textsc{Hive} processes, which we implement an interpreter for. It can be found in \lstref{lst:arith_transformation}: \texttt{interpret} maps expressions of the form \texttt{Val} to a basic process that simply returns a wrapped value and maps composed expressions to composed processes using the \texttt{Parallel} type constructor. When passing the resulting \textsc{Hive} process to the \textsc{Hive} process interpreter \texttt{runProcess}, it takes care of the distribution of the sub-processes of the \texttt{Parallel} nodes.
-\begin{lstlisting}[language=Haskell, caption=Transformation from \texttt{Expr} to \textsc{Hive} processes., label=lst:arith_transformation, numbers=left, frame=bt, firstnumber=43]
+All prerequisites are met now and we can start with the transformations from \texttt{Expr} to \texttt{Process () Int}, which we implement an interpreter for. It can be found in \lstref{lst:arith_transformation}: \texttt{interpret} maps expressions of the form \texttt{Val} to a basic process that simply returns a wrapped value and maps composed expressions to composed processes using the \texttt{Parallel} type constructor. When passing the resulting process to the process interpreter \texttt{runProcess}, it takes care of the parallelisation of the sub-processes of the \texttt{Parallel} nodes.
+\begin{lstlisting}[language=Haskell, caption=Transformation from \texttt{Expr} to processes., label=lst:arith_transformation, numbers=left, frame=bt, firstnumber=43]
 interpret :: Expr -> Process () Int
 interpret (Val i)   = valP i
 interpret (Add x y) = Parallel (interpret x) (interpret y) addP
@@ -483,4 +487,4 @@ interpret (Mul x y) = Parallel (interpret x) (interpret y) mulP
 interpret (Div x y) = Parallel (interpret x) (interpret y) divP
 \end{lstlisting}
 
-In this example we have defined a data structure that can be used to represent arithmetic expressions and implemented a conventional interpreter for this data structure. Then, we have defined a mapping from these arithmetic expressions to \textsc{Hive} processes, and used the \textsc{Hive} process interpreter to distribute their interpretation. We did not have to explicitly implement network communication of any kind for this, but only have to make appropriate use of the \textsc{Hive} process algebra to represent our computation as a composed process. 
+In this example we have defined a data structure that can be used to represent arithmetic expressions and implemented a conventional interpreter for this data structure. Then, we have defined a mapping from these arithmetic expressions to processes, and used the process interpreter to parallelise their interpretation. We did not have to explicitly implement parallelisation or thread management of any kind for this, but only have to make appropriate use of the process calculus to represent our computation as a composed process.

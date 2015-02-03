@@ -49,12 +49,12 @@ runProcessHelper master p x mvar = do
 \section{Ant system processes}
 \label{app:ant_system_processes}
 
-\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,caption=Type aliases and the implementation of ants as a \textsf{BasicProcess}.]
-type Visited     = [Node]
-type Unvisited   = [Node]
-type AntSolution = (Path, Int)
+\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,caption=Type aliases and the implementation of basic processes for the ant system.]
+type Visited   = [Node]
+type Unvisited = [Node]
+type Solution  = (Path, Int)
 
-ant :: Configuration -> BasicProcess AntSolution
+ant :: Configuration -> BasicProcess Solution
 ant Configuration {..} = do
   path <- runAnt graph pheromones [1] (nodes graph \\ [1])
   return (path, pathLength' graph path)
@@ -68,15 +68,15 @@ ant Configuration {..} = do
         rand <- liftIO $ randomRIO (0, sum probs)
         let next  = fst . head . dropWhile ((< rand) . snd) $ zip unvisited (scanl1 (+) probs)
         runAnt g p (visited ++ [next]) (unvisited \\ [next])
-\end{lstlisting}
 
-
-\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,caption=Implementation of a combinator process for ant solutions as \textsf{BasicProcess}.,firstnumber=16]
-combinePaths :: (Configuration, [AntSolution]) -> BasicProcess Configuration
+combinePaths :: (Configuration, [Solution]) -> BasicProcess Configuration
 combinePaths (conf@(Configuration {..}), ass) = return conf { pheromones = pheromones', path = path', pathLen = len' }
   where
     pheromones'   = depositPheromones ass pheromones
     (path', len') = minimumBy (compare `on` snd) ass
+
+evaporations :: Configuration -> BasicProcess Configuration
+evaporations (conf@Configuration {..}) = return conf { pheromones = evaporation rho pheromones }
 \end{lstlisting}
 
 \end{landscape}
