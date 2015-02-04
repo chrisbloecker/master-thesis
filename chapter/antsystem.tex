@@ -78,6 +78,7 @@ Ant systems perform their work in three phases:
 Phase (1) takes place exactly once. Phases (2) and (3) take place in turn until either a predefined maximum execution time is reached or a solution of sufficient quality has been found. Other criteria to abort the computation can be applied as well.
 
 \section{A prototype of a distributed ant system}
+\label{chp:ant_system_implementation}
 Having introduced the principles of ant systems, we use the our process calculus to implement a distributed ant system. Most notably, we do so without specifying any explicit communication between processes, illustrating that the process calculus fulfils its purpose.
 
 We begin by modelling the configuration for the ant system, including the previously mentioned necessary parameters, the data model for a configuration can be found in \lstref{lst:ant_conf}. The actual problem input is given by \texttt{graph}, \texttt{ants} specifies how many ants should be concurrently used to explore solutions, \texttt{alpha} and \texttt{beta} are used by the ants when exploring solutions and \texttt{rho} is the evaporation factor (cf. \chpref{chp:ant_system}). The configuration also includes the current pheromones as well as the best solution to the problem that has been found so far, both kept up to date by the ant system. Furthermore, it must be possible to send the configuration over the network to ants running on other nodes in a distributed system. Therefore we need to add instances for the type classes \texttt{Generic}, \texttt{Typeable} and \texttt{Binary}.
