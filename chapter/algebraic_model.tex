@@ -170,7 +170,7 @@ The argument $a$ of a process $P$ is the value that is presented to $P$ and that
 
 By running a process $P$, we mean presenting an argument $a$ to the process, applying its intrinsic function to $a$ and receiving a result value $r$, i.e. $\left\{ a \right\} P \left\{ r \right\}$. The goal of this chapter is to define the intrinsic function of a process which is exactly its semantics.
 
-For the definition of process semantics, we introduce a function $sem \colon \mathcal{P} \to 2^{\left( \mathcal{T} \to \mathcal{T} \right)}$ that takes a process and associated it with its meaning, i.e. with the \textbf{set} of functions it calculates. Since the choice operator $\choice$ and the \textsc{Kleene} star $\repetition$ introduce non-determinism\index{Non-determinism}, every process that involves a choice between processes or the \textsc{Kleene} star has more than one possible outcome, which we resemble in the definition of $sem$.
+For the definition of process semantics, we introduce a function $sem \colon \mathcal{P} \to 2^{\left( \mathcal{T} \to \mathcal{T} \right)}$ that takes a process and associates it with its meaning, i.e. with the \textbf{set} of functions it calculates. Since the choice operator $\choice$ and the \textsc{Kleene} star $\repetition$ introduce non-determinism\index{Non-determinism}, every process that involves a choice between processes or the \textsc{Kleene} star has more than one possible outcome, which we resemble in the definition of $sem$.
 
 
 \nomenclature{$a$}{Argument for a process}
@@ -225,7 +225,7 @@ The error process $Err$ presents a special case here: as stated in \chpref{chp:s
 Let $Err \in \mathcal{P}$ be the error process, i.e. the process that always returns the undefined value $\bot$.
   \begin{equation}
     \label{eqn:sem_error}
-    sem \left\langle Err \right\rangle = \left\{ \bot \right\}.
+    sem \left\langle Err \right\rangle = \left\{ x \mapsto \bot \right\}.
   \end{equation}
   \hfill\qedsymbol
 \end{definition}
@@ -255,7 +255,7 @@ If either $P$ of $Q$ is the error process, the optimistic oracle\index{Oracle} s
   \begin{eqnarray}
     sem \left\langle P \choice Err \right\rangle & = & sem \left\langle P \right\rangle \\
     sem \left\langle Err \choice Q \right\rangle & = & sem \left\langle Q \right\rangle \\
-    sem \left\langle Err \choice Err \right\rangle & = & sem \left\langle Err \right\rangle = \left\{ \bot \right\}
+    sem \left\langle Err \choice Err \right\rangle & = & sem \left\langle Err \right\rangle
   \end{eqnarray}
   \hfill\qedsymbol
 \end{definition}
@@ -297,25 +297,25 @@ Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_ato
 
 The reason why we need $\star$ to be commutative is the intuition one might have about parallel composition of processes. For two processes $Q, R \in \mathcal{P}$, it is a reasonable expectation that $Q \,\parallel\, R$ and $R \,\parallel\, Q$ behave exactly the same. Since in the definition of the semantics of parallel composition we employ $\star$ to combine the results of the parallel processes, the properties of $\star$ are transferred to the parallel composition operator $\parallel$. Hence, if we want $\parallel$ to have commutative properties, we have to require this from $\star$.
 
-Furthermore, for a semigroup\index{Semigroup} $\left(T_r, \star \right)$ that is employed to combine results of processes that are composed using the parallel operator $\parallel$, we require every $t_r \in T_r$, i.e. every concrete value of type $T_r$, to be idempotent\index{Idempotence} respective to $\star$:
-\begin{equation}
-  \label{eqn:idempotence}
-  \bigwedge_{t_r \in T_r} t_r \star t_r = t_r.
-\end{equation}
+%Furthermore, for a semigroup\index{Semigroup} $\left(T_r, \star \right)$ that is employed to combine results of processes that are composed using the parallel operator $\parallel$, we require every $t_r \in T_r$, i.e. every concrete value of type $T_r$, to be idempotent\index{Idempotence} respective to $\star$:
+%\begin{equation}
+%  \label{eqn:idempotence}
+%  \bigwedge_{t_r \in T_r} t_r \star t_r = t_r.
+%\end{equation}
 
-\begin{theorem}
-If the property shown in \eqnref{eqn:idempotence} holds, we can guarantee that parallel composition of processes lives up to another reasonable intuition, i.e. parallel composition of a process with itself does not change its semantics. In other words, let $R \in \mathcal{P}$ and compose $R$ using $\parallel$ with itself, then $R \,\parallel\, R$ has the same semantics as $R$.
-\end{theorem}
+%\begin{theorem}
+%If the property shown in \eqnref{eqn:idempotence} holds, we can guarantee that parallel composition of processes lives up to another reasonable intuition, i.e. parallel composition of a process with itself does not change its semantics. In other words, let $R \in \mathcal{P}$ and compose $R$ using $\parallel$ with itself, then $R \,\parallel\, R$ has the same semantics as $R$.
+%\end{theorem}
 
-\begin{myproof}
-Let $R \in \mathcal{P}$ be a process with $\rho \left( R \right) = \left( T_a, T_r \right)$ and let $\left( T_r, \star \right)$ be a semigroup\index{Semigroup} that satisfies the property given in \eqnref{eqn:idempotence}. Then $sem \left\langle R \,\parallel\, R \right\rangle = sem \left\langle R \right\rangle$.
-  \begin{eqnarray*}
-    sem \left\langle R \,\parallel\, R \right\rangle & \overset{\defref{def:sem_parallel}}{=} & \left\{ r \star r \,|\, r \in sem \left\langle R \right\rangle \right\} \\
-    & \overset{\eqnref{eqn:idempotence}}{=} & \left\{ r \,|\, r \in sem \left\langle R \right\rangle \right\} \\
-    & = & sem \left\langle R \right\rangle 
-  \end{eqnarray*}
-  \hfill$\blacksquare$
-\end{myproof}
+%\begin{myproof}
+%Let $R \in \mathcal{P}$ be a process with $\rho \left( R \right) = \left( T_a, T_r \right)$ and let $\left( T_r, \star \right)$ be a semigroup\index{Semigroup} that satisfies the property given in \eqnref{eqn:idempotence}. Then $sem \left\langle R \,\parallel\, R \right\rangle = sem \left\langle R \right\rangle$.
+%  \begin{eqnarray*}
+%    sem \left\langle R \,\parallel\, R \right\rangle & \overset{\defref{def:sem_parallel}}{=} & \left\{ r \star r \,|\, r \in sem \left\langle R \right\rangle \right\} \\
+%    & \overset{\eqnref{eqn:idempotence}}{=} & \left\{ r \,|\, r \in sem \left\langle R \right\rangle \right\} \\
+%    & = & sem \left\langle R \right\rangle 
+%  \end{eqnarray*}
+%  \hfill$\blacksquare$
+%\end{myproof}
 
 
 
