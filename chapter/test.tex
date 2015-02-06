@@ -18,15 +18,86 @@ Since $A_{seq}$, $A_{IO}$ and $A_{CH}$ are implementations of the same meta-heur
 
 The test runs to assess what speedup we can reach using $A_{IO}$ and local parallelisation, compared to $A_{seq}$, are carried out on an $\text{Intel}^{\textregistered}$ $\text{Core}^{\texttrademark}$ i7-3770 CPU @ 3.4GHz with 16GB RAM. We use \textsf{ghc} to compile the programs and the compiler flags \texttt{-O2} for $A_{seq}$ and \texttt{-threaded -O2} for $A_{IO}$. We run $A_{IO}$ with 1, 2, 3 and 4 cores active, respectively,  using the \texttt{+RTS -N} option.
 
-The tests to assess what speedup we can reach using $A_{CH}$ and parallelisation in a distributed system, compared to $A_{seq}$, are carried out using a set of $\text{Intel}^{\textregistered}$ $\text{Core}^{\texttrademark}$2 Quad Q6660 CPUs @ 2.4GHz with 8GM RAM. We use \textsf{ghc} to compile the programs and the compiler flags \texttt{-O2} for $A_{seq}$ and \texttt{-threaded -O2} for $A_{CH}$. We run $A_{CH}$ with the dedicated master node on one computer and with 1, 2, 4, 8, 16, 32 and 64 worker nodes connected, respectively. Note that, as the used cpus have 4 physical cores, each of them can be used to run 4 worker nodes.
+The tests to assess what speedup we can reach using $A_{CH}$ and parallelisation in a distributed system, compared to $A_{seq}$, are carried out using a set of $\text{Intel}^{\textregistered}$ $\text{Core}^{\texttrademark}$ i5-2400 CPUs @ 3.1GHz with 4GM RAM. We use \textsf{ghc} to compile the programs and the compiler flags \texttt{-O2} for $A_{seq}$ and \texttt{-threaded -O2} for $A_{CH}$. We run $A_{CH}$ with the dedicated master node on one computer and with 4, 8, 16 and 32 worker nodes connected, respectively. Note that, as the used cpus have 4 physical cores, each of them can be used to run 4 worker nodes.
 
 \section{Results}
+
+\begin{table}[h!]
+  \centering
+  \begin{tabular}{r|c||c|c|c|c|}
+    \cline{2-6}
+    & \multicolumn{1}{c||}{$A_{seq}$} & \multicolumn{4}{c|}{$A_{IO}$} \\
+    \hline
+    \multicolumn{1}{|r||}{scenario} & & 1 core & 2 cores & 3 cores & 4 cores \\
+    \hline
+    \hline
+    \multicolumn{1}{|r||}{\texttt{bays29}} & 0.45s & 0.492s & 0.369s & 0.377s & 0.386s \\
+    \hline
+    \multicolumn{1}{|r||}{\texttt{berlin52}} & 2.253s & 2.445s & 1.959s & 1.669s & 1.581s \\
+    \hline
+    \multicolumn{1}{|r||}{\texttt{st70}} & 5.292s & 6.141s & 4.882s & 3.952s & 3.603s \\
+    \hline
+    \multicolumn{1}{|r||}{\texttt{pr76}} & 6.4s & 7.909s & 5.941s & 4.823s & 4.418s \\
+    \hline
+    \multicolumn{1}{|r||}{\texttt{gr96}} & 12.855s & 21.564s & 13.548s & 9.707s & 8.536s \\
+    \hline
+    \multicolumn{1}{|r||}{\texttt{eil101}} & 15.126s & 27.91s & 17.011s & 12.646s & 10.652s \\
+    \hline
+    \multicolumn{1}{|r||}{\texttt{pr107}} & 16.244s & 28.066s & 16.19s & 11.751s & 11.365s \\
+    \hline
+    \multicolumn{1}{|r||}{\texttt{pr124}} & 26.277s & 51.789s & 29.859s & 22.708s & 18.909s \\
+    \hline
+    \multicolumn{1}{|r||}{\texttt{bier127}} & 28.468s & 56.648s & 32.632s & 24.744s & 21.037s \\
+    \hline
+    \multicolumn{1}{|r||}{\texttt{ch130}} & 32.039s & 71.878s & 37.951s & 29.253s & 25.094s \\
+    \hline
+  \end{tabular}
+  \caption{r1}
+  \label{tbl:variation_ameisenanzahl}
+\end{table}
+
+
 \begin{figure}[h!]
   \centering
   \includegraphics[width=\textwidth]{img/test_local_1.pdf}
   \label{fig:test_local_1}
   \caption{r1}
 \end{figure}
+
+
+\begin{table}[h!]
+  \centering
+  \begin{tabular}{r|c||c|c|c|c|}
+    \cline{2-6}
+    & \multicolumn{1}{c||}{$A_{seq}$} & \multicolumn{4}{c|}{$A_{CH}$} \\
+    \hline
+    \multicolumn{1}{|r||}{scenario} & & 4 worker & 8 worker & 12 worker & 16 worker \\
+    \hline
+    \hline
+    \multicolumn{1}{|r||}{\texttt{bays29}} & 0.893s & 59s & 36s & 35s & 30s \\
+    \hline
+    \multicolumn{1}{|r||}{\texttt{berlin52}} & 4.552s & 191s & 117s & 101s & 91s \\
+    \hline
+    \multicolumn{1}{|r||}{\texttt{st70}} & 10.493s & 363s & 255s & 217s & 193s \\
+    \hline
+    \multicolumn{1}{|r||}{\texttt{pr76}} & 19.3s & 484s & 308s & 269s & 236s \\
+    \hline
+    \multicolumn{1}{|r||}{\texttt{gr96}} & 25.595s & & 573 & & \\
+    \hline
+    \multicolumn{1}{|r||}{\texttt{eil101}} & & & & & \\
+    \hline
+    \multicolumn{1}{|r||}{\texttt{pr107}} & & & & & \\
+    \hline
+    \multicolumn{1}{|r||}{\texttt{pr124}} & & & & & \\
+    \hline
+    \multicolumn{1}{|r||}{\texttt{bier127}} & & & & & \\
+    \hline
+    \multicolumn{1}{|r||}{\texttt{ch130}} & & & & & \\
+    \hline
+  \end{tabular}
+  \caption{r1}
+  \label{tbl:variation_ameisenanzahl}
+\end{table}
 
 \begin{figure}[h!]
   \centering

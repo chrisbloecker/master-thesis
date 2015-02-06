@@ -8,17 +8,15 @@ For now we are not interested in \textbf{what} a process does or \textbf{how} it
 
 \section{Syntax\index{Syntax}}
 \label{chp:syntax}
-Let $\mathcal{P}$ be the set of processes\index{Process} and let $P, Q \in \mathcal{P}$ be basic processes. $\mathcal{P}$ represents the set of computable functions\index{Function} in form of processes and hence, is countable\footnote{For every computable function there is a Turing machine that computes it. There is a Gödel numbering for Turing machines, thus the number of Turing machines and the number of computable functions is countable.}. Then syntactically correct processes can be formed inductively by:
+Let $\mathcal{P}$ be the set of processes\index{Process} and let $B, P, Q \in \mathcal{P}$ be processes. Then syntactically correct processes can be formed inductively by:
+%$\mathcal{P}$ represents the set of computable functions\index{Function} in form of processes and hence, is countable\footnote{For every computable function there is a Turing machine that computes it. There is a Gödel numbering for Turing machines, thus the number of Turing machines and the number of computable functions is countable.}. 
 \begin{itemize}
-  \item $P \vee Q$ \hspace*{2em} (Choice)\index{Operator!choice}
-  \vspace*{-0.4em}
+  \item $\frac{P \vee Q}{B}$ \hspace*{2.7em} (Choice)\index{Operator!choice}
   \item $P \,|\, Q$ \hspace*{2.5em} (Parallel)\index{Operator!parallel}
-  \vspace*{-0.4em}
   \item $P \sequence Q$ \hspace*{2.2em} (Sequence)\index{Operator!sequence}
-  \vspace*{-0.4em}
-  \item $P^*$ \hspace*{3.5em} (Repetition)\index{Operator!repetition}
-  \vspace*{-0.4em}
-  \item $\left( P \right)$.
+%  \item $P^*$ \hspace*{3.5em} (Repetition)\index{Operator!repetition}
+%  \vspace*{-0.4em}
+  \item $\left( P \right)$
 \end{itemize}
 
 \nomenclature{$\mathcal{P}$}{Set of all processes}
@@ -26,7 +24,7 @@ Let $\mathcal{P}$ be the set of processes\index{Process} and let $P, Q \in \math
 \nomenclature{$\choice$}{Choice Operator}
 \nomenclature{$\parallel$}{Parallel Operator}
 \nomenclature{$\sequence$}{Sequence Operator}
-\nomenclature{$\repetition$}{\textsc{Kleene} star for repetition}
+%\nomenclature{$\repetition$}{\textsc{Kleene} star for repetition}
 
 %The syntax can also be expressed in form of a grammar $G = \left( N, T, R, P \right)$, where $N = \left\{ P \right\}$ is the set of non-terminals, $T = \mathcal{P}$ is the set of terminals, $R$ is the set of production rules and $P$ is the start symbol \cite{Hopcroft:2006:IAT:1196416} with % ToDo!
 %\begin{eqnarray*}
@@ -50,11 +48,11 @@ Let $\mathcal{P}$ be the set of processes\index{Process} and let $P, Q \in \math
 \label{chp:static_semantics}
 In this chapter we define the static semantics of our algebraic model\index{Algebraic!model}. We define what a basic\index{Process!basic} and what a composed\index{Process!composed} process is and we equip processes with a type signature\index{Type!signature}. The type signature of a process determines if the process can be used for composition with other processes, depending on the selected combinator.
 
-As before, let $\mathcal{P}$ be the countable set of processes. A basic\index{Process!basic}, or atomic\index{Process!atomic}, process is a process that performs an atomic operation and is no further divisable. A composed\index{Process!composed} process is a process that is composed of other processes, using one or many of the introduced process combinators $\choice, \parallel, \sequence$ and $\repetition$.
+As before, let $\mathcal{P}$ be the set of processes. A basic\index{Process!basic}, or atomic\index{Process!atomic}, process is a process that performs an atomic operation an is no further divisible insofar, that it does not involve any of the introduced process combinators. A composed\index{Process!composed} process is a process that is composed of other processes, using one or many of the introduced process combinators $\choice$, $\parallel$ and $\sequence$.
 
 \begin{definition}[Operator precedence\index{Operator!precedence}]
 \label{def:operator_precedence}
-The operator precedence in our algebra is as follows: $\repetition$ binds strongest, the next weaker binding operator is $\sequence$, followed by $\parallel$ and in the end $\choice$. Parentheses, as described in the syntax, might be necessary to express the desired composition.
+The operator precedence in our algebra is as follows: $\sequence$ binds strongest, the next weaker binding operator is $\parallel$ followed by $\choice$ in the end. Parentheses, as described in the syntax, might be necessary to overcome precedence and express the desired composition.
 
 \hfill\qedsymbol
 \end{definition}
@@ -62,9 +60,15 @@ The operator precedence in our algebra is as follows: $\repetition$ binds strong
 \begin{definition}[Types\index{Type}]
 Let $\mathcal{T}$ be the set of types with
 \begin{equation}
-  \mathcal{T} = \left\{ \bot \right\} \, \cup \, \bigcup_{i \in \mathbb{N}_0} \left\{ T_i \right\}
+  \mathcal{T} = \bigcup_{i \in \mathbb{N}_0} \left\{ T_i \right\}
 \end{equation}
-and let $T_i \in \mathcal{T}$ be types for every $i$. Furthermore, let $\bot$ be the undefined type\index{Type!undefined} that is identified with its only value $\bot$.
+and let $T_i \in \mathcal{T}$ be types for every $i$. %Furthermore, let $\bot$ be the undefined type\index{Type!undefined} that is identified with its only value $\bot$.
+
+\hfill\qedsymbol
+\end{definition}
+
+\begin{definition}[Undefined values]
+For every $T_i \in \mathcal{T}$, let $\bot_i \in T_i$ be the undefined value of type $T_i$ that is distinguishable from every other value of type $T_i$.
 
 \hfill\qedsymbol
 \end{definition}
