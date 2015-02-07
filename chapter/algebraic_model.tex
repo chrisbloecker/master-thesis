@@ -11,12 +11,13 @@ For now we are not interested in \textbf{what} a process does or \textbf{how} it
 Let $\mathcal{P}$ be the set of processes\index{Process} and let $P, Q, R \in \mathcal{P}$ be processes. Then syntactically correct processes can be formed by using the following construction rules:
 %$\mathcal{P}$ represents the set of computable functions\index{Function} in form of processes and hence, is countable\footnote{For every computable function there is a Turing machine that computes it. There is a Gödel numbering for Turing machines, thus the number of Turing machines and the number of computable functions is countable.}. 
 \begin{itemize}
-  \item $\choice{R}{P}{Q}$ \hspace*{2.7em} (Choice)\index{Operator!choice}
-  \item $\parallel{R}{P}{Q}$ \hspace*{2.8em} (Parallel)\index{Operator!parallel}
-  \item $\sequence{P}{Q}$ \hspace*{2.2em} (Sequence)\index{Operator!sequence}
+  \item $\choice{R}{P}{Q}$ \hspace*{2.3em} (Choice)\index{Syntax!Choice}
+  \item $\parallel{R}{P}{Q}$ \hspace*{2.8em} (Parallel)\index{Syntax!Parallel}
+  \item $\sequence{P}{Q}$ \hspace*{4.8em} (Sequence)\index{Syntax!Sequence}
+  \item $\repetition{R}{P}$ \hspace*{4.4em} (Repetition)\index{Syntax!Repetition}
 %  \item $P^*$ \hspace*{3.5em} (Repetition)\index{Operator!repetition}
 %  \vspace*{-0.4em}
-  \item $\left( P \right)$
+%  \item $\left( P \right)$
 \end{itemize}
 
 \nomenclature{$\mathcal{P}$}{Set of all processes}
@@ -52,12 +53,12 @@ As before, let $\mathcal{P}$ be the set of processes. A basic\index{Process!basi
 
 Intuitively, we call values that we present to processes their \textbf{input} and values produced by processes their \textbf{output}.
 
-\begin{definition}[Operator precedence\index{Operator!precedence}]
-\label{def:operator_precedence}
-The operator precedence in our algebra is as follows: $\sequenceop$ binds strongest, the next weaker binding operator is $\parallelop$, followed by $\choiceop$ in the end. Parentheses, as described in the syntax, might be necessary to overcome precedence and express the desired composition.
+%\begin{definition}[Operator precedence\index{Operator!precedence}]
+%\label{def:operator_precedence}
+%The operator precedence in our algebra is as follows: $\sequenceop$ binds strongest, the next weaker binding operator is $\parallelop$, followed by $\choiceop$ in the end. Parentheses, as described in the syntax, might be necessary to overcome precedence and express the desired composition.
 
-\hfill\qedsymbol
-\end{definition}
+%\hfill\qedsymbol
+%\end{definition}
 
 \begin{definition}[Types\index{Type}]
 Let $\mathcal{T}$ be the set of types and $T_i$ a type for every $i$ with
@@ -135,15 +136,16 @@ Let $\mathcal{B} \subset \mathcal{P}$ be the set of processes with output type $
 % ------------------------------------------------------------------------------
 % choice
 % ------------------------------------------------------------------------------
-\begin{definition}[Static semantics of the choice operator\index{Semantics!static!choice operator}]
+\begin{definition}[Static semantics of choice composition\index{Static Semantics!Choice}]
 \label{def:static_choice}
-Let $\choiceop \colon \mathcal{B} \times \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the choice between two processes, made by a third process. In order to compose processes with $\choiceop$, their type signatures have to match. Let $B \in \mathcal{B}$ and $P, Q \in \mathcal{P}$ be processes and let $a, b$ be type variables. Then the composition $\choice{B}{Q}{P}$ is valid iff
+Let $B \in \mathcal{B}$ and $P, Q \in \mathcal{P}$ be processes and let $a, b$ be type variables. Then the composition $\choice{B}{Q}{P}$ is valid iff
+%Let $\choiceop \colon \mathcal{B} \times \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the choice between two processes, guarded by a third process. In order to compose processes with $\choiceop$, their type signatures have to match. 
 \begin{eqnarray*}
   \rho \left( B \right) & = & \left( a, T_{Boolean} \right) \\
   \rho \left( P \right) & = & \left( a, b \right) \\
   \rho \left( Q \right) & = & \left( a, b \right)
 \end{eqnarray*}
-and invalid otherwise. The type signature of the resulting process is then $\typesignature{\choice{B}{P}{Q}}{a}{b}$.
+and invalid otherwise. The type signature of the resulting process is $\typesignature{\choice{B}{P}{Q}}{a}{b}$.
 
 \hfill\qedsymbol
 \end{definition}
@@ -152,14 +154,15 @@ and invalid otherwise. The type signature of the resulting process is then $\typ
 % ------------------------------------------------------------------------------
 % parallel
 % ------------------------------------------------------------------------------
-\begin{definition}[Static semantics of the parallel operator\index{Semantics!static!parallel operator}]
-Let $\parallelop \colon \mathcal{P} \times \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the parallel composition of processes. Let $P, Q, R \in \mathcal{P}$ be processes and let $a, b, c, d$ be type variables. Then the composition $\parallel{R}{P}{Q}$ is valid iff
+\begin{definition}[Static semantics of parallel composition\index{Static Semantics!Parallel}]
+Let $P, Q, R \in \mathcal{P}$ be processes and let $a, b, c, d$ be type variables. Then the composition $\parallel{R}{P}{Q}$ is valid iff
+%Let $\parallelop \colon \mathcal{P} \times \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the parallel composition of processes. 
 \begin{eqnarray*}
   \rho \left( P \right) & = & \left( a, c \right) \\
   \rho \left( Q \right) & = & \left( a, d \right) \\
   \rho \left( R \right) & = & \left( \left( c, d \right), b \right)
 \end{eqnarray*}
-and invalid otherwise. The type signature of the resulting process is then $\typesignature{\parallel{R}{P}{Q}}{a}{b}$.
+and invalid otherwise. The type signature of the resulting process is $\typesignature{\parallel{R}{P}{Q}}{a}{b}$.
 
 \hfill\qedsymbol
 \end{definition}
@@ -168,28 +171,34 @@ and invalid otherwise. The type signature of the resulting process is then $\typ
 % ------------------------------------------------------------------------------
 % sequence
 % ------------------------------------------------------------------------------
-\begin{definition}[Static semantics of the sequence operator\index{Semantics!static!sequence operator}]
+\begin{definition}[Static semantics of sequential composition\index{Static Semantics!Sequence}]
 \label{def:static_sequence}
-Let $\sequenceop \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the sequential composition of two processes. Let $P, Q \in \mathcal{P}$ be processes and let $a, b, c$ be type variables. Then the composition $\sequence{P}{Q}$ is valid iff
+Let $P, Q \in \mathcal{P}$ be processes and let $a, b, c$ be type variables. Then the composition $\sequence{P}{Q}$ is valid iff
+%Let $\sequenceop \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the sequential composition of two processes. 
 \begin{eqnarray*}
   \rho \left( P \right) & = & \left( a, c \right) \\
   \rho \left( Q \right) & = & \left( c, b \right)
 \end{eqnarray*}
-and invalid otherwise. The type signature of the resulting process is then $\typesignature{\sequence{P}{Q}}{a}{b}$.
+and invalid otherwise. The type signature of the resulting process is $\typesignature{\sequence{P}{Q}}{a}{b}$.
 
 \hfill\qedsymbol
 \end{definition}
 
 
 % ------------------------------------------------------------------------------
-% kleene
+% repetition
 % ------------------------------------------------------------------------------
-%\begin{definition}[Static semantics of the \textsc{Kleene} star\index{Semantics!static!repetition operator}\index{Kleene star}]
-%\label{def:static_kleene}
-%Let $\repetition \colon \mathcal{P} \to \mathcal{P}$ be the \textsc{Kleene} star that can be used to express repetition, i.e. executing a process several times. $P^\repetition$ creates a process that runs $P$ zero or more times and can also be expressed recursively as $P^\repetition = Id \choice P \sequence P^\repetition$. Let $\rho \left( P \right) = \left( T_i, T_j \right)$, then $P^\repetition$ is valid and $\rho \left( P^\repetition \right) = \left( T_i, T_i \right)$ iff $T_i = T_j$ and invalid otherwise. Like for the choice operator $\choice$, an oracle\index{Oracle} selects the concrete, \textbf{finite} number of repetitions of a process $P^\repetition$, thus leading to non-determinism.
+\begin{definition}[Static semantics of repetition\index{Static Semantics!Repetition}]
+\label{def:static_repetition}
+Let $B \in \mathcal{B}$ and $P \in \mathcal{P}$ be processes and let $a$ be a type variable. Then the composition $\repetition{B}{P}$ is valid iff
+\begin{eqnarray*}
+  \rho \left( B \right) & = & \left( a, T_{Boolean} \right) \\
+  \rho \left( P \right) & = & \left( a, a \right) \\
+\end{eqnarray*}
+and invalid otherwise. The type signature of the resulting process is $\typesignature{\repetition{B}{P}}{a}{a}$.
 
-%\hfill\qedsymbol
-%\end{definition}
+\hfill\qedsymbol
+\end{definition}
 
 
 
@@ -207,9 +216,11 @@ In \chpref{chp:static_semantics} we have introduced static semantics and constru
 
 For the definition of process semantics, we introduce the polymorphic function 
 \begin{equation*}
-  sem \colon \mathcal{P} \to a \times b
+  sem \colon \mathcal{P} \times a \to b
 \end{equation*}
-$sem$ takes a process $P \in \mathcal{P}$ with $\typesignature{P}{a}{b}$, an input value $x$ of type $a$ and defines the semantics of $P$ applied to $x$. We write $\sem{P}{x}$ for that. Note that this is only valid if $x$ is of appropriate type to serve as input for $P$. If $x$ is not of appropriate type to serve as input for a process $P$, it is illegal to write $\sem{P}{x}$.
+$sem$ takes a process $P \in \mathcal{P}$ with $\typesignature{P}{a}{b}$, an input $x$ of type $a$ and defines the semantics of $P$ when applied to $x$, i.e. the function computed by $P$. We write $\sem{P}{x}$ for that. For a concrete value, $P$'s output can be obtained by function application.
+
+Note that the expression $\sem{P}{x}$ is only legal if $x$ is of appropriate type to serve as input for $P$.
 
 
 %\nomenclature{$a$}{Argument for a process}
@@ -230,12 +241,12 @@ The semantics of an atomic\index{Process!atomic} process $P \in \mathcal{P}$ is 
   \hfill\qedsymbol
 \end{definition}
 
-\nomenclature{$f_P$}{Intrinsic function of basic process $P$}
+\nomenclature{$f_P$}{Intrinsic function of a basic process $P$}
 
 
 \begin{definition}[Semantics of the identity process\index{Semantics!identity process}\index{Process!identity}\index{Identity process}]
 \label{def:sem_id}
-Let $Id \in \mathcal{P}$ be the identity process, i.e. the process that always outputs its input, and $x$ be an input.
+Let $Id \in \mathcal{P}$ be the identity process, i.e. the process that always outputs its input, and $x$ be an input for $Id$.
 \begin{equation}
   \label{eqn:sem_id}
   \sem{Id}{x} = x
@@ -276,7 +287,7 @@ Let $Err \in \mathcal{P}$ be the error process, i.e. the process that always out
 The semantics of composed\index{Process!composed} processes is determined by their structure and the involved sub-processes.
 
 \begin{definition}[Sub-process\index{Sub-process}]
-Let $P \in \mathcal{P}$ be a composed process. Then the processes $P$ is composed of are called its sub-processes.
+Let $P \in \mathcal{P}$ be a composed process. Then the processes $P$ is composed of are called the sub-processes of $P$.
 
 \hfill\qedsymbol
 \end{definition}
@@ -286,12 +297,12 @@ Let $P \in \mathcal{P}$ be a composed process. Then the processes $P$ is compose
 % ------------------------------------------------------------------------------
 \begin{definition}[Semantics of the choice operator\index{Semantics!choice operator}\index{Operator!choice}]
 \label{def:sem_choice}
-Let $B \in \mathcal{B}$ and $Q, R \in \mathcal{P}$ be processes, let them be composed using the choice operator $\choiceop$ and call the resulting process $P$, i.e. $P = \choice{B}{Q}{R}$. Then, depending on $P$'s argument $x$ and decided by $B$, $P$ behaves either like $Q$ or $R$. The semantics of $\choice{B}{Q}{R}$ is given by:
+Let $B \in \mathcal{B}$ and $P, Q \in \mathcal{P}$ be processes and let them be composed using the choice operator $\choiceop$, i.e. $\choice{B}{P}{Q}$. Then, decided by $B$, the resulting process behaves either like $P$ or $Q$. The semantics of $\choice{B}{P}{Q}$ is given by:
   \begin{equation}
     \label{eqn:sem_choice}
-    \sem{\choice{B}{Q}{R}}{x} = \left\{ \begin{array}{ll}
-      \sem{Q}{x} & \text{if } B\left(x\right) \\
-      \sem{R}{x} & \text{otherwise}
+    \sem{\choice{B}{P}{Q}}{x} = \left\{ \begin{array}{ll}
+      \sem{P}{x} & \text{if } \sem{B}{x} = True \\
+      \sem{Q}{x} & \text{otherwise}
     \end{array}\right.
   \end{equation}
   
@@ -300,10 +311,13 @@ Let $B \in \mathcal{B}$ and $Q, R \in \mathcal{P}$ be processes, let them be com
 
 \begin{example}[Semantics of the choice operator]
 \label{exp:sem_chice}
-Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_atomic}. If we compose $S$ and $D$ using the choice operator $\choiceop$, the semantics of the resulting process is as follows:
-  \begin{equation}
-    sem \left\langle S \choiceop D \right\rangle = sem \left\langle S \right\rangle \cup sem \left\langle D \right\rangle = \left\{ \sigma \right\} \cup \left\{ \delta \right\} = \left\{ x \mapsto x+1, x \mapsto 2x \right\}
-  \end{equation}
+Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_atomic}. Furthermore, let $Even \in \mathcal{P}$ with $\typesignature{Even}{\mathbb{N}}{T_{Bool}}$ be the process that outputs $True$ if its input is an even number and $False$ otherwise. If we compose $S$ and $D$, guarded by $Even$, using the choice operator $\choiceop$, the semantics of the resulting process is as follows:
+  \begin{equation*}
+    \sem{\choice{Even}{S}{D}}{x} = \left\{\begin{array}{ll}
+      x \mapsto x+1 & \text{if } x \text{ is even} \\
+      x \mapsto 2x & \text{otherwise}
+    \end{array}\right.
+  \end{equation*}
   \hfill\qedsymbol
 \end{example}
 
@@ -313,27 +327,30 @@ Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_ato
 % ------------------------------------------------------------------------------
 \begin{definition}[Semantics of the parallel operator\index{Semantics!parallel operator}]
 \label{def:sem_parallel}
-Let $Q, R \in \mathcal{P}$ be processes and let them be composed using the parallel operator, i.e. $Q \,\parallelop\, R$, with $\rho \left( Q \right) = \rho \left( R \right) = \left( T_a, T_r \right)$. Furthermore, let $\left( \left( T_a, T_r \right), \star \right)$ be a semigroup\footnote{A semigroup is an algebraic structure $(S, \cdot)$ where $S$ is a set and $\cdot\colon S \times S \to S$ is a binary operation on the elements of $S$ with associative property.}\index{Semigroup} with the commutative binary operation $\star \colon \left( T_a, T_r \right) \times \left( T_a, T_r \right) \to \left( T_a, T_r \right)$. The semantics of $Q \,\parallelop\, R$ is then given by %The semantics of the resulting process is given by running both $Q$ and $R$ on the same argument and combining the elements of their result sets using $\star$.
+Let $P, Q, R \in \mathcal{P}$ be processes and let them be composed using the parallel operator, i.e. $\parallel{R}{P}{Q}$. Then the semantics of the resulting process $\parallel{R}{P}{Q}$ is given by %Furthermore, let $\left( \left( T_a, T_r \right), \star \right)$ be a semigroup\footnote{A semigroup is an algebraic structure $(S, \cdot)$ where $S$ is a set and $\cdot\colon S \times S \to S$ is a binary operation on the elements of $S$ with associative property.}\index{Semigroup} with the commutative binary operation $\star \colon \left( T_a, T_r \right) \times \left( T_a, T_r \right) \to \left( T_a, T_r \right)$. The semantics of $Q \,\parallelop\, R$ is then given by %The semantics of the resulting process is given by running both $Q$ and $R$ on the same argument and combining the elements of their result sets using $\star$.
   \begin{equation}
     \label{eqn:sem_parallel}
-    sem \left\langle Q \,\parallelop\, R \right\rangle = \left\{ q \star r \,|\, q \in sem \left\langle Q \right\rangle, r \in sem \left\langle R \right\rangle \right\}.
+    \sem{\parallel{R}{P}{Q}}{x} = \sem{R}{\left( \sem{P}{x}, \sem{Q}{x} \right)}
   \end{equation}
   \hfill\qedsymbol
 \end{definition}
 
-\nomenclature{$\star$}{Binary operation on a semigroup with associative and commutative property}
-
 
 \begin{example}[Semantics of the parallel operator]
 \label{exp:sem_parallel}
-Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_atomic} and use the parallel operator $|$ to compose $D$ and $S$. The semantics of the result process is determined by the concrete $\star$-operation we employ to combine the processes' results.
-  \begin{equation}
-    sem \left\langle S \,|\, D \right\rangle = \left\{ \sigma \star \delta \right\}
-  \end{equation}
+Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_atomic}. Furthermore, let $sum \colon \left( x, y \right) \mapsto x + y \subset \mathbb{N} \times \mathbb{N} \to \mathbb{N}$ be the function that is intrinsic to the atomic process $Sum \in \mathcal{P}$. Then the semantics of the process created by parallel composition of $S$ and $D$, combined with $Sum$, using the parallel operator $\parallelop$ is: 
+  \begin{eqnarray*}
+    \sem{\parallel{Sum}{S}{D}}{x} & = & \sem{Sum}{\left( \sem{S}{x}, \sem{D}{x} \right)} \\
+                                  & = & \sem{Sum}{\left( \sigma\left(x\right), \delta\left(x\right) \right)} \\
+                                  & = & sum \left( \sigma\left(x\right), \delta\left(x\right) \right) \\
+                                  & = & sum \left( x \mapsto x+1, x \mapsto 2x \right) \\
+                                  & = & x \mapsto \left( x+1 \right) + \left( 2x \right) \\
+                                  & = & x \mapsto 3x + 1
+  \end{eqnarray*}
   \hfill\qedsymbol
 \end{example}
 
-The reason why we need $\star$ to be commutative is the intuition one might have about parallel composition of processes. For two processes $Q, R \in \mathcal{P}$, it is a reasonable expectation that $Q \,\parallelop\, R$ and $R \,\parallelop\, Q$ behave exactly the same. Since in the definition of the semantics of parallel composition we employ $\star$ to combine the results of the parallel processes, the properties of $\star$ are transferred to the parallel composition operator $\parallelop$. Hence, if we want $\parallelop$ to have commutative properties, we have to require this from $\star$.
+%The reason why we need $\star$ to be commutative is the intuition one might have about parallel composition of processes. For two processes $Q, R \in \mathcal{P}$, it is a reasonable expectation that $Q \,\parallelop\, R$ and $R \,\parallelop\, Q$ behave exactly the same. Since in the definition of the semantics of parallel composition we employ $\star$ to combine the results of the parallel processes, the properties of $\star$ are transferred to the parallel composition operator $\parallelop$. Hence, if we want $\parallelop$ to have commutative properties, we have to require this from $\star$.
 
 %Furthermore, for a semigroup\index{Semigroup} $\left(T_r, \star \right)$ that is employed to combine results of processes that are composed using the parallel operator $\parallel$, we require every $t_r \in T_r$, i.e. every concrete value of type $T_r$, to be idempotent\index{Idempotence} respective to $\star$:
 %\begin{equation}
@@ -362,23 +379,32 @@ The reason why we need $\star$ to be commutative is the intuition one might have
 % ------------------------------------------------------------------------------
 \begin{definition}[Semantics of the sequence operator\index{Semantics!sequence operator}\index{Operator!sequence}]
 \label{def:sem_sequence}
-Let $Q, R \in \mathcal{P}$ be processes and let them be composed using the sequence operator, i.e. $Q \sequence R$. The semantics of the resulting process is given by function composition.
+Let $P, Q \in \mathcal{P}$ be processes and let them be composed using the sequence operator, i.e. $\sequence{P}{Q}$. Then the semantics of the resulting process is given by:
   \begin{equation}
     \label{eqn:sem_sequence}
-    sem \left\langle Q \sequence R \right\rangle = \left\{ r \circ q \,|\, q \in sem \left\langle Q \right\rangle, r \in sem \left\langle R \right\rangle \right\}
+    \sem{\sequence{P}{Q}}{x} = \sem{Q}{\sem{P}{x}}
   \end{equation}
   \hfill\qedsymbol
 \end{definition}
 
 \begin{example}[Semantics of the sequence operator]
 \label{exp:sem_sequence}
-Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_atomic} and use the sequence operator $\sequenceop$ to compose $D$ and $S$. Since $\sequenceop$ does not have commutative properties, $S \sequenceop D$ and $D \sequenceop S$ yield different results.
-  \begin{equation}
-    sem \left\langle S \sequence D \right\rangle = \left\{ \delta \circ \sigma \right\} = \left\{ x \mapsto 2x+2 \right\}
-  \end{equation}
-  \begin{equation}
-    sem \left\langle D \sequence S \right\rangle = \left\{ \sigma \circ \delta \right\} = \left\{ x \mapsto 2x+1 \right\}
-  \end{equation}
+Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_atomic} and use the sequence operator $\sequenceop$ to compose $D$ and $S$. Since $\sequenceop$ does not have commutative properties, $\sequence{S}{D}$ and $\sequence{D}{S}$ yield different results.
+  \begin{eqnarray*}
+    \sem{\sequence{S}{D}}{x} & = & \sem{D}{\sem{S}{x}} \\
+                             & = & \sem{D}{\sigma \left( x \right)} \\
+                             & = & \delta \left( \sigma \left( x \right) \right) \\
+                             & = & \delta \left( x \mapsto x+1 \right) \\
+                             & = & x \mapsto 2 \left( x+1 \right) \\
+                             & = & x \mapsto 2x+2
+  \end{eqnarray*}
+  \begin{eqnarray*}
+    \sem{\sequence{D}{S}}{x} & = & \sem{S}{\sem{D}{x}} \\
+                             & = & \sem{S}{\delta \left( x \right)} \\
+                             & = & \sigma \left( \delta \left( x \right) \right) \\
+                             & = & \sigma \left( x \mapsto 2x \right) \\
+                             & = & x \mapsto 2x + 1
+  \end{eqnarray*}
   \hfill\qedsymbol
 \end{example}
 
@@ -387,49 +413,49 @@ Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_ato
 % ------------------------------------------------------------------------------
 % repetition
 % ------------------------------------------------------------------------------
-Based on the semantics for $\choiceop$ and $\sequenceop$ from \eqnref{eqn:sem_choice} and \eqnref{eqn:sem_sequence}, the semantics of the \textsc{Kleene} star\index{Kleene star} $\repetition$ is already given, but we will discuss it for completeness. The definition in \chpref{chp:syntax} makes clear the recursive nature of the \textsc{Kleene} star: $R^\repetition = Id \choice R \sequence R^\repetition$ and immediately reveals its semantics.
-\begin{definition}[Semantics of the \textsc{Kleene} star\index{Semantics!repetition operator}\index{Operator!repetition}]
-\label{def:sem_kleene}
-Let $R \in \mathcal{P}$ be a process and let the \textsc{Kleene} star $\repetition$ be applied to $R$, i.e. $R^\repetition$. The semantics of $R^\repetition$ is then directly derived from \defref{def:static_kleene} and \defref{def:sem_choice}.
-  \begin{equation}
-    \label{eqn:sem_kleene}
-    sem \left\langle R^\repetition \right\rangle = sem \left\langle Id \choice R \sequence R^\repetition \right\rangle = sem \left\langle Id \right\rangle \cup sem \left\langle R \sequence R^\repetition \right\rangle.
-  \end{equation}
-  \hfill\qedsymbol
-\end{definition}
+%Based on the semantics for $\choiceop$ and $\sequenceop$ from \eqnref{eqn:sem_choice} and \eqnref{eqn:sem_sequence}, the semantics of the \textsc{Kleene} star\index{Kleene star} $\repetition$ is already given, but we will discuss it for completeness. The definition in \chpref{chp:syntax} makes clear the recursive nature of the \textsc{Kleene} star: $R^\repetition = Id \choice R \sequence R^\repetition$ and immediately reveals its semantics.
+%\begin{definition}[Semantics of the \textsc{Kleene} star\index{Semantics!repetition operator}\index{Operator!repetition}]
+%\label{def:sem_kleene}
+%Let $R \in \mathcal{P}$ be a process and let the \textsc{Kleene} star $\repetition$ be applied to $R$, i.e. $R^\repetition$. The semantics of $R^\repetition$ is then directly derived from \defref{def:static_kleene} and \defref{def:sem_choice}.
+%  \begin{equation}
+%    \label{eqn:sem_kleene}
+%    sem \left\langle R^\repetition \right\rangle = sem \left\langle Id \choice R \sequence R^\repetition \right\rangle = sem \left\langle Id \right\rangle \cup sem \left\langle R \sequence R^\repetition \right\rangle.
+%  \end{equation}
+%  \hfill\qedsymbol
+%\end{definition}
 
-\begin{example}[Semantics of the \textsc{Kleene} star]
-Consider the definition of $\sigma$ and $S$ from \expref{exp:sem_atomic} and apply the \textsc{Kleene} star $\repetition$ to $S$. The semantics of the resulting process $S^\repetition$ includes every number of applications of $\sigma$, or in other words any multiplicity of running $S$.
-  \begin{equation}
-    sem \left\langle S^\repetition \right\rangle = sem \left\langle Id \choice S \sequence S^\repetition \right\rangle = \left\{ x \mapsto x, x \mapsto x+1, x \mapsto x+2, \ldots \right\}
-  \end{equation}
-  \hfill\qedsymbol
-\end{example}
+%\begin{example}[Semantics of the \textsc{Kleene} star]
+%Consider the definition of $\sigma$ and $S$ from \expref{exp:sem_atomic} and apply the \textsc{Kleene} star $\repetition$ to $S$. The semantics of the resulting process $S^\repetition$ includes every number of applications of $\sigma$, or in other words any multiplicity of running $S$.
+%  \begin{equation}
+%    sem \left\langle S^\repetition \right\rangle = sem \left\langle Id \choice S \sequence S^\repetition \right\rangle = \left\{ x \mapsto x, x \mapsto x+1, x \mapsto x+2, \ldots \right\}
+%  \end{equation}
+%  \hfill\qedsymbol
+%\end{example}
 
-The definition given in \defref{def:sem_kleene} is complete and correct, however it is recursive and contains a non-terminating component. We give an alternative, yet equivalent definition for the semantics of the \textsc{Kleene} star $\repetition$ that does not have this property. For this purpose, we introduce a shorthand notation for running a process $n$-times.
-\begin{definition}[Multiple execution\index{Multiple execution}]
-\label{def:multiple_execution}
-Let $R \in \mathcal{P}$ be a process. Then $R^n$ is the inductively defined $n$-time execution of $R$ with $n \in \mathbb{N}_0$.
-  \begin{eqnarray}
-    \label{eqn:multiple_execution}
-    R^0 & = & Id \\
-    R^n & = & R \sequence R^{n-1} 
-  \end{eqnarray}
-  \hfill\qedsymbol
-\end{definition}
+%The definition given in \defref{def:sem_kleene} is complete and correct, however it is recursive and contains a non-terminating component. We give an alternative, yet equivalent definition for the semantics of the \textsc{Kleene} star $\repetition$ that does not have this property. For this purpose, we introduce a shorthand notation for running a process $n$-times.
+%\begin{definition}[Multiple execution\index{Multiple execution}]
+%\label{def:multiple_execution}
+%Let $R \in \mathcal{P}$ be a process. Then $R^n$ is the inductively defined $n$-time execution of $R$ with $n \in \mathbb{N}_0$.
+%  \begin{eqnarray}
+%    \label{eqn:multiple_execution}
+%    R^0 & = & Id \\
+%    R^n & = & R \sequence R^{n-1} 
+%  \end{eqnarray}
+%  \hfill\qedsymbol
+%\end{definition}
 
-\nomenclature{$P^n$}{$n$-time execution of process $P$}
+%\nomenclature{$P^n$}{$n$-time execution of process $P$}
 
 
-\begin{definition}[Semantics of the \textsc{Kleene} star (alternative definition)\index{Semantics!repetition operator}\index{Operator!repetition}]
-\label{def:sem_kleene_alternative}
-  Let $R \in \mathcal{P}$ be a process and let the \textsc{Kleene} star $\repetition$ be applied to $R$, i.e. $R^\repetition$. Then, the semantics of $R^\repetition$ is given by the union over the semantics of every finite number of executions of $R$.
-  \begin{equation}
-    \label{eqn:sem_kleene_alternative}
-    sem \left\langle R^\repetition \right\rangle = \bigcup_{i \in \mathbb{N}_0} sem \left\langle R^i \right\rangle
-  \end{equation}
-  \hfill\qedsymbol
-\end{definition}
+%\begin{definition}[Semantics of the \textsc{Kleene} star (alternative definition)\index{Semantics!repetition operator}\index{Operator!repetition}]
+%\label{def:sem_kleene_alternative}
+%  Let $R \in \mathcal{P}$ be a process and let the \textsc{Kleene} star $\repetition$ be applied to $R$, i.e. $R^\repetition$. Then, the semantics of $R^\repetition$ is given by the union over the semantics of every finite number of executions of $R$.
+%  \begin{equation}
+%    \label{eqn:sem_kleene_alternative}
+%    sem \left\langle R^\repetition \right\rangle = \bigcup_{i \in \mathbb{N}_0} sem \left\langle R^i \right\rangle
+%  \end{equation}
+%  \hfill\qedsymbol
+%\end{definition}
 
 
 % ------------------------------------------------------------------------------

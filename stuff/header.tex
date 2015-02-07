@@ -109,12 +109,13 @@
 
 %% shortcuts
 \newcommand{\choiceop}{\vee}
-\newcommand{\choice}[3]{\frac{#2 \choiceop #3}{#1}}
+\newcommand{\choice}[3]{\left( #1 \to #2 \choiceop #3 \right)}
 \newcommand{\parallelop}{|}
-\renewcommand{\parallel}[3]{\frac{#2 \, \parallelop \, #3}{#1}}
+\renewcommand{\parallel}[3]{\left( #1 \gets #2 \, \parallelop \, #3 \right)}
 \newcommand{\sequenceop}{\triangleright}
-\newcommand{\sequence}[2]{#1 \sequenceop #2}
-\newcommand{\repetition}{*}
+\newcommand{\sequence}[2]{\left( #1 \sequenceop #2 \right)}
+\newcommand{\repetitionop}{\propto}
+\newcommand{\repetition}[2]{\left( #1 \repetitionop #2 \right)}
 
 \newcommand{\typesignature}[3]{\rho \left( #1 \right) = \left( #2, #3 \right)}
 \newcommand{\sem}[2]{sem \left\langle #1, #2 \right\rangle}
