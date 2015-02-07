@@ -257,11 +257,11 @@ Let $Id \in \mathcal{P}$ be the identity process, i.e. the process that always o
 
 \begin{example}[Semantics of an atomic process]
   \label{exp:sem_atomic}
-  Let $\sigma \colon x \mapsto x+1 \subset \mathbb{N} \times \mathbb{N}$ be the function that is intrinsic to the atomic process $S \in \mathcal{P}$. Then the semantics $\sem{S}{x}$ of $S$ applied to $x$ is given by its intrinsic function $\sigma$:
+  Let $\sigma \colon \mathbb{N} \to \mathbb{N}, x \mapsto x+1$ be the function that is intrinsic to the atomic process $S \in \mathcal{P}$. Then the semantics $\sem{S}{x}$ of $S$ applied to $x$ is given by its intrinsic function $\sigma$:
   \begin{equation}
     \sem{S}{x} = \sigma \left( x \right) = x \mapsto x+1
   \end{equation}
-  Let $\delta \colon x \mapsto 2x \subset \mathbb{N} \times \mathbb{N}$ be the function that is intrinsic to the atomic process $D \in \mathcal{P}$. Then the semantics $\sem{D}{x}$ of $D$ applied to $x$ is given by its intrinsic function $\delta$:
+  Let $\delta \colon \mathbb{N} \to \mathbb{N}, x \mapsto 2x$ be the function that is intrinsic to the atomic process $D \in \mathcal{P}$. Then the semantics $\sem{D}{x}$ of $D$ applied to $x$ is given by its intrinsic function $\delta$:
   \begin{equation}
     \sem{D}{x} = \delta \left( x \right) = x \mapsto 2x
   \end{equation}
@@ -295,9 +295,9 @@ Let $P \in \mathcal{P}$ be a composed process. Then the processes $P$ is compose
 % ------------------------------------------------------------------------------
 % choice
 % ------------------------------------------------------------------------------
-\begin{definition}[Semantics of the choice operator\index{Semantics!choice operator}\index{Operator!choice}]
+\begin{definition}[Semantics of choice composition\index{Semantics!Choice}]
 \label{def:sem_choice}
-Let $B \in \mathcal{B}$ and $P, Q \in \mathcal{P}$ be processes and let them be composed using the choice operator $\choiceop$, i.e. $\choice{B}{P}{Q}$. Then, decided by $B$, the resulting process behaves either like $P$ or $Q$. The semantics of $\choice{B}{P}{Q}$ is given by:
+Let $B \in \mathcal{B}$ and $P, Q \in \mathcal{P}$ be processes and let them be composed using choice composition, i.e. $\choice{B}{P}{Q}$. Let $x$ be an input of matching type for $B, Q, P$. Then, based on $\sem{B}{x}$, the resulting process behaves either like $P$ or $Q$. The semantics of $\choice{B}{P}{Q}$ is given by:
   \begin{equation}
     \label{eqn:sem_choice}
     \sem{\choice{B}{P}{Q}}{x} = \left\{ \begin{array}{ll}
@@ -309,13 +309,13 @@ Let $B \in \mathcal{B}$ and $P, Q \in \mathcal{P}$ be processes and let them be 
   \hfill\qedsymbol
 \end{definition}
 
-\begin{example}[Semantics of the choice operator]
+\begin{example}[Semantics of choice composition]
 \label{exp:sem_chice}
-Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_atomic}. Furthermore, let $Even \in \mathcal{P}$ with $\typesignature{Even}{\mathbb{N}}{T_{Bool}}$ be the process that outputs $True$ if its input is an even number and $False$ otherwise. If we compose $S$ and $D$, guarded by $Even$, using the choice operator $\choiceop$, the semantics of the resulting process is as follows:
+Consider the definitions of $S$ and $D$ from \expref{exp:sem_atomic}. Furthermore, let $Even \in \mathcal{P}$ with $\typesignature{Even}{\mathbb{N}}{T_{Bool}}$ be the process that outputs $True$ if its input is an even number and $False$ otherwise. If we compose $S$ and $D$, guarded by $Even$, using the choice composition, the semantics of the resulting process is as follows:
   \begin{equation*}
     \sem{\choice{Even}{S}{D}}{x} = \left\{\begin{array}{ll}
-      x \mapsto x+1 & \text{if } x \text{ is even} \\
-      x \mapsto 2x & \text{otherwise}
+      \sem{S}{x} & \text{if } x \text{ is even} \\
+      \sem{D}{x} & \text{otherwise}
     \end{array}\right.
   \end{equation*}
   \hfill\qedsymbol
@@ -325,9 +325,9 @@ Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_ato
 % ------------------------------------------------------------------------------
 % parallel
 % ------------------------------------------------------------------------------
-\begin{definition}[Semantics of the parallel operator\index{Semantics!parallel operator}]
+\begin{definition}[Semantics of parallel composition\index{Semantics!Parallel}]
 \label{def:sem_parallel}
-Let $P, Q, R \in \mathcal{P}$ be processes and let them be composed using the parallel operator, i.e. $\parallel{R}{P}{Q}$. Then the semantics of the resulting process $\parallel{R}{P}{Q}$ is given by %Furthermore, let $\left( \left( T_a, T_r \right), \star \right)$ be a semigroup\footnote{A semigroup is an algebraic structure $(S, \cdot)$ where $S$ is a set and $\cdot\colon S \times S \to S$ is a binary operation on the elements of $S$ with associative property.}\index{Semigroup} with the commutative binary operation $\star \colon \left( T_a, T_r \right) \times \left( T_a, T_r \right) \to \left( T_a, T_r \right)$. The semantics of $Q \,\parallelop\, R$ is then given by %The semantics of the resulting process is given by running both $Q$ and $R$ on the same argument and combining the elements of their result sets using $\star$.
+Let $P, Q, R \in \mathcal{P}$ be processes and let them be composed using parallel composition, i.e. $\parallel{R}{P}{Q}$. Let $x$ be an input of matching type for $P, Q$. Then the semantics of the resulting process $\parallel{R}{P}{Q}$ is given by %Furthermore, let $\left( \left( T_a, T_r \right), \star \right)$ be a semigroup\footnote{A semigroup is an algebraic structure $(S, \cdot)$ where $S$ is a set and $\cdot\colon S \times S \to S$ is a binary operation on the elements of $S$ with associative property.}\index{Semigroup} with the commutative binary operation $\star \colon \left( T_a, T_r \right) \times \left( T_a, T_r \right) \to \left( T_a, T_r \right)$. The semantics of $Q \,\parallelop\, R$ is then given by %The semantics of the resulting process is given by running both $Q$ and $R$ on the same argument and combining the elements of their result sets using $\star$.
   \begin{equation}
     \label{eqn:sem_parallel}
     \sem{\parallel{R}{P}{Q}}{x} = \sem{R}{\left( \sem{P}{x}, \sem{Q}{x} \right)}
@@ -336,9 +336,9 @@ Let $P, Q, R \in \mathcal{P}$ be processes and let them be composed using the pa
 \end{definition}
 
 
-\begin{example}[Semantics of the parallel operator]
+\begin{example}[Semantics of parallel composition]
 \label{exp:sem_parallel}
-Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_atomic}. Furthermore, let $sum \colon \left( x, y \right) \mapsto x + y \subset \mathbb{N} \times \mathbb{N} \to \mathbb{N}$ be the function that is intrinsic to the atomic process $Sum \in \mathcal{P}$. Then the semantics of the process created by parallel composition of $S$ and $D$, combined with $Sum$, using the parallel operator $\parallelop$ is: 
+Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_atomic}. Furthermore, let $sum \colon \mathbb{N} \times \mathbb{N} \to \mathbb{N}, \left( x, y \right) \mapsto x + y$ be the function that is intrinsic to the atomic process $Sum \in \mathcal{P}$. Then the semantics of the process created by parallel composition of $S$ and $D$, combined with $Sum$, using the parallel operator $\parallelop$ is: 
   \begin{eqnarray*}
     \sem{\parallel{Sum}{S}{D}}{x} & = & \sem{Sum}{\left( \sem{S}{x}, \sem{D}{x} \right)} \\
                                   & = & \sem{Sum}{\left( \sigma\left(x\right), \delta\left(x\right) \right)} \\
@@ -377,9 +377,9 @@ Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_ato
 % ------------------------------------------------------------------------------
 % sequence
 % ------------------------------------------------------------------------------
-\begin{definition}[Semantics of the sequence operator\index{Semantics!sequence operator}\index{Operator!sequence}]
+\begin{definition}[Semantics of sequence composition\index{Semantics!Sequence}]
 \label{def:sem_sequence}
-Let $P, Q \in \mathcal{P}$ be processes and let them be composed using the sequence operator, i.e. $\sequence{P}{Q}$. Then the semantics of the resulting process is given by:
+Let $P, Q \in \mathcal{P}$ be processes and let them be composed using sequence composition, i.e. $\sequence{P}{Q}$. Let $x$ be an input of matching type for $P$. Then the semantics of the resulting process is given by:
   \begin{equation}
     \label{eqn:sem_sequence}
     \sem{\sequence{P}{Q}}{x} = \sem{Q}{\sem{P}{x}}
@@ -387,9 +387,9 @@ Let $P, Q \in \mathcal{P}$ be processes and let them be composed using the seque
   \hfill\qedsymbol
 \end{definition}
 
-\begin{example}[Semantics of the sequence operator]
+\begin{example}[Semantics of sequence composition]
 \label{exp:sem_sequence}
-Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_atomic} and use the sequence operator $\sequenceop$ to compose $D$ and $S$. Since $\sequenceop$ does not have commutative properties, $\sequence{S}{D}$ and $\sequence{D}{S}$ yield different results.
+Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_atomic} and use sequence composition to compose $D$ and $S$. Since $\sequenceop$ does not have commutative properties, $\sequence{S}{D}$ and $\sequence{D}{S}$ yield different results.
   \begin{eqnarray*}
     \sem{\sequence{S}{D}}{x} & = & \sem{D}{\sem{S}{x}} \\
                              & = & \sem{D}{\sigma \left( x \right)} \\
@@ -413,49 +413,25 @@ Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_ato
 % ------------------------------------------------------------------------------
 % repetition
 % ------------------------------------------------------------------------------
-%Based on the semantics for $\choiceop$ and $\sequenceop$ from \eqnref{eqn:sem_choice} and \eqnref{eqn:sem_sequence}, the semantics of the \textsc{Kleene} star\index{Kleene star} $\repetition$ is already given, but we will discuss it for completeness. The definition in \chpref{chp:syntax} makes clear the recursive nature of the \textsc{Kleene} star: $R^\repetition = Id \choice R \sequence R^\repetition$ and immediately reveals its semantics.
-%\begin{definition}[Semantics of the \textsc{Kleene} star\index{Semantics!repetition operator}\index{Operator!repetition}]
-%\label{def:sem_kleene}
-%Let $R \in \mathcal{P}$ be a process and let the \textsc{Kleene} star $\repetition$ be applied to $R$, i.e. $R^\repetition$. The semantics of $R^\repetition$ is then directly derived from \defref{def:static_kleene} and \defref{def:sem_choice}.
-%  \begin{equation}
-%    \label{eqn:sem_kleene}
-%    sem \left\langle R^\repetition \right\rangle = sem \left\langle Id \choice R \sequence R^\repetition \right\rangle = sem \left\langle Id \right\rangle \cup sem \left\langle R \sequence R^\repetition \right\rangle.
-%  \end{equation}
-%  \hfill\qedsymbol
-%\end{definition}
+\begin{definition}[Semantics of repetition composition\index{Semantics!Repetition}]
+\label{def:sem_repetition}
+Let $B \in \mathcal{B}$ and $P \in \mathcal{P}$ be processes and let them be composed using repetition composition, i.e. $\repetition{B}{P}$. Let $x$ be an input of matching type for $P$. Then the semantics of $\repetition{B}{P}$ is given by the recursive equation
+  \begin{equation}
+    \label{eqn_sem_repetition}
+    \sem{\repetition{B}{P}}{x} = \sem{\choice{B}{\sequence{P}{\repetition{B}{P}}}{Id}}{x}
+  \end{equation}
 
-%\begin{example}[Semantics of the \textsc{Kleene} star]
-%Consider the definition of $\sigma$ and $S$ from \expref{exp:sem_atomic} and apply the \textsc{Kleene} star $\repetition$ to $S$. The semantics of the resulting process $S^\repetition$ includes every number of applications of $\sigma$, or in other words any multiplicity of running $S$.
-%  \begin{equation}
-%    sem \left\langle S^\repetition \right\rangle = sem \left\langle Id \choice S \sequence S^\repetition \right\rangle = \left\{ x \mapsto x, x \mapsto x+1, x \mapsto x+2, \ldots \right\}
-%  \end{equation}
-%  \hfill\qedsymbol
-%\end{example}
+\hfill\qedsymbol
+\end{definition}
 
-%The definition given in \defref{def:sem_kleene} is complete and correct, however it is recursive and contains a non-terminating component. We give an alternative, yet equivalent definition for the semantics of the \textsc{Kleene} star $\repetition$ that does not have this property. For this purpose, we introduce a shorthand notation for running a process $n$-times.
-%\begin{definition}[Multiple execution\index{Multiple execution}]
-%\label{def:multiple_execution}
-%Let $R \in \mathcal{P}$ be a process. Then $R^n$ is the inductively defined $n$-time execution of $R$ with $n \in \mathbb{N}_0$.
-%  \begin{eqnarray}
-%    \label{eqn:multiple_execution}
-%    R^0 & = & Id \\
-%    R^n & = & R \sequence R^{n-1} 
-%  \end{eqnarray}
-%  \hfill\qedsymbol
-%\end{definition}
-
-%\nomenclature{$P^n$}{$n$-time execution of process $P$}
-
-
-%\begin{definition}[Semantics of the \textsc{Kleene} star (alternative definition)\index{Semantics!repetition operator}\index{Operator!repetition}]
-%\label{def:sem_kleene_alternative}
-%  Let $R \in \mathcal{P}$ be a process and let the \textsc{Kleene} star $\repetition$ be applied to $R$, i.e. $R^\repetition$. Then, the semantics of $R^\repetition$ is given by the union over the semantics of every finite number of executions of $R$.
-%  \begin{equation}
-%    \label{eqn:sem_kleene_alternative}
-%    sem \left\langle R^\repetition \right\rangle = \bigcup_{i \in \mathbb{N}_0} sem \left\langle R^i \right\rangle
-%  \end{equation}
-%  \hfill\qedsymbol
-%\end{definition}
+\begin{example}[Semantics of repetition composition\index{Semantics!Repetition}]
+\label{exp:sem_repetition}
+Consider the definition of $\delta$ and $D$ from \expref{exp:sem_atomic} ... ToDo...
+  \begin{eqnarray*}
+    \sem{x}{y}
+  \end{eqnarray*}
+  \hfill\qedsymbol
+\end{example}
 
 
 % ------------------------------------------------------------------------------
@@ -464,48 +440,34 @@ Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_ato
 \section{Semantic equivalence\index{Semantic equivalence}}
 Based on the definition of process semantics $sem$, we can define a partial ordering $<$ on processes. The partial ordering can then be used to define semantic equivalence on processes.
 
-\nomenclature{$<$}{Ordering on processes}
+\nomenclature{$\leq$}{Ordering on processes}
 
 
-\begin{definition}[Partial ordering on processes\index{Process!ordering}]
+\begin{definition}[Partial ordering on processes\index{Process!Ordering}]
 \label{def:process_ordering}
-Let $P, Q \in \mathcal{P}$ be processes. Then $P$ and $Q$ are in relation $P < Q$ iff the semantics from $P$ can be obtained by removing the undefined value from the semantics of $Q$.
-  \begin{equation}
-    P < Q \Leftrightarrow sem \left\langle P \right\rangle = sem \left\langle Q \right\rangle \setminus \left\{ \bot \right\}
-  \end{equation}
-  \hfill\qedsymbol
+Let $P, Q \in \mathcal{P}$ be processes with $\rho \left( P \right) = \rho \left( Q \right)$. Then $P$ and $Q$ are in relation $P \leq Q$ iff $\sem{P}{x} \subseteq \sem{Q}{x}$.
+
+Processes with different type signatures can not be ordered.
+
+\hfill\qedsymbol
 \end{definition}
 
 \nomenclature{iff}{if and only if}
 
 
-If two processes $P$ and $Q$ are in relation $<$, i.e. $P < Q$, this means that $P$ is defined on at least the same values as $Q$ is, $P$'s domain includes $Q$'s domain\index{Domain}. Furthermore, if $\bot \in sem \left\langle Q \right\rangle$ then $P$ is defined on values where $Q$ is undefined.
+If two processes $P$ and $Q$ are in relation $\leq$, i.e. $P \leq Q$, then, given the same input, $P$ always produces the same output as $Q$. However, $Q$ might be defined on values where $P$ is undefined.
 
-\begin{definition}[Equivalence of processes\index{Process!equivalence}]
+\begin{definition}[Equivalence of processes\index{Process!Equivalence}]
 \label{def:process_equivalence}
-Let $P, Q \in \mathcal{P}$ be processes. $P$ and $Q$ are equivalent iff their semantics are exactly the same.
+Let $P, Q \in \mathcal{P}$ be processes. Then $P$ and $Q$ are equivalent iff both $P \leq Q$ and $Q \leq P$.
   \begin{equation}
     \label{eqn:equivalence}
-    P \equiv Q \Leftrightarrow sem \left\langle P \right\rangle = sem \left\langle Q \right\rangle
+    P \equiv Q \Leftrightarrow P \leq Q \wedge Q \leq P
   \end{equation}
   \hfill\qedsymbol
 \end{definition}
 
 \nomenclature{$\equiv$}{Process equivalence}
-
-
-\begin{corollary}[Equivalence of ordered processes\index{Process!equivalence}]
-\label{crl:equivalence_ordered_processes}
-Let $P, Q \in \mathcal{P}$ be processes. Then from \defref{def:process_ordering} and \defref{def:process_equivalence} follows that
-  \begin{equation}
-    P < Q \wedge Q < P \Rightarrow P \equiv Q
-  \end{equation}
-  and $\bot \notin sem \left\langle P \right\rangle, \bot \notin sem \left\langle Q \right\rangle$. However, from the equivalence of two processes $P, Q$ it does not automatically follow that they are ordered since the semantics of $P$ and $Q$ can contain $\bot$.
-  \begin{equation}
-    P \equiv Q \not\Rightarrow P < Q \wedge Q < P
-\end{equation}    
-  \hfill\qedsymbol
-\end{corollary}
 
 \begin{definition}[Process substitution\index{Process!substitution}]
 \label{def:process_substitution}
@@ -526,16 +488,6 @@ Let $P, Q, R \in \mathcal{P}$ be processes and $Q \equiv R$. Then it follows fro
   \hfill\qedsymbol
 \end{corollary}
 
-\begin{corollary}[Substitution of ordered processes]
-Let $P, Q, R, S \in \mathcal{P}$ be processes and $R < Q$. Then from \crlref{crl:equivalence_ordered_processes} and \defref{def:process_substitution} it follows that
-  \begin{equation}
-    R < Q \Rightarrow P_{\left[ Q / R \right]} \equiv P \lor P_{\left[ Q / R \right]} < P
-  \end{equation}
-  depending on $P$'s sub-processes and their semantics. If $P$ involves a sub-process $S$ that is not a sub-process of $Q$ and $\bot \in sem \left\langle S \right\rangle$, then $P$ can still produce $\bot$ and it follows $P \equiv P_{\left[Q / R \right]}$. This is the case because of the strictness of processes in $\bot$, as defined in \defref{def:process_strictness}. If there is no such sub-process involved in $P$, then $P_{\left[Q / R \right]} < P$.
-    
-  \hfill\qedsymbol
-\end{corollary}
-
 The equivalence from \crlref{crl:process_substitution} can be used to perform transformations\index{Process!transformation} on processes and optimise\index{Optimisation} them according to some measurable property. E.g. assume that we have a process $P$ that involved $Q$ as a sub-process. Now if $Q$ has high time complexity and we have another process $R$ with low time complexity and $Q \equiv R$, then we might want to use $P_{\left[ Q / R \right]}$ in a productive system instead of $P$ in order to save run time.
 
 
@@ -546,7 +498,7 @@ The equivalence from \crlref{crl:process_substitution} can be used to perform tr
 \label{def:inverse_process}
 Let $P \in \mathcal{P}$ be a process. Then an inverse process $\overline{P}$ for $P$ is a process that satisfies the following property:
   \begin{equation}
-    P \sequence \overline{P} \equiv Id.
+    \sequence{P}{\overline{P}} \equiv Id.
   \end{equation}
   \hfill\qedsymbol
 \end{definition}
@@ -554,7 +506,7 @@ Let $P \in \mathcal{P}$ be a process. Then an inverse process $\overline{P}$ for
 \nomenclature{$\overline{P}$}{Process that is inverse to $P$}
 
 
-As a final remark, we want to point out that, for a process $P$ an inverse process as defined in \defref{def:inverse_process} does generally \textbf{not} exist since not every computable function is invertible\footnote{Take, e.g. the function $f \colon x \mapsto x^2$. Clearly, $f$ is not injective since $f \left( x \right) = f \left( -x \right)$ and therefore not invertible. However, there is an inverse relation $\overline{f_r} \colon x \mapsto \left\{ \overline{x} \,|\, f \left( \overline{x} \right) = x \right\}$ that maps a value $x$ to the set of values that, if $f$ is applied to them, will yield $x$.}.
+As a final remark, we want to point out that, for a process $P$ an inverse process as defined in \defref{def:inverse_process} does \textbf{not} exist in general since not every computable function is invertible\footnote{Take, e.g. the function $f \colon x \mapsto x^2$. Clearly, $f$ is not injective since $f \left( x \right) = f \left( -x \right)$ and therefore not invertible. However, there is an inverse relation $\overline{f_r} \colon x \mapsto \left\{ \overline{x} \,|\, f \left( \overline{x} \right) = x \right\}$ that maps a value $x$ to the set of values that, if $f$ is applied to them, will yield $x$.}.
 
 
 
