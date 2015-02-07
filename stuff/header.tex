@@ -108,10 +108,16 @@
 \fi
 
 %% shortcuts
-\newcommand{\choice}{\vee}
-\renewcommand{\parallel}{|}
-\newcommand{\sequence}{\triangleright}
+\newcommand{\choiceop}{\vee}
+\newcommand{\choice}[3]{\frac{#2 \choiceop #3}{#1}}
+\newcommand{\parallelop}{|}
+\renewcommand{\parallel}[3]{\frac{#2 \, \parallelop \, #3}{#1}}
+\newcommand{\sequenceop}{\triangleright}
+\newcommand{\sequence}[2]{#1 \sequenceop #2}
 \newcommand{\repetition}{*}
+
+\newcommand{\typesignature}[3]{\rho \left( #1 \right) = \left( #2, #3 \right)}
+\newcommand{\sem}[2]{sem \left\langle #1, #2 \right\rangle}
 
 %% layout for nomenclature
 \setlength{\nomlabelwidth}{.20\hsize}

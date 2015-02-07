@@ -8,12 +8,12 @@ For now we are not interested in \textbf{what} a process does or \textbf{how} it
 
 \section{Syntax\index{Syntax}}
 \label{chp:syntax}
-Let $\mathcal{P}$ be the set of processes\index{Process} and let $B, P, Q \in \mathcal{P}$ be processes. Then syntactically correct processes can be formed inductively by:
+Let $\mathcal{P}$ be the set of processes\index{Process} and let $P, Q, R \in \mathcal{P}$ be processes. Then syntactically correct processes can be formed by using the following construction rules:
 %$\mathcal{P}$ represents the set of computable functions\index{Function} in form of processes and hence, is countable\footnote{For every computable function there is a Turing machine that computes it. There is a Gödel numbering for Turing machines, thus the number of Turing machines and the number of computable functions is countable.}. 
 \begin{itemize}
-  \item $\frac{P \vee Q}{B}$ \hspace*{2.7em} (Choice)\index{Operator!choice}
-  \item $P \,|\, Q$ \hspace*{2.5em} (Parallel)\index{Operator!parallel}
-  \item $P \sequence Q$ \hspace*{2.2em} (Sequence)\index{Operator!sequence}
+  \item $\choice{R}{P}{Q}$ \hspace*{2.7em} (Choice)\index{Operator!choice}
+  \item $\parallel{R}{P}{Q}$ \hspace*{2.8em} (Parallel)\index{Operator!parallel}
+  \item $\sequence{P}{Q}$ \hspace*{2.2em} (Sequence)\index{Operator!sequence}
 %  \item $P^*$ \hspace*{3.5em} (Repetition)\index{Operator!repetition}
 %  \vspace*{-0.4em}
   \item $\left( P \right)$
@@ -21,10 +21,10 @@ Let $\mathcal{P}$ be the set of processes\index{Process} and let $B, P, Q \in \m
 
 \nomenclature{$\mathcal{P}$}{Set of all processes}
 \nomenclature{$P,Q,R$}{Processes}
-\nomenclature{$\choice$}{Choice Operator}
-\nomenclature{$\parallel$}{Parallel Operator}
-\nomenclature{$\sequence$}{Sequence Operator}
-%\nomenclature{$\repetition$}{\textsc{Kleene} star for repetition}
+\nomenclature{$\choiceop$}{Choice Operator}
+\nomenclature{$\parallelop$}{Parallel Operator}
+\nomenclature{$\sequenceop$}{Sequence Operator}
+%\nomenclature{$\repetitionop$}{\textsc{Kleene} star for repetition}
 
 %The syntax can also be expressed in form of a grammar $G = \left( N, T, R, P \right)$, where $N = \left\{ P \right\}$ is the set of non-terminals, $T = \mathcal{P}$ is the set of terminals, $R$ is the set of production rules and $P$ is the start symbol \cite{Hopcroft:2006:IAT:1196416} with % ToDo!
 %\begin{eqnarray*}
@@ -46,29 +46,40 @@ Let $\mathcal{P}$ be the set of processes\index{Process} and let $B, P, Q \in \m
 
 \section{Static Semantics\index{Semantics!static}}
 \label{chp:static_semantics}
-In this chapter we define the static semantics of our algebraic model\index{Algebraic!model}. We define what a basic\index{Process!basic} and what a composed\index{Process!composed} process is and we equip processes with a type signature\index{Type!signature}. The type signature of a process determines if the process can be used for composition with other processes, depending on the selected combinator.
+In this chapter we define the static semantics of our algebraic model\index{Algebraic!model}. We define what a \textbf{basic}\index{Process!basic} and what a \textbf{composed}\index{Process!composed} process is and we equip processes with a type signature\index{Type!signature}. The \textbf{type signature} of a process determines whether the process can be used for composition with other processes, respective to a combinator.
 
-As before, let $\mathcal{P}$ be the set of processes. A basic\index{Process!basic}, or atomic\index{Process!atomic}, process is a process that performs an atomic operation an is no further divisible insofar, that it does not involve any of the introduced process combinators. A composed\index{Process!composed} process is a process that is composed of other processes, using one or many of the introduced process combinators $\choice$, $\parallel$ and $\sequence$.
+As before, let $\mathcal{P}$ be the set of processes. A basic\index{Process!basic}, or atomic\index{Process!atomic}, process is a process that performs an atomic operation an is no further divisible insofar, that it does not involve any of the introduced process combinators. A composed\index{Process!composed} process is a process that is composed of other processes, using one or many process combinators.
+
+Intuitively, we call values that we present to processes their \textbf{input} and values produced by processes their \textbf{output}.
 
 \begin{definition}[Operator precedence\index{Operator!precedence}]
 \label{def:operator_precedence}
-The operator precedence in our algebra is as follows: $\sequence$ binds strongest, the next weaker binding operator is $\parallel$ followed by $\choice$ in the end. Parentheses, as described in the syntax, might be necessary to overcome precedence and express the desired composition.
+The operator precedence in our algebra is as follows: $\sequenceop$ binds strongest, the next weaker binding operator is $\parallelop$, followed by $\choiceop$ in the end. Parentheses, as described in the syntax, might be necessary to overcome precedence and express the desired composition.
 
 \hfill\qedsymbol
 \end{definition}
 
 \begin{definition}[Types\index{Type}]
-Let $\mathcal{T}$ be the set of types with
-\begin{equation}
-  \mathcal{T} = \bigcup_{i \in \mathbb{N}_0} \left\{ T_i \right\}
-\end{equation}
-and let $T_i \in \mathcal{T}$ be types for every $i$. %Furthermore, let $\bot$ be the undefined type\index{Type!undefined} that is identified with its only value $\bot$.
+Let $\mathcal{T}$ be the set of types and $T_i$ a type for every $i$ with
+\begin{equation*}
+  \mathcal{T} = \bigcup_i \left\{ T_i \right\}
+\end{equation*}
+Furthermore, let lowercase letters, e.g. $a, b, c$ be type variables, i.e. placeholders for types.
+
+\hfill\qedsymbol
+\end{definition}
+
+\begin{definition}[The type Boolean]
+Let $T_{Boolean} \in \mathcal{T}$ be the type of truth values with
+\begin{equation*}
+  T_{Boolean} = \left\{False, True \right\}.
+\end{equation*}
 
 \hfill\qedsymbol
 \end{definition}
 
 \begin{definition}[Undefined values]
-For every $T_i \in \mathcal{T}$, let $\bot_i \in T_i$ be the undefined value of type $T_i$ that is distinguishable from every other value of type $T_i$.
+For every $T_i \in \mathcal{T}$, let $\bot_i \in T_i$ be the undefined value of type $T_i$ that is distinguishable from every other value of type $T_i$. Every type implicitly contains an undefined value, even if not explicitly mentioned. When talking about the undefined value $\bot$, we omit its type and only mention it explicitly when necessary.
 
 \hfill\qedsymbol
 \end{definition}
@@ -80,15 +91,25 @@ For every $T_i \in \mathcal{T}$, let $\bot_i \in T_i$ be the undefined value of 
 % ------------------------------------------------------------------------------
 \begin{definition}[Type signature\index{Type!signature}]
 \label{def:type_signature}
-The type signature of a process states types of which the input value and the output value of a process are.
+The type signature of a process states of which types the input and the output of a process are. Let $\rho \colon \mathcal{P} \to \mathcal{T} \times \mathcal{T}$ be the function that assigns a type signature to processes.
 
 \hfill\qedsymbol
 \end{definition}
 
-In the following, let $\rho \colon \mathcal{P} \to \mathcal{T} \times \mathcal{T}$ be a function that assigns a type signature\index{Type!signature} to a process. Furthermore, let $Id \in \mathcal{P}$ be the process that simply outputs its input, i.e. the identity process, and let $Err \in \mathcal{P}$ the error process, i.e. the process that always fails. To be precise, there is an identity process $Id_i$ with $\rho \left( Id_i \right) = \left( T_i, T_i \right)$ and an error process $Err_i$ with $\rho \left( Err_i \right) = \left( T_i, \bot \right)$ for every $T_i \in \mathcal{T}$. For simplicity, we just refer to them as $Id$ and $Err$, but keep in mind that for every type, there is a specific identity and error process. Let their type signatures be $\rho \left( Id \right) = \left( a, a \right)$ and $\rho \left( Err \right) = \left( a, \bot \right)$, where $a$ is a type variable which resembles the fact that $Id$ and $Err$ are representing a family of processes.
+% ------------------------------------------------------------------------------
+% identity and error process
+% ------------------------------------------------------------------------------
+
+\begin{definition}[Identity\index{Process!Identity} and error\index{Process!Error} process]
+Let $Id \in \mathcal{P}$ be the identity process, i.e. the process that outputs its input, and let $Err \in \mathcal{P}$ be the error process, i.e. the process that always returns the undefined value. To be precise, there is an identity process $Id_i$ with $\typesignature{Id_i}{T_i}{T_i}$ and an error process $Err_i$ with $\typesignature{Err_i}{T_i}{T_i})$ for every $T_i \in \mathcal{T}$. For simplicity, we refer to them as $Id$ and $Err$, but keep in mind that for every type, there is a specific identity and error process. Let their type signatures be $\typesignature{Id}{a}{a}$ and $\typesignature{Err}{a}{a}$, where $a$ is a type variable which resembles the fact that $Id$ and $Err$ represent a family of processes.
+
+\hfill\qedsymbol
+\end{definition}
 
 \nomenclature{$Id$}{The identity process}
 \nomenclature{$Err$}{The error process}
+%\nomenclature{$\bot_i$}{The undefined value of type $i$}
+\nomenclature{$\bot$}{The undefined value}
 \nomenclature{$\rho$}{Function that assigns a type signature to a process}
 
 % ------------------------------------------------------------------------------
@@ -96,24 +117,33 @@ In the following, let $\rho \colon \mathcal{P} \to \mathcal{T} \times \mathcal{T
 % ------------------------------------------------------------------------------
 \begin{definition}[Strictness of processes\index{Strictness}]
 \label{def:process_strictness}
-Processes are strict in the undefined value. If the undefined value $\bot$ is presented to a process as its input, then the output of the process is the undefined value $\bot$. Processes also give the undefined value as output whenever they receive an input value that lies outside their domain\index{Domain}.
+Processes are strict in the undefined value. If the undefined value $\bot$ is presented to a process as its input, then the output of the process is the undefined value $\bot$. %Processes also give the undefined value as output whenever they receive an input value that lies outside their domain\index{Domain}.
 
 \hfill\qedsymbol
 \end{definition}
 
-\nomenclature{$\bot$}{The undefined type that is identified with its only value, the undefined value}
+% ------------------------------------------------------------------------------
+% processes as predicates
+% ------------------------------------------------------------------------------
+\begin{definition}[Processes as predicates]
+Let $\mathcal{B} \subset \mathcal{P}$ be the set of processes with output type $T_{Boolean}$. A process $B \in \mathcal{B}$ with $\rho \left( B \right) = \left( a, T_{Boolean} \right)$ is a predicate.
+
+\hfill\qedsymbol
+\end{definition}
+
 
 % ------------------------------------------------------------------------------
 % choice
 % ------------------------------------------------------------------------------
 \begin{definition}[Static semantics of the choice operator\index{Semantics!static!choice operator}]
 \label{def:static_choice}
-Let $\choice \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the non-deterministic choice between two processes that is made by an optimistic oracle\footnote{Our oracle will make this choice optimistically and never select the error process if it is involved.}\index{Oracle}. In order to compose processes with $\choice$, their type signatures have to match. Let $P, Q \in \mathcal{P}$ be processes and let $T_i, T_j, T_k, T_l \in \mathcal{T}$ be types. The type signatures of $P$ and $Q$ are given by $\rho$:
-\begin{eqnarray}
-  \rho \left( P \right) & = & \left( T_i, T_j \right) \\
-  \rho \left( Q \right) & = & \left( T_k, T_l \right)
-\end{eqnarray}
-Then $P \choice Q$ yields a valid process with $\rho \left( P \choice Q \right) = \left( T_i, T_j \right)$ iff $T_i = T_k \wedge T_j = T_l$, otherwise the composition is invalid. $P \choice Q$ yields a process that either behaves like $P$ or $Q$, depending on the oracle's choice. Depending on the point of view, we could also say that $P \choice Q$ behaves like $P$ and $Q$ at the same time.
+Let $\choiceop \colon \mathcal{B} \times \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the choice between two processes, made by a third process. In order to compose processes with $\choiceop$, their type signatures have to match. Let $B \in \mathcal{B}$ and $P, Q \in \mathcal{P}$ be processes and let $a, b$ be type variables. Then the composition $\choice{B}{Q}{P}$ is valid iff
+\begin{eqnarray*}
+  \rho \left( B \right) & = & \left( a, T_{Boolean} \right) \\
+  \rho \left( P \right) & = & \left( a, b \right) \\
+  \rho \left( Q \right) & = & \left( a, b \right)
+\end{eqnarray*}
+and invalid otherwise. The type signature of the resulting process is then $\typesignature{\choice{B}{P}{Q}}{a}{b}$.
 
 \hfill\qedsymbol
 \end{definition}
@@ -123,12 +153,13 @@ Then $P \choice Q$ yields a valid process with $\rho \left( P \choice Q \right) 
 % parallel
 % ------------------------------------------------------------------------------
 \begin{definition}[Static semantics of the parallel operator\index{Semantics!static!parallel operator}]
-Let $\parallel \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the parallel composition of processes. Let $P, Q \in \mathcal{P}$ be processes and let $T_i, T_j, T_k, T_l \in \mathcal{T}$ be types. The type signatures of $P$ and $Q$ are given by $\rho$:
+Let $\parallelop \colon \mathcal{P} \times \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the parallel composition of processes. Let $P, Q, R \in \mathcal{P}$ be processes and let $a, b, c, d$ be type variables. Then the composition $\parallel{R}{P}{Q}$ is valid iff
 \begin{eqnarray*}
-  \rho \left( P \right) & = & \left( T_i, T_j \right) \\
-  \rho \left( Q \right) & = & \left( T_k, T_l \right).
+  \rho \left( P \right) & = & \left( a, c \right) \\
+  \rho \left( Q \right) & = & \left( a, d \right) \\
+  \rho \left( R \right) & = & \left( \left( c, d \right), b \right)
 \end{eqnarray*}
-Then the composition $P \,\parallel\, Q$ yields a valid process with the signature $\rho \left( P \,\parallel\, Q \right) = \left( T_i, T_j \right)$ iff $T_i = T_k \wedge T_j = T_l$, i.e. $\rho \left( P \right) = \rho \left( Q \right)$, and is invalid otherwise.
+and invalid otherwise. The type signature of the resulting process is then $\typesignature{\parallel{R}{P}{Q}}{a}{b}$.
 
 \hfill\qedsymbol
 \end{definition}
@@ -139,12 +170,12 @@ Then the composition $P \,\parallel\, Q$ yields a valid process with the signatu
 % ------------------------------------------------------------------------------
 \begin{definition}[Static semantics of the sequence operator\index{Semantics!static!sequence operator}]
 \label{def:static_sequence}
-Let $\sequence \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the sequential composition of two processes. Let $P, Q \in \mathcal{P}$ be processes and let $T_i, T_j, T_k, T_l \in \mathcal{T}$ be types. The type signatures of $P$ and $Q$ are given by $\rho$: 
+Let $\sequenceop \colon \mathcal{P} \times \mathcal{P} \to \mathcal{P}$ be the sequential composition of two processes. Let $P, Q \in \mathcal{P}$ be processes and let $a, b, c$ be type variables. Then the composition $\sequence{P}{Q}$ is valid iff
 \begin{eqnarray*}
-  \rho \left( P \right) & = & \left( T_i, T_j \right) \\
-  \rho \left( Q \right) & = & \left( T_k, T_l \right).
+  \rho \left( P \right) & = & \left( a, c \right) \\
+  \rho \left( Q \right) & = & \left( c, b \right)
 \end{eqnarray*}
-Then the composition $P \sequence Q$ yields a valid process with $\rho \left( P \sequence Q \right) = \left( T_i, T_l \right)$ iff $T_j = T_k$, and is invalid otherwise. By $P \sequence Q$, we mean running $P$ first and then $Q$.
+and invalid otherwise. The type signature of the resulting process is then $\typesignature{\sequence{P}{Q}}{a}{b}$.
 
 \hfill\qedsymbol
 \end{definition}
@@ -153,12 +184,12 @@ Then the composition $P \sequence Q$ yields a valid process with $\rho \left( P 
 % ------------------------------------------------------------------------------
 % kleene
 % ------------------------------------------------------------------------------
-\begin{definition}[Static semantics of the \textsc{Kleene} star\index{Semantics!static!repetition operator}\index{Kleene star}]
-\label{def:static_kleene}
-Let $\repetition \colon \mathcal{P} \to \mathcal{P}$ be the \textsc{Kleene} star that can be used to express repetition, i.e. executing a process several times. $P^\repetition$ creates a process that runs $P$ zero or more times and can also be expressed recursively as $P^\repetition = Id \choice P \sequence P^\repetition$. Let $\rho \left( P \right) = \left( T_i, T_j \right)$, then $P^\repetition$ is valid and $\rho \left( P^\repetition \right) = \left( T_i, T_i \right)$ iff $T_i = T_j$ and invalid otherwise. Like for the choice operator $\choice$, an oracle\index{Oracle} selects the concrete, \textbf{finite} number of repetitions of a process $P^\repetition$, thus leading to non-determinism.
+%\begin{definition}[Static semantics of the \textsc{Kleene} star\index{Semantics!static!repetition operator}\index{Kleene star}]
+%\label{def:static_kleene}
+%Let $\repetition \colon \mathcal{P} \to \mathcal{P}$ be the \textsc{Kleene} star that can be used to express repetition, i.e. executing a process several times. $P^\repetition$ creates a process that runs $P$ zero or more times and can also be expressed recursively as $P^\repetition = Id \choice P \sequence P^\repetition$. Let $\rho \left( P \right) = \left( T_i, T_j \right)$, then $P^\repetition$ is valid and $\rho \left( P^\repetition \right) = \left( T_i, T_i \right)$ iff $T_i = T_j$ and invalid otherwise. Like for the choice operator $\choice$, an oracle\index{Oracle} selects the concrete, \textbf{finite} number of repetitions of a process $P^\repetition$, thus leading to non-determinism.
 
-\hfill\qedsymbol
-\end{definition}
+%\hfill\qedsymbol
+%\end{definition}
 
 
 
@@ -168,42 +199,46 @@ Let $\repetition \colon \mathcal{P} \to \mathcal{P}$ be the \textsc{Kleene} star
 
 \section{Semantics\index{Semantics}}
 \label{chp:semantics}
-In \chpref{chp:static_semantics} we have introduced static semantics and construction rules for processes. In this chapter, we give an inductive definition of their semantics. In order to make this definition accurately, we need to introduce some terms first: \textit{argument}\index{Argument} of a process, \textit{result}\index{Result} of a process and \textit{running} a process.
+In \chpref{chp:static_semantics} we have introduced static semantics and construction rules for processes. In this chapter, we give an inductive definition of process semantics. %In order to make this definition accurately, we need to introduce some terms first: \textit{argument}\index{Argument} of a process, \textit{result}\index{Result} of a process and \textit{running} a process.
 
-The argument $a$ of a process $P$ is the value that is presented to $P$ and that is transformed into a result value $r$ by $P$. The type of $a$ needs to match $P$'s input type, which is given by $\rho$. The relationship of $P$, $a$ and $r$ can be described using \textsc{Hoare} triples\index{Hoare!triple} from \textsc{Hoare}\index{Hoare!logic} logic \cite{}. In \textsc{Hoare} logic, $a$ is a precondition\index{Precondition}, $r$ is a postcondition\index{Postcondition} and $P$ is a command. The relationship between the three is given by $\left\{ a \right\} P \left\{ r \right\}$ and means that $P$ transform the program's state from a situation where $a$ holds to a situation where $r$ holds. To be precise, in \textsc{Hoare} logic both $a$ and $r$ are formulas in predicate logic. They are used to give certain assurances over the current program state. However, we can interpret $a$ and $r$ in a compatible way: Let $s$ be the state of the program, then the condition $a$ would mean that $s$ has to be exactly $a$.
+%The argument $a$ of a process $P$ is the value that is presented to $P$ and that is transformed into a result value $r$ by $P$. The type of $a$ needs to match $P$'s input type, which is given by $\rho$. The relationship of $P$, $a$ and $r$ can be described using \textsc{Hoare} triples\index{Hoare!triple} from \textsc{Hoare}\index{Hoare!logic} logic \cite{}. In \textsc{Hoare} logic, $a$ is a precondition\index{Precondition}, $r$ is a postcondition\index{Postcondition} and $P$ is a command. The relationship between the three is given by $\left\{ a \right\} P \left\{ r \right\}$ and means that $P$ transform the program's state from a situation where $a$ holds to a situation where $r$ holds. To be precise, in \textsc{Hoare} logic both $a$ and $r$ are formulas in predicate logic. They are used to give certain assurances over the current program state. However, we can interpret $a$ and $r$ in a compatible way: Let $s$ be the state of the program, then the condition $a$ would mean that $s$ has to be exactly $a$.
 
-By running a process $P$, we mean presenting an argument $a$ to the process, applying its intrinsic function to $a$ and receiving a result value $r$, i.e. $\left\{ a \right\} P \left\{ r \right\}$. The goal of this chapter is to define the intrinsic function of a process which is exactly its semantics.
+%By running a process $P$, we mean presenting an argument $a$ to the process, applying its intrinsic function to $a$ and receiving a result value $r$, i.e. $\left\{ a \right\} P \left\{ r \right\}$. The goal of this chapter is to define the intrinsic function of a process which is exactly its semantics.
 
-For the definition of process semantics, we introduce a function $sem \colon \mathcal{P} \to 2^{\left( \mathcal{T} \to \mathcal{T} \right)}$ that takes a process and associates it with its meaning, i.e. with the \textbf{set} of functions it calculates. Since the choice operator $\choice$ and the \textsc{Kleene} star $\repetition$ introduce non-determinism\index{Non-determinism}, every process that involves a choice between processes or the \textsc{Kleene} star has more than one possible outcome, which we resemble in the definition of $sem$.
+For the definition of process semantics, we introduce the polymorphic function 
+\begin{equation*}
+  sem \colon \mathcal{P} \to a \times b
+\end{equation*}
+$sem$ takes a process $P \in \mathcal{P}$ with $\typesignature{P}{a}{b}$, an input value $x$ of type $a$ and defines the semantics of $P$ applied to $x$. We write $\sem{P}{x}$ for that. Note that this is only valid if $x$ is of appropriate type to serve as input for $P$. If $x$ is not of appropriate type to serve as input for a process $P$, it is illegal to write $\sem{P}{x}$.
 
 
-\nomenclature{$a$}{Argument for a process}
-\nomenclature{$r$}{Result of a process}
+%\nomenclature{$a$}{Argument for a process}
+%\nomenclature{$r$}{Result of a process}
 \nomenclature{$sem$}{Function that gives the semantics of a process}
 
 % ------------------------------------------------------------------------------
 % atomic process
 % ------------------------------------------------------------------------------
-The semantics of an atomic\index{Process!atomic} process $P \in \mathcal{P}$ is directly given by the function it calculates. For an atomic process $P$, let $f_P$ be its intrinsic function.
+The semantics of an atomic\index{Process!atomic} process $P \in \mathcal{P}$ is directly given by the function it calculates. For an atomic process $P$, let $f_P$ be its intrinsic function. 
 \begin{definition}[Semantics of atomic processes\index{Semantics!atomic process}]
   \label{def:sem_atomic}
-  Let $P$ be an atomic process, then its semantics $sem \left(\langle P \right\rangle$ is given by its intrinsic function $f_P$.
+  Let $P$ be an atomic process and $x$ be an input for $P$ of matching type, then the semantics $\sem{P}{x}$ is given by $P$'s intrinsic function $f_P$.
   \begin{equation}
     \label{eqn:sem_atomic}
-    sem \left\langle P \right\rangle = \left\{ f_P \right\}
+    \sem{P}{x} = f_P \left( x \right)
   \end{equation}
   \hfill\qedsymbol
 \end{definition}
 
-\nomenclature{$f_P$}{Intrinsic function of process $P$}
+\nomenclature{$f_P$}{Intrinsic function of basic process $P$}
 
 
 \begin{definition}[Semantics of the identity process\index{Semantics!identity process}\index{Process!identity}\index{Identity process}]
 \label{def:sem_id}
-Let $Id \in \mathcal{P}$ be the identity process, i.e. the process that always returns its argument.
+Let $Id \in \mathcal{P}$ be the identity process, i.e. the process that always outputs its input, and $x$ be an input.
 \begin{equation}
   \label{eqn:sem_id}
-  sem \left\langle Id \right\rangle = \left\{ x \mapsto x \right\}
+  \sem{Id}{x} = x
 \end{equation}
 \hfill\qedsymbol
 \end{definition}
@@ -211,25 +246,26 @@ Let $Id \in \mathcal{P}$ be the identity process, i.e. the process that always r
 
 \begin{example}[Semantics of an atomic process]
   \label{exp:sem_atomic}
-  Let $\sigma \colon x \mapsto x+1 \subset \mathbb{N} \times \mathbb{N}$ be the function that is intrinsic to the atomic process $S \in \mathcal{P}$. Then the semantics $sem \left\langle S \right\rangle$ of $S$ is given by its intrinsic function $\sigma$:
+  Let $\sigma \colon x \mapsto x+1 \subset \mathbb{N} \times \mathbb{N}$ be the function that is intrinsic to the atomic process $S \in \mathcal{P}$. Then the semantics $\sem{S}{x}$ of $S$ applied to $x$ is given by its intrinsic function $\sigma$:
   \begin{equation}
-    sem \left\langle S \right\rangle = \left\{ \sigma \right\} = \left\{ x \mapsto x+1 \right\}
+    \sem{S}{x} = \sigma \left( x \right) = x \mapsto x+1
   \end{equation}
-  Let $\delta \colon x \mapsto 2x \subset \mathbb{N} \times \mathbb{N}$ be the function that is intrinsic to the atomic process $D \in \mathcal{P}$. Then the semantics $sem \left\langle D \right\rangle$ of $D$ is given by its intrinsic function $\delta$:
+  Let $\delta \colon x \mapsto 2x \subset \mathbb{N} \times \mathbb{N}$ be the function that is intrinsic to the atomic process $D \in \mathcal{P}$. Then the semantics $\sem{D}{x}$ of $D$ applied to $x$ is given by its intrinsic function $\delta$:
   \begin{equation}
-    sem \left\langle D \right\rangle = \left\{ \delta \right\} = \left\{ x \mapsto 2x \right\}
+    \sem{D}{x} = \delta \left( x \right) = x \mapsto 2x
   \end{equation}
   \hfill\qedsymbol
 \end{example}
 
 
-The error process $Err$ presents a special case here: as stated in \chpref{chp:static_semantics}, its output type is undefined. Hence, its result is always the undefined value, which is identified with the undefined type:
+%The error process $Err$ presents a special case here: as stated in \chpref{chp:static_semantics}, its output type is undefined. Hence, its result is always the undefined value, which is identified with the undefined type:
+The semantics of the error process $Err$, no matter which input it receives, is always the undefined value $\bot$ of the respective type. 
 \begin{definition}[Semantics of the error process\index{Semantics!error process}\index{Process!error}\index{Error process}]
 \label{def:sem_err}
-Let $Err \in \mathcal{P}$ be the error process, i.e. the process that always returns the undefined value $\bot$.
+Let $Err \in \mathcal{P}$ be the error process, i.e. the process that always outputs the undefined value $\bot$.
   \begin{equation}
     \label{eqn:sem_error}
-    sem \left\langle Err \right\rangle = \left\{ x \mapsto \bot \right\}.
+    \sem{Err}{x} = x \mapsto \bot
   \end{equation}
   \hfill\qedsymbol
 \end{definition}
@@ -237,10 +273,10 @@ Let $Err \in \mathcal{P}$ be the error process, i.e. the process that always ret
 % ------------------------------------------------------------------------------
 % composed processes
 % ------------------------------------------------------------------------------
-The semantics of composed\index{Process!composed} processes is determined by their structure and the involved sub-processes. 
+The semantics of composed\index{Process!composed} processes is determined by their structure and the involved sub-processes.
 
 \begin{definition}[Sub-process\index{Sub-process}]
-A sub-process is a process that has been used together with one or many process combinators to build a structurally more complicated process.
+Let $P \in \mathcal{P}$ be a composed process. Then the processes $P$ is composed of are called its sub-processes.
 
 \hfill\qedsymbol
 \end{definition}
@@ -250,25 +286,23 @@ A sub-process is a process that has been used together with one or many process 
 % ------------------------------------------------------------------------------
 \begin{definition}[Semantics of the choice operator\index{Semantics!choice operator}\index{Operator!choice}]
 \label{def:sem_choice}
-Let $Q, R \in \mathcal{P}$ be processes and let them be composed using the choice operator $\choice$. $Q \choice R$ gives a process that behaves like $Q$ and $R$ at the same time and thus the semantics of the resulting process is given by the union of the semantics of $Q$ and $R$.
+Let $B \in \mathcal{B}$ and $Q, R \in \mathcal{P}$ be processes, let them be composed using the choice operator $\choiceop$ and call the resulting process $P$, i.e. $P = \choice{B}{Q}{R}$. Then, depending on $P$'s argument $x$ and decided by $B$, $P$ behaves either like $Q$ or $R$. The semantics of $\choice{B}{Q}{R}$ is given by:
   \begin{equation}
     \label{eqn:sem_choice}
-    sem \left\langle Q \choice R \right\rangle = sem \left\langle Q \right\rangle \cup sem \left\langle R \right\rangle
+    \sem{\choice{B}{Q}{R}}{x} = \left\{ \begin{array}{ll}
+      \sem{Q}{x} & \text{if } B\left(x\right) \\
+      \sem{R}{x} & \text{otherwise}
+    \end{array}\right.
   \end{equation}
-If either $P$ of $Q$ is the error process, the optimistic oracle\index{Oracle} selects the other process. If both $P$ and $Q$ are the error process $Err$, the oracle must select the error process.
-  \begin{eqnarray}
-    sem \left\langle P \choice Err \right\rangle & = & sem \left\langle P \right\rangle \\
-    sem \left\langle Err \choice Q \right\rangle & = & sem \left\langle Q \right\rangle \\
-    sem \left\langle Err \choice Err \right\rangle & = & sem \left\langle Err \right\rangle
-  \end{eqnarray}
+  
   \hfill\qedsymbol
 \end{definition}
 
 \begin{example}[Semantics of the choice operator]
 \label{exp:sem_chice}
-Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_atomic}. If we compose $S$ and $D$ using the choice operator $\vee$, the semantics of the resulting process is as follows:
+Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_atomic}. If we compose $S$ and $D$ using the choice operator $\choiceop$, the semantics of the resulting process is as follows:
   \begin{equation}
-    sem \left\langle S \choice D \right\rangle = sem \left\langle S \right\rangle \cup sem \left\langle D \right\rangle = \left\{ \sigma \right\} \cup \left\{ \delta \right\} = \left\{ x \mapsto x+1, x \mapsto 2x \right\}
+    sem \left\langle S \choiceop D \right\rangle = sem \left\langle S \right\rangle \cup sem \left\langle D \right\rangle = \left\{ \sigma \right\} \cup \left\{ \delta \right\} = \left\{ x \mapsto x+1, x \mapsto 2x \right\}
   \end{equation}
   \hfill\qedsymbol
 \end{example}
@@ -279,10 +313,10 @@ Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_ato
 % ------------------------------------------------------------------------------
 \begin{definition}[Semantics of the parallel operator\index{Semantics!parallel operator}]
 \label{def:sem_parallel}
-Let $Q, R \in \mathcal{P}$ be processes and let them be composed using the parallel operator, i.e. $Q \,\parallel\, R$, with $\rho \left( Q \right) = \rho \left( R \right) = \left( T_a, T_r \right)$. Furthermore, let $\left( \left( T_a, T_r \right), \star \right)$ be a semigroup\footnote{A semigroup is an algebraic structure $(S, \cdot)$ where $S$ is a set and $\cdot\colon S \times S \to S$ is a binary operation on the elements of $S$ with associative property.}\index{Semigroup} with the commutative binary operation $\star \colon \left( T_a, T_r \right) \times \left( T_a, T_r \right) \to \left( T_a, T_r \right)$. The semantics of $Q \,\parallel\, R$ is then given by %The semantics of the resulting process is given by running both $Q$ and $R$ on the same argument and combining the elements of their result sets using $\star$.
+Let $Q, R \in \mathcal{P}$ be processes and let them be composed using the parallel operator, i.e. $Q \,\parallelop\, R$, with $\rho \left( Q \right) = \rho \left( R \right) = \left( T_a, T_r \right)$. Furthermore, let $\left( \left( T_a, T_r \right), \star \right)$ be a semigroup\footnote{A semigroup is an algebraic structure $(S, \cdot)$ where $S$ is a set and $\cdot\colon S \times S \to S$ is a binary operation on the elements of $S$ with associative property.}\index{Semigroup} with the commutative binary operation $\star \colon \left( T_a, T_r \right) \times \left( T_a, T_r \right) \to \left( T_a, T_r \right)$. The semantics of $Q \,\parallelop\, R$ is then given by %The semantics of the resulting process is given by running both $Q$ and $R$ on the same argument and combining the elements of their result sets using $\star$.
   \begin{equation}
     \label{eqn:sem_parallel}
-    sem \left\langle Q \,\parallel\, R \right\rangle = \left\{ q \star r \,|\, q \in sem \left\langle Q \right\rangle, r \in sem \left\langle R \right\rangle \right\}.
+    sem \left\langle Q \,\parallelop\, R \right\rangle = \left\{ q \star r \,|\, q \in sem \left\langle Q \right\rangle, r \in sem \left\langle R \right\rangle \right\}.
   \end{equation}
   \hfill\qedsymbol
 \end{definition}
@@ -299,7 +333,7 @@ Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_ato
   \hfill\qedsymbol
 \end{example}
 
-The reason why we need $\star$ to be commutative is the intuition one might have about parallel composition of processes. For two processes $Q, R \in \mathcal{P}$, it is a reasonable expectation that $Q \,\parallel\, R$ and $R \,\parallel\, Q$ behave exactly the same. Since in the definition of the semantics of parallel composition we employ $\star$ to combine the results of the parallel processes, the properties of $\star$ are transferred to the parallel composition operator $\parallel$. Hence, if we want $\parallel$ to have commutative properties, we have to require this from $\star$.
+The reason why we need $\star$ to be commutative is the intuition one might have about parallel composition of processes. For two processes $Q, R \in \mathcal{P}$, it is a reasonable expectation that $Q \,\parallelop\, R$ and $R \,\parallelop\, Q$ behave exactly the same. Since in the definition of the semantics of parallel composition we employ $\star$ to combine the results of the parallel processes, the properties of $\star$ are transferred to the parallel composition operator $\parallelop$. Hence, if we want $\parallelop$ to have commutative properties, we have to require this from $\star$.
 
 %Furthermore, for a semigroup\index{Semigroup} $\left(T_r, \star \right)$ that is employed to combine results of processes that are composed using the parallel operator $\parallel$, we require every $t_r \in T_r$, i.e. every concrete value of type $T_r$, to be idempotent\index{Idempotence} respective to $\star$:
 %\begin{equation}
@@ -338,7 +372,7 @@ Let $Q, R \in \mathcal{P}$ be processes and let them be composed using the seque
 
 \begin{example}[Semantics of the sequence operator]
 \label{exp:sem_sequence}
-Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_atomic} and use the sequence operator $\sequence$ to compose $D$ and $S$. Since $\sequence$ does not have commutative properties, $S \sequence D$ and $D \sequence S$ will yield different results.
+Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_atomic} and use the sequence operator $\sequenceop$ to compose $D$ and $S$. Since $\sequenceop$ does not have commutative properties, $S \sequenceop D$ and $D \sequenceop S$ yield different results.
   \begin{equation}
     sem \left\langle S \sequence D \right\rangle = \left\{ \delta \circ \sigma \right\} = \left\{ x \mapsto 2x+2 \right\}
   \end{equation}
@@ -351,9 +385,9 @@ Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_ato
 
 
 % ------------------------------------------------------------------------------
-% kleene
+% repetition
 % ------------------------------------------------------------------------------
-Based on the semantics for $\choice$ and $\sequence$ from \eqnref{eqn:sem_choice} and \eqnref{eqn:sem_sequence}, the semantics of the \textsc{Kleene} star\index{Kleene star} $\repetition$ is already given, but we will discuss it for completeness. The definition in \chpref{chp:syntax} makes clear the recursive nature of the \textsc{Kleene} star: $R^\repetition = Id \choice R \sequence R^\repetition$ and immediately reveals its semantics.
+Based on the semantics for $\choiceop$ and $\sequenceop$ from \eqnref{eqn:sem_choice} and \eqnref{eqn:sem_sequence}, the semantics of the \textsc{Kleene} star\index{Kleene star} $\repetition$ is already given, but we will discuss it for completeness. The definition in \chpref{chp:syntax} makes clear the recursive nature of the \textsc{Kleene} star: $R^\repetition = Id \choice R \sequence R^\repetition$ and immediately reveals its semantics.
 \begin{definition}[Semantics of the \textsc{Kleene} star\index{Semantics!repetition operator}\index{Operator!repetition}]
 \label{def:sem_kleene}
 Let $R \in \mathcal{P}$ be a process and let the \textsc{Kleene} star $\repetition$ be applied to $R$, i.e. $R^\repetition$. The semantics of $R^\repetition$ is then directly derived from \defref{def:static_kleene} and \defref{def:sem_choice}.
@@ -511,44 +545,44 @@ Based on the defined semantics of our process algebra, i.e. $sem$, we can find a
 In the following, let $P, Q, R \in \mathcal{P}$ and assume that their types are suitable for the desired composition in the respective case. Proofs for the stated laws can be found in \appref{chp:proofs}.
 
 \subsection{Associativity\index{Associativity}\index{Laws!associativity}}
-The associativity property holds for the choice operator $\vee$, the parallel operator $|$ and the sequence operator $\sequence$ of the process algebra.
+The associativity property holds for the choice operator $choiceop$, the parallel operator $\parallelop$ and the sequence operator $\sequenceop$ of the process algebra.
 \begin{equation*}
 \begin{array}{rcccl}
-  \left( P \choice Q \right) \choice R & \equiv & P \choice Q \choice R & \equiv & P \choice \left( Q \choice R \right) \\
-  \left( P \,\parallel\, Q \right) \parallel\, R & \equiv & P \,\parallel\, Q \,\parallel\, R & \equiv & P \,\parallel \left( Q \,\parallel\, R \right) \\
-  \left( P \sequence Q \right) \sequence R & \equiv & P \sequence Q \sequence R & \equiv & P \sequence \left( Q \sequence R \right)
+  \left( P \choiceop Q \right) \choiceop R & \equiv & P \choiceop Q \choiceop R & \equiv & P \choiceop \left( Q \choiceop R \right) \\
+  \left( P \,\parallelop\, Q \right) \parallelop\, R & \equiv & P \,\parallelop\, Q \,\parallelop\, R & \equiv & P \,\parallelop \left( Q \,\parallelop\, R \right) \\
+  \left( P \sequenceop Q \right) \sequenceop R & \equiv & P \sequenceop Q \sequenceop R & \equiv & P \sequenceop \left( Q \sequenceop R \right)
 \end{array}
 \end{equation*}
 
 \subsection{Distributivity\index{Distributivity}\index{Laws!distributivity}}
-In our algebra, the choice operator $\choice$, the parallel operator $|$ and the sequence operator $\sequence$ distribute over the choice operator $\choice$. Furthermore, the sequence operator $\sequence$ distributes over the parallel operator $|$.
+In our algebra, the choice operator $\choiceop$, the parallel operator $|$ and the sequence operator $\sequenceop$ distribute over the choice operator $\choiceop$. Furthermore, the sequence operator $\sequenceop$ distributes over the parallel operator $|$.
 \begin{eqnarray*}
-  P \choice \left( Q \choice R \right) & \equiv & \left( P \choice Q \right) \choice \left( P \choice R \right) \\
-  P \,\parallel \left( Q \choice R \right) & \equiv & \left( P \,\parallel\, Q \right) \choice \left( P \,\parallel\, R \right) \\
-  P \sequence \left( Q \choice R \right) & \equiv & \left( P \sequence Q \right) \choice \left( P \sequence R \right) \\
+  P \choiceop \left( Q \choiceop R \right) & \equiv & \left( P \choiceop Q \right) \choiceop \left( P \choiceop R \right) \\
+  P \,\parallelop \left( Q \choiceop R \right) & \equiv & \left( P \,\parallelop\, Q \right) \choiceop \left( P \,\parallelop\, R \right) \\
+  P \sequenceop \left( Q \choiceop R \right) & \equiv & \left( P \sequenceop Q \right) \choiceop \left( P \sequenceop R \right) \\
   & & \\
-  P \sequence \left( Q \,\parallel\, R \right) & \equiv & \left( P \sequence Q \right) \parallel \left( P \sequence R \right)
+  P \sequenceop \left( Q \,\parallelop\, R \right) & \equiv & \left( P \sequenceop Q \right) \parallelop \left( P \sequenceop R \right)
 \end{eqnarray*}
 
 \subsection{Commutativity\index{Commutativity}\index{Laws!commutativity}}
-The commutativity property is given for the choice operator $\choice$ and the parallel operator $|$, but not for the sequence operator $\sequence$.
+The commutativity property is given for the choice operator $\choiceop$ and the parallel operator $|$, but not for the sequence operator $\sequenceop$.
 \begin{eqnarray*}
-  P \choice Q & \equiv & Q \choice P \\
-  P \,\parallel\, Q & \equiv & Q \,\parallel\, P
+  P \choiceop Q & \equiv & Q \choiceop P \\
+  P \,\parallelop\, Q & \equiv & Q \,\parallelop\, P
 \end{eqnarray*}
 
 \subsection{Idempotence\index{Idempotence}\index{Laws!idempotence}}
-Idempotence properties can be dependant on both the operation at hand and a specific element. For every process $P$, if it is combined with itself using the choice operator $\choice$, the resulting process has the same semantics as the original process $P$. The identity process $Id$ as well as the error process $Err$ is idempotent regarding sequential composition $\sequence$ with itself. Furthermore, multiple application of the \textsc{Kleene} star $*$ does not change the semantics of a process compared to single application of $*$.
+Idempotence properties can be dependant on both the operation at hand and a specific element. For every process $P$, if it is combined with itself using the choice operator $\choiceop$, the resulting process has the same semantics as the original process $P$. The identity process $Id$ as well as the error process $Err$ is idempotent regarding sequential composition $\sequenceop$ with itself. Furthermore, multiple application of the \textsc{Kleene} star $*$ does not change the semantics of a process compared to single application of $*$.
 \begin{eqnarray*}
-  P \choice P & \equiv & P \\
-  Id \sequence Id & \equiv & Id \\
-  Err \sequence Err & \equiv & Err \\
+  P \choiceop P & \equiv & P \\
+  Id \sequenceop Id & \equiv & Id \\
+  Err \sequenceop Err & \equiv & Err \\
   (P^*)^* & \equiv & P^*
 \end{eqnarray*}
 
 \subsection{Neutral elements\index{Neutral element}\index{Laws!neutral element}}
-The identity process $Id$ is both a left and right neutral element for sequential composition $\sequence$. Furthermore, it follows directly from the definition of the semantics of the error process $Err$ and the choice operator $\choice$ that $Err$ is a neutral element for $\choice$. The commutative property of $\choice$ makes $Err$ both a left and right neutral element.
+The identity process $Id$ is both a left and right neutral element for sequential composition $\sequenceop$. Furthermore, it follows directly from the definition of the semantics of the error process $Err$ and the choice operator $\choiceop$ that $Err$ is a neutral element for $\choiceop$. The commutative property of $\choiceop$ makes $Err$ both a left and right neutral element.
 \begin{eqnarray*}
-  Id \sequence P & \equiv & P \\
-  P \sequence Id & \equiv & P
+  Id \sequenceop P & \equiv & P \\
+  P \sequenceop Id & \equiv & P
 \end{eqnarray*}
