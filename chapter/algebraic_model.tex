@@ -21,6 +21,7 @@ Let $\mathcal{P}$ be the set of processes\index{Process} and let $P, Q, R \in \m
 \end{itemize}
 
 \nomenclature{$\mathcal{P}$}{Set of all processes}
+\nomenclature{$\mathcal{B}$}{Set of processes with output type $T_{Boolean}$}
 \nomenclature{$P,Q,R$}{Processes}
 \nomenclature{$\choiceop$}{Choice Operator}
 \nomenclature{$\parallelop$}{Parallel Operator}
@@ -295,14 +296,20 @@ Let $P \in \mathcal{P}$ be a composed process. Then the processes $P$ is compose
 % ------------------------------------------------------------------------------
 % choice
 % ------------------------------------------------------------------------------
+\begin{definition}[Shorthand notion for predicate processes]
+Let $B \in \mathcal{B}$ be a predicate process. Then $B \left( x \right)$ is a shorthand notion for $\sem{B}{x} = True$ and $\overline{B \left( x \right)}$ is a shorthand notion for $\sem{B}{x} = False$.
+
+\hfill\qedsymbol
+\end{definition}
+
 \begin{definition}[Semantics of choice composition\index{Semantics!Choice}]
 \label{def:sem_choice}
 Let $B \in \mathcal{B}$ and $P, Q \in \mathcal{P}$ be processes and let them be composed using choice composition, i.e. $\choice{B}{P}{Q}$. Let $x$ be an input of matching type for $B, Q, P$. Then, based on $\sem{B}{x}$, the resulting process behaves either like $P$ or $Q$. The semantics of $\choice{B}{P}{Q}$ is given by:
   \begin{equation}
     \label{eqn:sem_choice}
     \sem{\choice{B}{P}{Q}}{x} = \left\{ \begin{array}{ll}
-      \sem{P}{x} & \text{if } \sem{B}{x} = True \\
-      \sem{Q}{x} & \text{otherwise}
+      \sem{P}{x} & \text{if } B \left( x \right) \\
+      \sem{Q}{x} & \text{if } \overline{B \left( x \right)}
     \end{array}\right.
   \end{equation}
   
@@ -315,7 +322,7 @@ Consider the definitions of $S$ and $D$ from \expref{exp:sem_atomic}. Furthermor
   \begin{equation*}
     \sem{\choice{Even}{S}{D}}{x} = \left\{\begin{array}{ll}
       \sem{S}{x} & \text{if } x \text{ is even} \\
-      \sem{D}{x} & \text{otherwise}
+      \sem{D}{x} & \text{if } x \text{ is odd}
     \end{array}\right.
   \end{equation*}
   \hfill\qedsymbol
