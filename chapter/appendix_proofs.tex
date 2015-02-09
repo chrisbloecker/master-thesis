@@ -1,124 +1,92 @@
 \chapter{Proofs}
 \label{chp:proofs}
 
-\clearpage
-
-\begin{theorem}[Associativity of the choice operator]
-\label{thm:associativity_choice}
-The choice operator $\vee$ has associative property, i.e. for any processes $P, Q, R \in \mathcal{P}$ with suitable type signatures, the following equivalence holds:
-\begin{equation*}
-  P \vee \left( Q \vee R \right) \equiv \left( P \vee Q \right) \vee R.
-\end{equation*}
-\end{theorem}
-
-\begin{myproof}[Associativity of the choice operator]
-Let $P, Q, R \in \mathcal{P}$ be processes with the type signature $\rho \left( P \right) = \rho \left( Q \right) = \rho \left( R \right) = \left( T_a, T_r \right)$ for some $a, r$ and $T_a, T_r \in \mathcal{T}$. Then $sem \left\langle P \vee \left( Q \vee R \right) \right\rangle = sem \left\langle \left( P \vee Q \right) \vee R \right\rangle$.
-\begin{eqnarray*}
-  sem \left\langle P \vee \left( Q \vee R \right) \right\rangle & \overset{\defref{def:sem_choice}}{=} & sem \left\langle P \right\rangle \cup sem \left\langle Q \vee R \right\rangle \\
-  & \overset{\defref{def:sem_choice}}{=} & sem \left\langle P \right\rangle \cup \left( sem \left\langle Q \right\rangle \cup sem \left\langle R \right\rangle \right) \\
-  & \overset{associativity \ of \ \cup}{=} & sem \left\langle P \right\rangle \cup sem \left\langle Q \right\rangle \cup sem \left\langle R \right\rangle \\
-  & \overset{associativity \ of \ \cup}{=} & \left( sem \left\langle P \right\rangle \cup sem \left\langle Q \right\rangle \right) \cup sem \left\langle R \right\rangle \\
-  & \overset{\defref{def:sem_choice}}{=} & sem \left\langle P \vee Q \right\rangle \cup sem \left\langle R \right\rangle \\
-  & \overset{\defref{def:sem_choice}}{=} & sem \left\langle \left( R \vee Q \right) \vee R \right\rangle
-\end{eqnarray*}
-The associative property of set union $\cup$ is transferred to the choice operator $\vee$ and hence, \thmref{thm:associativity_choice} holds.
-
-\hfill$\blacksquare$
-\end{myproof}
-
-\begin{theorem}[Associativity of the parallel operator]
-\label{thm:associativity_parallel}
-The parallel operator $|$ has associative property, i.e. for any processes $P, Q, R \in \mathcal{P}$ with suitable type signatures, the following equivalence holds:
-\begin{equation*}
-  P \,| \left( Q \,|\, R \right) \equiv \left( P \,|\, Q \right) |\, R.
-\end{equation*}
-\end{theorem}
-
-\begin{myproof}[Associativity of the parallel operator]
-Let $P, Q, R \in \mathcal{P}$ be processes with the type signature $\rho \left( P \right) = \rho \left( Q \right) = \rho \left( R \right) = \left( T_a, T_r \right)$ for some $a, r$ and $T_a, T_r \in \mathcal{T}$. Let $\left( T_r, \star \right)$ be a semi-group with the commutative binary operation $\star \star T_r \times T_r \to T_r$. Then $sem \left\langle P \,| \left( Q \,|\, R \right) \right\rangle = sem \left\langle \left( P \,|\, Q \right) |\, R \right\rangle$.
-\begin{eqnarray*}
-  sem \left\langle P \,| \left( Q \,|\, R \right) \right\rangle & \overset{\defref{def:sem_parallel}}{=} & \left\{ p \star u \,|\, p \in sem \left\langle P \right\rangle, u \in sem \left\langle Q \,|\, R \right\rangle \right\} \\
-  & \overset{\defref{def:sem_parallel}}{=} & \left\{ p \star u \,|\, p \in sem \left\langle P \right\rangle, u \in \left\{q \star r \,|\, q \in sem \left\langle Q \right\rangle, r \in sem \left\langle R \right\rangle \right\} \right\} \\
-  & \overset{substitution \ of \ u}{=} & \left\{ p \star \left( q \star r \right) \,|\, p \in sem \left\langle P \right\rangle, q \in sem \left\langle Q \right\rangle, r \in sem \left\langle R \right\rangle \right\} \\
-  & \overset{associativity \ of \  \star}{=} & \left\{ p \star q \star r \,|\, p \in sem \left\langle P \right\rangle, q \in sem \left\langle Q \right\rangle, r \in sem \left\langle R \right\rangle \right\} \\
-  & \overset{associativity \ of \  \star}{=} & \left\{ \left( p \star q \right) \star r \,|\, p \in sem \left\langle P \right\rangle, q \in sem \left\langle Q \right\rangle, r \in sem \left\langle R \right\rangle \right\} \\
-  & \overset{introduction \ of \ v}{=} & \left\{ v \star r \,|\, v \in \left\{ p \star q \,|\, p \in sem \left\langle P \right\rangle, q \in sem \left\langle Q \right\rangle \right\}, r \in sem \left\langle R \right\rangle \right\} \\
-  & \overset{\defref{def:sem_parallel}}{=} & \left\{ v \star r \,|\, v \in sem \left\langle P \,|\, Q \right\rangle, r \in sem \left\langle R \right\rangle \right\} \\
-  & \overset{\defref{def:sem_parallel}}{=} & sem \left\langle \left( P \,|\, Q \right) |\, R \right\rangle
-\end{eqnarray*}
-The associative property of $\star$ is transferred to the parallel operator $|$ and hence, \thmref{thm:associativity_parallel} holds.
-
-\hfill$\blacksquare$
-\end{myproof}
-
-\begin{theorem}[Associativity of the sequence operator]
+\begin{theorem}[Associative property of sequence composition]
 \label{thm:associativity_sequence}
-The sequence operator $\triangleright$ has associative property, i.e. for any processes $P, Q, R \in \mathcal{P}$ with suitable type signatures, the following equivalence holds:
+Sequence composition has associative property, i.e. for any three processes $P, Q, R \in \mathcal{P}$ with suitable type signatures, the following equivalence holds:
 \begin{equation*}
-  P \triangleright \left( Q \triangleright R \right) \equiv \left( P \triangleright Q \right) \triangleright R.
+  \sequence{P}{\sequence{Q}{R}} \equiv \sequence{\sequence{P}{Q}}{R}.
 \end{equation*}
 \end{theorem}
 
-\begin{myproof}[Associativity of the sequence operator]
-Let $P, Q, R \in \mathcal{P}$ be processes with the type signature $\rho \left( P \right) = \rho \left( Q \right) = \rho \left( R \right) = \left( T_a, T_r \right)$ for some $a, r$ and $T_a, T_r \in \mathcal{T}$. Then $sem \left\langle P \triangleright \left( Q \triangleright R \right) \right\rangle = sem \left\langle \left( P \triangleright Q \right) \triangleright R \right\rangle$. Recall that $\circ$ is the associative operation of function composition.
+\begin{myproof}[Associative property of sequence composition]
+Let $P, Q, R \in \mathcal{P}$ be processes with type signatures $\typesignature{P}{a}{b}, \typesignature{Q}{b}{c}, \typesignature{R}{c}{d}$.
+
+Then $\sem{\sequence{P}{\sequence{Q}{R}}}{x} = \sem{\sequence{\sequence{P}{Q}}{R}}{x}$.
 \begin{eqnarray*}
-  sem \left\langle P \triangleright \left( Q \triangleright R \right) \right\rangle & \overset{\defref{def:sem_sequence}}{=} & \left\{ u \circ p \,|\, p \in sem \left\langle P \right\rangle, u \in sem \left\langle Q \triangleright R \right\rangle \right\} \\
-  & \overset{\defref{def:sem_sequence}}{=} & \left\{ u \circ p \,|\, p \in sem \left\langle P \right\rangle, u \in \left\{r \circ q \,|\, q \in sem \left\langle Q \right\rangle, r \in sem \left\langle R \right\rangle \right\} \right\} \\
-  & \overset{substitution \ of \ u}{=} & \left\{ \left( r \circ q \right) \circ p \,|\, p \in sem \left\langle P \right\rangle, q \in sem \left\langle Q \right\rangle, r \in sem \left\langle R \right\rangle \right\} \\
-  & \overset{associativity \ of \  \circ}{=} & \left\{ r \circ q \circ p \,|\, p \in sem \left\langle P \right\rangle, q \in sem \left\langle Q \right\rangle, r \in sem \left\langle R \right\rangle \right\} \\
-  & \overset{associativity \ of \  \circ}{=} & \left\{ r \circ \left( q \circ p \right) \,|\, p \in sem \left\langle P \right\rangle, q \in sem \left\langle Q \right\rangle, r \in sem \left\langle R \right\rangle \right\} \\
-  & \overset{introduction \ of \ v}{=} & \left\{ r \circ v \,|\, v \in \left\{ q \circ p \,|\, p \in sem \left\langle P \right\rangle, q \in sem \left\langle Q \right\rangle \right\}, r \in sem \left\langle R \right\rangle \right\} \\
-  & \overset{\defref{def:sem_sequence}}{=} & \left\{ r \circ v \,|\, v \in sem \left\langle P \triangleright Q \right\rangle, r \in sem \left\langle R \right\rangle \right\} \\
-  & \overset{\defref{def:sem_sequence}}{=} & sem \left\langle \left( P \triangleright Q \right) \triangleright R \right\rangle
+  \sem{\sequence{P}{\sequence{Q}{R}}}{x} & \overset{\defref{def:sem_sequence}}{=} & \sem{\sequence{Q}{R}}{\sem{P}{x}} \\
+                                         & \overset{\defref{def:sem_sequence}}{=} & \sem{R}{\sem{Q}{\sem{P}{x}}} \\
+                                         & \overset{\defref{def:sem_sequence}}{=} & \sem{R}{\sem{\sequence{P}{Q}}{x}} \\
+                                         & \overset{\defref{def:sem_sequence}}{=} & \sem{\sequence{\sequence{P}{Q}}{R}}{x}
 \end{eqnarray*}
-The associative property of function composition $\circ$ is transferred to the sequence operator $\triangleright$ and hence, \thmref{thm:associativity_sequence} holds.
 
 \hfill$\blacksquare$
 \end{myproof}
 
-\begin{theorem}[Distributivity of parallel over choice]
+\begin{theorem}[Distributivity of parallel composition over choice composition]
 \label{thm:distributivity_parallel_choice}
-The parallel operator $|$ distributes over the choice operator $\vee$, i.e. for any processes $P, Q, R \in \mathcal{P}$ with suitable type signatures, the following equivalence holds:
+Parallel composition distributes over choice composition, i.e. for any processes $B \in \mathcal{B}$ and $C, P, Q, R \in \mathcal{P}$ with suitable type signatures, the following equivalence holds:
 \begin{equation*}
-  P \,| \left( Q \vee R \right) \equiv \left( P \,|\, Q \right) \vee \left( P \,|\, R \right).
+  \parallel{C}{P}{\choice{B}{Q}{R}} \equiv \choice{B}{\parallel{C}{P}{Q}}{\parallel{C}{P}{R}}.
 \end{equation*}
 \end{theorem}
 
-\begin{myproof}[Distributivity of parallel over choice]
-Let $P, Q, R \in \mathcal{P}$ be processes with the type signatures $\rho \left( P \right) = \rho \left( Q \right) = \rho \left( R \right) = \left( T_a, T_r \right)$ for some $a, r$ and $T_a, T_r \in \mathcal{T}$. Let $\left( T_r, \star \right)$ be a semi-group with the commutative binary operation $\star \colon T_r \times T_r \to T_r$. Then $sem \left\langle P \,| \left( Q \vee R \right) \right\rangle = sem \left\langle \left( P \,|\, Q \right) \vee \left( P \,|\, R \right) \right\rangle$.
+\clearpage
+\begin{myproof}[Distributivity of parallel composition over choice composition]
+Let $B \in \mathcal{B}$ and $C, P, Q, R \in \mathcal{P}$ be processes with type signatures $\typesignature{B}{a}{T_{Boolean}}, \typesignature{C}{\left( b, c \right)}{d}, \typesignature{P}{a}{b}, \typesignature{Q}{a}{c}, \typesignature{R}{a}{c}$.
+
+Then $\sem{\parallel{C}{P}{\choice{B}{Q}{R}}}{x} = \sem{\choice{B}{\parallel{C}{P}{Q}}{\parallel{C}{P}{R}}}{x}$.
 \begin{eqnarray*}
-  sem \left\langle P \,| \left( Q \vee R \right) \right\rangle & \overset{\defref{def:sem_parallel}}{=} & \left\{ p \star u \,|\, p \in sem \left\langle P \right\rangle, u \in sem \left\langle Q \vee R \right\rangle \right\} \\
-  & \overset{\defref{def:sem_choice}}{=} & \left\{ p \star u \,|\, p \in sem \left\langle P \right\rangle, u \in sem \left\langle Q \right\rangle \cup sem \left\langle R \right\rangle \right\} \\
-  & \overset{distributivity \ of \ \cup}{=} & \hspace*{0.8em} \left\{ p \star q \,|\, p \in sem \left\langle P \right\rangle, q \in sem \left\langle Q \right\rangle \right\} \\
-  & & \cup \left\{ p \star r \,|\, p \in sem \left\langle P \right\rangle, r \in sem \left\langle R \right\rangle \right\} \\
-  & \overset{\defref{def:sem_parallel}}{=} & sem \left\langle P \,|\, Q \right\rangle \cup sem \left\langle P \,|\, R \right\rangle \\
-  & \overset{\defref{def:sem_choice}}{=} & sem \left\langle \left( P \,|\, Q \right) \vee \left( P \,|\, R \right) \right\rangle
+  &                                        & \sem{\parallel{C}{P}{\choice{B}{Q}{R}}}{x} \\
+  & \overset{\defref{def:sem_parallel}}{=} & \sem{C}{\left( \sem{P}{x}, \sem{\choice{B}{Q}{R}}{x} \right)} \\
+  & \overset{\defref{def:sem_choice}}{=}   & \sem{C}{\left( \sem{P}{x}, \left\{\begin{array}{ll}
+                                                                                 \sem{Q}{x} & \text{if } B \left( x \right) \\
+                                                                                 \sem{R}{x} & \text{if } \overline{B \left( x \right)}
+                                                                               \end{array}
+                                                                        \right.\right)} \\
+  & =                                      & \left\{\begin{array}{ll}
+                                                      \sem{C}{\left( \sem{P}{x}, \sem{Q}{x}} \right) & \text{if } B \left( x \right) \\
+                                                      \sem{C}{\left( \sem{P}{x}, \sem{R}{x}} \right) & \text{if } \overline{B \left( x \right)}
+                                                    \end{array}
+                                             \right. \\
+  & \overset{\defref{def:sem_parallel}}{=} & \left\{\begin{array}{ll}
+                                                      \sem{\parallel{C}{P}{Q}}{x} & \text{if } B \left( x \right) \\
+                                                      \sem{\parallel{C}{P}{R}}{x} & \text{if } \overline{B \left( x \right)}
+                                                    \end{array}
+                                             \right. \\
+  & \overset{\defref{def:sem_choice}}{=}   & \sem{\choice{B}{\parallel{C}{P}{Q}}{\parallel{C}{P}{R}}}{x}
 \end{eqnarray*}
-The distributivity of set union $\cup$ is transferred to the choice operator $\vee$ and hence, \thmref{thm:distributivity_parallel_choice} holds.
 
 \hfill$\blacksquare$
 \end{myproof}
 
-\begin{theorem}[Distributivity of sequence over choice]
+\begin{theorem}[Distributivity of sequence composition over choice composition]
 \label{thm:distributivity_sequence_choice}
-The sequence operator $\triangleright$ distributes over the choice operator $\vee$, i.e. for any processes $P, Q, R \in \mathcal{P}$ with suitable type signatures, the following equivalence holds:
+Sequence composition distributes over choice composition, i.e. for any processes $B \in \mathcal{B}$ and $P, Q, R \in \mathcal{P}$ with suitable type signatures, the following equivalence holds:
 \begin{equation*}
-  P \triangleright \left( Q \vee R \right) \equiv \left( P \triangleright Q \right) \vee \left( P \triangleright R \right).
+  \sequence{P}{\choice{B}{Q}{R}} \equiv \choice{B}{\sequence{P}{Q}}{\sequence{P}{R}}
 \end{equation*}
 \end{theorem}
 
-\begin{myproof}[Distributivity of sequence over choice]
-Let $P, Q, R \in \mathcal{P}$ be processes with the type signatures $\rho \left( P \right) = \left( T_a, T_x \right)$ and $\rho \left( Q \right) = \rho \left( R \right) = \left( T_x, T_r \right)$ for some $a, r, x$ and $T_a, T_r, T_x \in \mathcal{T}$. Then $sem \left\langle P \triangleright \left( Q \vee R \right) \right\rangle = sem \left\langle \left( P \triangleright Q \right) \vee \left( P \triangleright R \right) \right\rangle$.
+\begin{myproof}[Distributivity of sequence composition over choice composition]
+Let $B \in \mathcal{B}$ and $P, Q, R \in \mathcal{P}$ be processes with type signatures $\typesignature{B}{a}{T_{Boolean}}, \typesignature{P}{a}{b}, \typesignature{Q}{b}{c}, \typesignature{R}{b}{c}$. 
+
+Then $\sem{\sequence{P}{\choice{B}{Q}{R}}}{x} = \sem{\choice{B}{\sequence{P}{Q}}{\sequence{P}{R}}}{x}$.
 \begin{eqnarray*}
-  sem \left\langle P \triangleright \left( Q \vee R \right) \right\rangle & \overset{\defref{def:sem_sequence}}{=} & \left\{ u \circ p \,|\, p \in sem \left\langle P \right\rangle, u \in sem \left\langle Q \vee R \right\rangle \right\} \\
-  & \overset{\defref{def:sem_choice}}{=} & \left\{ u \circ p \,|\, p \in sem \left\langle P \right\rangle, u \in sem \left\langle Q \right\rangle \cup sem \left\langle R \right\rangle \right\} \\
-  & \overset{distributivity \ of \ \cup}{=} & \left\{ q \circ p, r \circ p \,|\, p \in sem \left\langle P \right\rangle, q \in sem \left\langle Q \right\rangle, r \in sem \left\langle R \right\rangle \right\} \\
-  & \overset{set \ equivalence}{=} & \hspace*{0.8em} \left\{ q \circ p \,|\, p \in sem \left\langle P \right\rangle, q \in sem \left\langle Q \right\rangle \right\} \\  
-  & & \cup \left\{ r \circ p \,|\, p \in sem \left\langle P \right\rangle, r \in sem \left\langle R \right\rangle \right\} \\
-  & \overset{\defref{def:sem_sequence}}{=} & sem \left\langle P \triangleright Q \right\rangle \cup sem \left\langle P \triangleright R \right\rangle \\
-  & \overset{\defref{def:sem_choice}}{=} & sem \left\langle \left( P \triangleright Q \right) \vee \left( P \triangleright R \right) \right\rangle
+  \sem{\sequence{P}{\choice{B}{Q}{R}}}{x} & \overset{\defref{def:sem_sequence}}{=} & \sem{\choice{B}{Q}{R}}{\sem{P}{x}} \\
+                                          & \overset{\defref{def:sem_choice}}{=}   & \left\{\begin{array}{ll}
+                                                                                              \sem{Q}{\sem{P}{x}} & \text{if } B \left( x \right) \\
+                                                                                              \sem{R}{\sem{P}{x}} & \text{if } \overline{B \left( x \right)}
+                                                                                            \end{array}
+                                                                                     \right. \\
+                                          & \overset{\defref{def:sem_sequence}}{=} & \left\{\begin{array}{ll}
+                                                                                              \sem{\sequence{P}{Q}}{x} & \text{if } B \left( x \right) \\
+                                                                                              \sem{\sequence{P}{R}}{x} & \text{if } \overline{B \left( x \right)}
+                                                                                            \end{array}
+                                                                                     \right. \\
+                                          & \overset{\defref{def:sem_choice}}{=}   & \sem{\choice{B}{\sequence{P}{Q}}{\sequence{P}{R}}}{x}
 \end{eqnarray*}
-The distributivity of set union $\cup$ is transferred to the choice operator $\vee$ and hence, \thmref{thm:distributivity_sequence_choice} holds.
+
 
 \hfill$\blacksquare$
 \end{myproof}
