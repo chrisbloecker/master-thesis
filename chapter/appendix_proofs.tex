@@ -1,6 +1,7 @@
 \chapter{Proofs}
 \label{chp:proofs}
 
+\vfill
 \begin{theorem}[Associative property of sequence composition]
 \label{thm:associativity_sequence}
 Sequence composition has associative property, i.e. for any three processes $P, Q, R \in \mathcal{P}$ with suitable type signatures, the following equivalence holds:
@@ -12,17 +13,21 @@ Sequence composition has associative property, i.e. for any three processes $P, 
 \begin{myproof}[Associative property of sequence composition]
 Let $P, Q, R \in \mathcal{P}$ be processes with type signatures $\typesignature{P}{a}{b}, \typesignature{Q}{b}{c}, \typesignature{R}{c}{d}$.
 
-Then $\sem{\sequence{P}{\sequence{Q}{R}}}{x} = \sem{\sequence{\sequence{P}{Q}}{R}}{x}$.
+Then $\sem{\sequence{P}{\sequence{Q}{R}}} = \sem{\sequence{\sequence{P}{Q}}{R}}$.
 \begin{eqnarray*}
-  \sem{\sequence{P}{\sequence{Q}{R}}}{x} & \overset{\defref{def:sem_sequence}}{=} & \sem{\sequence{Q}{R}}{\sem{P}{x}} \\
-                                         & \overset{\defref{def:sem_sequence}}{=} & \sem{R}{\sem{Q}{\sem{P}{x}}} \\
-                                         & \overset{\defref{def:sem_sequence}}{=} & \sem{R}{\sem{\sequence{P}{Q}}{x}} \\
-                                         & \overset{\defref{def:sem_sequence}}{=} & \sem{\sequence{\sequence{P}{Q}}{R}}{x}
+  & & \sem{\sequence{P}{\sequence{Q}{R}}} \\
+  & \overset{\defref{def:sem_sequence}}{=} & \sem{\sequence{Q}{R}} \circ \sem{P} \\
+  & \overset{\defref{def:sem_sequence}}{=} & \left( \sem{R} \circ \sem{Q} \right) \circ \sem{P} \\
+  & \overset{\text{associativity of }\circ}{=} & \sem{R} \circ \left( \sem{Q} \circ \sem{P} \right) \\
+  & \overset{\defref{def:sem_sequence}}{=} & \sem{R} \circ \sem{\sequence{P}{Q}} \\
+  & \overset{\defref{def:sem_sequence}}{=} & \sem{\sequence{\sequence{P}{Q}}{R}}
 \end{eqnarray*}
 
 \hfill$\blacksquare$
 \end{myproof}
 
+
+\clearpage
 \begin{theorem}[Distributivity of parallel composition over choice composition]
 \label{thm:distributivity_parallel_choice}
 Parallel composition distributes over choice composition, i.e. for any processes $B \in \mathcal{B}$ and $C, P, Q, R \in \mathcal{P}$ with suitable type signatures, the following equivalence holds:
@@ -31,30 +36,32 @@ Parallel composition distributes over choice composition, i.e. for any processes
 \end{equation*}
 \end{theorem}
 
-\clearpage
 \begin{myproof}[Distributivity of parallel composition over choice composition]
 Let $B \in \mathcal{B}$ and $C, P, Q, R \in \mathcal{P}$ be processes with type signatures $\typesignature{B}{a}{T_{Boolean}}, \typesignature{C}{\left( b, c \right)}{d}, \typesignature{P}{a}{b}, \typesignature{Q}{a}{c}, \typesignature{R}{a}{c}$.
 
-Then $\sem{\parallel{C}{P}{\choice{B}{Q}{R}}}{x} = \sem{\choice{B}{\parallel{C}{P}{Q}}{\parallel{C}{P}{R}}}{x}$.
+Then $\sem{\parallel{C}{P}{\choice{B}{Q}{R}}} = \sem{\choice{B}{\parallel{C}{P}{Q}}{\parallel{C}{P}{R}}}$.
 \begin{eqnarray*}
-  &                                        & \sem{\parallel{C}{P}{\choice{B}{Q}{R}}}{x} \\
-  & \overset{\defref{def:sem_parallel}}{=} & \sem{C}{\left( \sem{P}{x}, \sem{\choice{B}{Q}{R}}{x} \right)} \\
-  & \overset{\defref{def:sem_choice}}{=}   & \sem{C}{\left( \sem{P}{x}, \left\{\begin{array}{ll}
-                                                                                 \sem{Q}{x} & \text{if } B \left( x \right) \\
-                                                                                 \sem{R}{x} & \text{if } \overline{B \left( x \right)}
+  &                                        & \sem{\parallel{C}{P}{\choice{B}{Q}{R}}} \\
+  & \overset{\defref{def:sem_parallel}}{=} & x \mapsto \sem{C} \left( \sem{P} \left( x \right), \sem{\choice{B}{Q}{R}} \left( x \right) \right) \\
+  & \overset{\defref{def:sem_choice}}{=}   & x \mapsto \sem{C} \left( \sem{P} \left( x \right), x \mapsto \left\{\begin{array}{ll}
+                                                                                 \sem{Q} \left( x \right) & \text{if } B \left( x \right) \\
+                                                                                 \sem{R} \left( x \right) & \text{if } \overline{B \left( x \right)} \\
+                                                                                 \bot & \text{otherwise}
                                                                                \end{array}
-                                                                        \right.\right)} \\
-  & =                                      & \left\{\begin{array}{ll}
-                                                      \sem{C}{\left( \sem{P}{x}, \sem{Q}{x}} \right) & \text{if } B \left( x \right) \\
-                                                      \sem{C}{\left( \sem{P}{x}, \sem{R}{x}} \right) & \text{if } \overline{B \left( x \right)}
+                                                                        \right.\right) \\
+  & =                                      & x \mapsto \left\{\begin{array}{ll}
+                                                      \sem{C} \left( \sem{P} \left( x \right), \sem{Q} \left( x \right) \right) & \text{if } B \left( x \right) \\
+                                                      \sem{C} \left( \sem{P} \left( x \right), \sem{R} \left( x \right) \right) & \text{if } \overline{B \left( x \right)} \\
+                                                      \bot & \text{otherwise}
                                                     \end{array}
                                              \right. \\
-  & \overset{\defref{def:sem_parallel}}{=} & \left\{\begin{array}{ll}
-                                                      \sem{\parallel{C}{P}{Q}}{x} & \text{if } B \left( x \right) \\
-                                                      \sem{\parallel{C}{P}{R}}{x} & \text{if } \overline{B \left( x \right)}
+  & \overset{\defref{def:sem_parallel}}{=} & x \mapsto \left\{\begin{array}{ll}
+                                                      \sem{\parallel{C}{P}{Q}} \left( x \right) & \text{if } B \left( x \right) \\
+                                                      \sem{\parallel{C}{P}{R}} \left( x \right) & \text{if } \overline{B \left( x \right)} \\
+                                                      \bot & \text{otherwise}
                                                     \end{array}
                                              \right. \\
-  & \overset{\defref{def:sem_choice}}{=}   & \sem{\choice{B}{\parallel{C}{P}{Q}}{\parallel{C}{P}{R}}}{x}
+  & \overset{\defref{def:sem_choice}}{=}   & \sem{\choice{B}{\parallel{C}{P}{Q}}{\parallel{C}{P}{R}}}
 \end{eqnarray*}
 
 \hfill$\blacksquare$
@@ -64,7 +71,7 @@ Then $\sem{\parallel{C}{P}{\choice{B}{Q}{R}}}{x} = \sem{\choice{B}{\parallel{C}{
 \label{thm:distributivity_sequence_choice}
 Sequence composition distributes over choice composition, i.e. for any processes $B \in \mathcal{B}$ and $P, Q, R \in \mathcal{P}$ with suitable type signatures, the following equivalence holds:
 \begin{equation*}
-  \sequence{P}{\choice{B}{Q}{R}} \equiv \choice{B}{\sequence{P}{Q}}{\sequence{P}{R}}
+  \sequence{P}{\choice{B}{Q}{R}} \equiv \choice{B}{\sequence{P}{Q}}{\sequence{P}{R}}.
 \end{equation*}
 \end{theorem}
 
@@ -91,110 +98,119 @@ Then $\sem{\sequence{P}{\choice{B}{Q}{R}}}{x} = \sem{\choice{B}{\sequence{P}{Q}}
 \hfill$\blacksquare$
 \end{myproof}
 
-\begin{theorem}[Distributivity of sequence over parallel]
+\begin{theorem}[Distributivity of sequence composition over parallel composition]
 \label{thm:distributivity_sequence_parallel}
-The sequence operator $\triangleright$ distributes over the parallel operator $|$, i.e. for any processes $P, Q, R \in \mathcal{P}$ with suitable type signatures, the following equivalence holds:
+Sequence composition distributes over parallel composition, i.e. for any processes $C, P, Q, R \in \mathcal{P}$ with suitable type signatures, the following equivalence holds:
 \begin{equation*}
-  P \triangleright \left( Q \,|\, R \right) \equiv \left( P \triangleright Q \right) \,|\, \left( P \triangleright R \right). 
+  \sequence{P}{\parallel{C}{Q}{R}} \equiv \parallel{C}{\sequence{P}{Q}}{\sequence{P}{R}}.
 \end{equation*}
 \end{theorem}
 
-\begin{myproof}[Distributivity of sequence over parallel]
-Let $P, Q, R \in \mathcal{P}$ be processes with the type signatures $\rho \left( P \right) = \left( T_a, T_x \right)$ and $\rho \left( Q \right) = \rho \left( R \right) = \left( T_x, T_r \right)$ for some $a, r, x$ and $T_a, T_r, T_x \in \mathcal{T}$. Let $\left( T_r, \star \right)$ be a semi-group with the commutative binary operation $\star \colon T_r \times T_r \to T_r$. Then $sem \left\langle P \triangleright \left( Q \,|\, R \right) \right\rangle = sem \left\langle \left( P \triangleright Q \right) | \left( P \triangleright R \right) \right\rangle$.
-\begin{eqnarray*}
-  sem \left\langle P \triangleright \left( Q \,|\, R \right) \right\rangle & \overset{\defref{def:sem_sequence}}{=} & \left\{ u \circ p \,|\, p \in sem \left\langle P \right\rangle, u \in sem \left\langle Q \,|\, R \right\rangle \right\} \\
-  & \overset{\defref{def:sem_parallel}}{=} & \left\{ u \circ p \,|\, p \in sem \left\langle P \right\rangle, u \in \left\{q \star r \,|\, q \in sem \left\langle Q \right\rangle, r \in \left\langle R \right\rangle \right\} \right\} \\
-  & \overset{flattening \ set}{=} & \left\{ \left( q \star r \right) \circ p \,|\, p \in sem \left\langle P \right\rangle, q \in sem \left\langle Q \right\rangle, r \in \left\langle R \right\rangle \right\} \\
-  & \overset{???}{=} & \left\{ \left( q \circ p \right) \star \left( r \circ p \right) \,|\, p \in sem \left\langle P \right\rangle, q \in sem \left\langle Q \right\rangle, r \in \left\langle R \right\rangle \right\} \\
-  & \overset{\defref{def:sem_sequence}}{=} & \left\{ v \star w \,|\, v \in sem \left\langle P \triangleright Q \right\rangle, w \in sem \left\langle P \triangleright R \right\rangle \right\} \\
-  & \overset{\defref{def:sem_parallel}}{=} & sem \left\langle \left( P \triangleright Q \right) | \left( P \triangleright R \right) \right\rangle
-\end{eqnarray*}
-ToDo: This proof is broken! $\circ$ needs to distribute over $\star$ or can it work without?
-\end{myproof}
+\begin{myproof}[Distributivity of sequence composition over parallel composition]
+Let $C, P, Q, R \in \mathcal{P}$ be processes with type signatures $\typesignature{C}{\left( c, d \right)}{e}, \typesignature{P}{a}{b}, \typesignature{Q}{b}{c}, \typesignature{R}{b}{d}$.
 
-\begin{theorem}[Commutativity of the choice operator]
-\label{thm:commutativity_choice}
-The choice operator $\vee$ has commutative properties, i.e. for any processes $P, Q \in \mathcal{P}$ with suitable type signatures, the following equivalence holds:
-\begin{equation*}
-  P \vee Q \equiv Q \vee P.
-\end{equation*}
-\end{theorem}
-
-\begin{myproof}[Commutativity of the choice operator]
-Let $P, Q \in \mathcal{P}$ be processes with the type signatures $\rho \left( P \right) = \rho \left( Q \right) = \left( T_a, T_r \right)$ for some $a, r$ and $T_a, T_r \in \mathcal{T}$. Then $sem \left\langle P \vee Q \right\rangle = sem \left\langle Q \vee P \right\rangle$.
+Then $\sem{\sequence{P}{\parallel{C}{Q}{R}}}{x} = \sem{\parallel{C}{\sequence{P}{Q}}{\sequence{P}{R}}}{x}$.
 \begin{eqnarray*}
-  sem \left\langle P \vee Q \right\rangle & \overset{\defref{def:sem_choice}}{=} & sem \left\langle P \right\rangle \cup sem \left\langle Q \right\rangle \\
-  & \overset{commutativity \ of \ \cup}{=} & sem \left\langle Q \right\rangle \cup sem \left\langle P \right\rangle \\
-  & \overset{\defref{def:sem_choice}}{=} & sem \left\langle Q \vee P \right\rangle
+  & & \sem{\sequence{P}{\parallel{C}{Q}{R}}}{x} \\
+  & \overset{\defref{def:sem_sequence}}{=} & \sem{\parallel{C}{Q}{R}}{\sem{P}{x}} \\
+  & \overset{\defref{def:sem_parallel}}{=} & \sem{C}{\left( \sem{Q}{\sem{P}{x}}, \sem{R}{\sem{P}{x}} \right)} \\
+  & \overset{\defref{def:sem_sequence}}{=} & \sem{C}{\left( \sem{\sequence{P}{Q}}{x}, \sem{\sequence{P}{R}}{x} \right)} \\
+  & \overset{\defref{def:sem_parallel}}{=} & \sem{\parallel{C}{\sequence{P}{Q}}{\sequence{P}{R}}}{x}
 \end{eqnarray*}
-The commutative property of set union $\cup$ is transferred to the choice operator $\vee$ and hence, \thmref{thm:commutativity_choice} holds.
 
 \hfill$\blacksquare$
 \end{myproof}
 
-\begin{theorem}[Commutativity of the parallel operator]
-\label{thm:commutativity_parallel}
-The parallel operator $|$ has commutative properties, i.e. for any processes $P, Q \in \mathcal{P}$ with suitable type signatures, the following equivalence holds:
-\begin{equation*}
-  P \,|\, Q \equiv Q \,|\, P.
-\end{equation*}
-\end{theorem}
 
-\begin{myproof}[Commutativity of the parallel operator]
-Let $P, Q \in \mathcal{P}$ be processes with the type signatures $\rho \left( P \right) = \rho \left( Q \right) = \left( T_a, T_r \right)$ for some $a, r$ and $T_a, T_r \in \mathcal{T}$. Let $\left( T_r, \star \right)$ be a semi-group with the commutative binary operation $\star \colon T_r \times T_r \to T_r$. Then $sem \left\langle P \,|\, Q \right\rangle = sem \left\langle Q \,|\, P \right\rangle$.
-\begin{eqnarray*}
-  sem \left\langle P \,|\, Q \right\rangle & \overset{\defref{def:sem_parallel}}{=} & \left\{ p \star q \,|\, p \in sem \left\langle P \right\rangle, q \in sem \left\langle Q \right\rangle \right\} \\
-  & \overset{commutativity \ of \ \star}{=} & \left\{ q \star p \,|\, p \in sem \left\langle P \right\rangle, q \in sem \left\langle Q \right\rangle \right\} \\
-  & \overset{\defref{def:sem_parallel}}{=} & sem \left\langle Q \,|\, P \right\rangle
-\end{eqnarray*}
-The commutative property of $\star$ is transferred to the parallel operator $|$ and hence, \thmref{thm:commutativity_parallel} holds.
-
-\hfill$\blacksquare$
-\end{myproof}
-
-\begin{theorem}[Idempotence of the choice operator]
+\begin{theorem}[Idempotence of choice composition]
 \label{thm:idempotence_choice}
-When combining a process with itself using the choice operator $\vee$, it shows idempotence properties, i.e. for any process $P \in \mathcal{P}$, the following equivalence holds:
+For any predicate $B \in \mathcal{B}$ and any process $P \in \mathcal{P}$, choice composition of $P$ with itself yields a process that behaves like $P$, regardless of the used predicate $B$.
 \begin{equation*}
-  P \vee P \equiv P.
+  \choice{B}{P}{P} \equiv P
 \end{equation*}
 \end{theorem}
 
-\begin{myproof}[Idempotence of the choice operator]
-Let $P \in \mathcal{P}$ be a process, then $sem \left\langle P \vee P \right\rangle = sem \left\langle P \right\rangle$.
+\begin{myproof}[Idempotence of choice composition]
+Let $B \in \mathcal{B}$ and $P \in \mathcal{P}$ be processes with type signatures $\typesignature{B}{a}{T_{Boolean}}, \typesignature{P}{a}{b}$. 
+
+Then $\sem{\choice{B}{P}{P}}{x} = \sem{P}{x}$.
 \begin{eqnarray*}
-  sem \left\langle P \vee P \right\rangle & \overset{\defref{def:sem_choice}}{=} & sem \left\langle P \right\rangle \cup sem \left\langle P \right\rangle \\
-  & \overset{union\ of\ equal\ sets}{=} & sem \left\langle P \right\rangle
+  & & \sem{\choice{B}{P}{P}}{x} \\
+    & \overset{\defref{def:sem_choice}}{=} & \left\{\begin{array}{ll}
+                                                      \sem{P}{x} & \text{if } B \left( x \right) \\
+                                                      \sem{P}{x} & \text{if } \overline{B \left( x \right)}
+                                                    \end{array}
+                                             \right. \\
+    & = & \sem{P}{x}
 \end{eqnarray*}
-The idempotence property of $\cup$ for equal sets is transferred to the choice operator $\vee$ and hence, \thmref{thm:idempotence_choice} holds.
 
 \hfill$\blacksquare$
 \end{myproof}
 
-\begin{theorem}[Idempotence of the sequence operator respecting the identity process]
+%\begin{theorem}[Idempotence of sequence composition respecting the identity process]
+%\label{thm:idempotence_identity}
+%Sequential composition of the identity process $Id$ with itself yields the identity process.
+%\begin{equation*}
+%  \sequence{Id}{Id} \equiv Id.
+%\end{equation*}
+%\end{theorem}
+
+%\begin{myproof}[Idempotence of sequence composition respecting the identity process]
+%Let $Id \in \mathcal{P}$ be the identity process and compose it with itself using sequence composition. The resulting process is the identity process $Id$, i.e. $\sem{\sequence{Id}{Id}}{x} = \sem{Id}{x}$.
+%\begin{eqnarray*}
+%  & & \sem{\sequence{Id}{Id}}{x} \\
+%    & \overset{\defref{def:sem_sequence}}{=} & \sem{Id}{\sem{Id}{x}} \\
+%    & \overset{\defref{def:sem_id}}{=} & \sem{Id}{x}
+%\end{eqnarray*}
+%
+%\hfill$\blacksquare$
+%\end{myproof}
+
+
+\begin{theorem}[Idempotence of sequence composition respecting the error process]
 \label{thm:idempotence_identity}
-When the identity process $Id$ combined with itself sequentially, the resulting process is the identity process $Id$. The sequence operator is idempotent respecting the identity process:
+Sequential composition of the error process $Err$ with itself yields the error process.
 \begin{equation*}
-  Id \triangleright Id \equiv Id.
+  \sequence{Err}{Err} \equiv Err.
 \end{equation*}
 \end{theorem}
 
-\begin{myproof}[Idempotence of the sequence operator respecting the identity process]
-Let $Id \in \mathcal{P}$ be the identity process and use the sequence operator $\triangleright$ to compose it with itself. Then $sem \left\langle Id \triangleright Id \right\rangle = sem \left\langle Id \right\rangle$.
+\begin{myproof}[Idempotence of sequence composition respecting the identity process]
+Let $Id \in \mathcal{P}$ be the identity process and compose it with itself using sequence composition. The resulting process is the identity process $Id$, i.e. $\sem{\sequence{Id}{Id}}{x} = \sem{Id}{x}$.
 \begin{eqnarray*}
-  sem \left\langle Id \triangleright Id \right\rangle & \overset{\defref{def:sem_id}}{=} & \left\{ \left( x \mapsto x \right) \circ \left( x \mapsto x \right) \right\} \\
-  & \overset{function \ composition}{=} & \left\{ x \mapsto x \right\} \\
-  & \overset{\defref{def:sem_id}}{=} & sem \left\langle Id \right\rangle
+  a
 \end{eqnarray*}
-The idempotence property of function composition $\circ$ respecting the identity function is transferred to sequential process composition $\triangleright$ and hence, \thmref{thm:idempotence_identity} holds.
 
 \hfill$\blacksquare$
 \end{myproof}
 
-\begin{myproof}[Idempotence of the error process respecting the sequence operator]
+
+\begin{theorem}[$Id$ is a left and right unit for sequence composition]
+\label{thm:idempotence_identity}
+Sequential composition of any process $P \in \mathcal{P}$ with the identity process $Id$ on the left or on the right yields $P$.
+\begin{equation*}
+  \sequence{Id}{P} \equiv P \equiv \sequence{P}{Id}
+\end{equation*}
+\end{theorem}
+
+\begin{myproof}[$Id$ is a left and right unit for sequence composition]
+Let $P \in \mathcal{P}$ be a process and $Id$ be the identity process. $Id$ is a left and right unit for sequence composition.
+\begin{eqnarray*}
+  & & \sem{\sequence{Id}{P}}{x} \\
+    & \overset{\defref{def:sem_sequence}}{=} & \sem{P}{\sem{Id}{x}} \\
+    & \overset{\defref{def:sem_id}}{=} & \sem{P}{x} \\
+    & \overset{\defref{def:sem_id}}{=} & \sem{Id}{\sem{P}{x}} \\
+    & \overset{\defref{def:sem_sequence}}{=} & \sem{\sequence{P}{Id}}{x} \\
+\end{eqnarray*}
+
+\hfill$\blacksquare$
 \end{myproof}
 
-\begin{myproof}[Idempotence of the \textsc{Kleene} star]
-\end{myproof}
+\begin{corollary}[Idempotence of sequence composition respecting the identity process]
+Since $Id$ is both a left and right unit of sequence composition, $Id$ is an idempotent element respecting sequence composition, i.e. for any process $P \in \mathcal{P}$, the following equation holds:
+\begin{equation*}
+  \sequence{Id}{P} \equiv \sequence{P}{Id}.
+\end{equation*}
 
-% ToDo: neutral elements
+\hfill$\blacksquare$
+\end{corollary}
