@@ -78,20 +78,29 @@ Sequence composition distributes over choice composition, i.e. for any processes
 \begin{myproof}[Distributivity of sequence composition over choice composition]
 Let $B \in \mathcal{B}$ and $P, Q, R \in \mathcal{P}$ be processes with type signatures $\typesignature{B}{a}{T_{Boolean}}, \typesignature{P}{a}{b}, \typesignature{Q}{b}{c}, \typesignature{R}{b}{c}$. 
 
-Then $\sem{\sequence{P}{\choice{B}{Q}{R}}}{x} = \sem{\choice{B}{\sequence{P}{Q}}{\sequence{P}{R}}}{x}$.
+Then $\sem{\sequence{P}{\choice{B}{Q}{R}}} = \sem{\choice{B}{\sequence{P}{Q}}{\sequence{P}{R}}}$.
 \begin{eqnarray*}
-  \sem{\sequence{P}{\choice{B}{Q}{R}}}{x} & \overset{\defref{def:sem_sequence}}{=} & \sem{\choice{B}{Q}{R}}{\sem{P}{x}} \\
-                                          & \overset{\defref{def:sem_choice}}{=}   & \left\{\begin{array}{ll}
-                                                                                              \sem{Q}{\sem{P}{x}} & \text{if } B \left( x \right) \\
-                                                                                              \sem{R}{\sem{P}{x}} & \text{if } \overline{B \left( x \right)}
-                                                                                            \end{array}
-                                                                                     \right. \\
-                                          & \overset{\defref{def:sem_sequence}}{=} & \left\{\begin{array}{ll}
-                                                                                              \sem{\sequence{P}{Q}}{x} & \text{if } B \left( x \right) \\
-                                                                                              \sem{\sequence{P}{R}}{x} & \text{if } \overline{B \left( x \right)}
-                                                                                            \end{array}
-                                                                                     \right. \\
-                                          & \overset{\defref{def:sem_choice}}{=}   & \sem{\choice{B}{\sequence{P}{Q}}{\sequence{P}{R}}}{x}
+  & & \sem{\sequence{P}{\choice{B}{Q}{R}}} \\
+  & \overset{\defref{def:sem_sequence}}{=} & \sem{\choice{B}{Q}{R}} \circ \sem{P} \\
+  & \overset{\defref{def:sem_choice}}{=}   & \left( x \mapsto \left\{\begin{array}{ll}
+                                                                       \sem{Q} \left( x \right) & \text{if } B \left( x \right) \\
+                                                                       \sem{R} \left( x \right) & \text{if } \overline{B \left( x \right)} \\
+                                                                       \bot & \text{otherwise}
+                                                                     \end{array}
+                                                              \right.\right) \circ \sem{P} \\
+  & = & \left\{\begin{array}{ll}
+                 \left( x \mapsto \sem{Q} \left( x \right) \right) \circ \sem{P} & \text{if } B \left( x \right) \\
+                 \left( x \mapsto \sem{R} \left( x \right) \right) \circ \sem{P} & \text{if } \overline{B \left( x \right)} \\
+                 \left( x \mapsto \bot \right) \circ \sem{P} & \text{otherwise}
+               \end{array}
+        \right. \\
+  & \overset{\defref{def:sem_sequence}, ToDo}{=} & x \mapsto \left\{\begin{array}{ll}
+                                                                      \sem{\sequence{P}{Q}} \left( x \right) & \text{if } B \left( x \right) \\
+                                                                      \sem{\sequence{P}{R}} \left( x \right) & \text{if } \overline{B \left( x \right)} \\
+                                                                      \bot & \text{otherwise}
+                                                          \end{array}
+                                                   \right. \\
+  & \overset{\defref{def:sem_choice}}{=}   & \sem{\choice{B}{\sequence{P}{Q}}{\sequence{P}{R}}}
 \end{eqnarray*}
 
 
