@@ -24,6 +24,8 @@ Let $\mathcal{P}$ be the set of processes\index{Process} and let $P, Q, R \in \m
 \nomenclature{$\parallelop$}{Operator used in parallel composition}
 \nomenclature{$\sequenceop$}{Operator used in sequence composition}
 \nomenclature{$\repetitionop$}{Operator used in repetition}
+\nomenclature{$a,b,c,d,e$}{Type variables}
+\nomenclature{$T_i$}{Data type $i$}
 
 
 % ==============================================================================
@@ -89,16 +91,6 @@ Let $Id \in \mathcal{P}$ be the identity process, i.e. the process that outputs 
 \nomenclature{$Err$}{The error process}
 \nomenclature{$\bot$}{The undefined value}
 \nomenclature{$\rho$}{Function that assigns a type signature to a process}
-
-% ------------------------------------------------------------------------------
-% strictness
-% ------------------------------------------------------------------------------
-\begin{definition}[Strictness of processes\index{Strictness}]
-\label{def:process_strictness}
-Processes are strict in the undefined value. If the undefined value $\bot$ is presented to a process as its input, then the output of the process is the undefined value $\bot$. 
-
-\hfill\qedsymbol
-\end{definition}
 
 % ------------------------------------------------------------------------------
 % processes as predicates
@@ -179,37 +171,43 @@ and invalid otherwise. The type signature of the resulting process is $\typesign
 % ==============================================================================
 % semantics
 % ==============================================================================
+\nomenclature{$sem$}{Function that gives the semantics of a process}
+\nomenclature{$f_P$}{Intrinsic function of a basic process $P$}
+\nomenclature{$\circ$}{Function composition}
+
 
 \section{Semantics\index{Semantics}}
 \label{chp:semantics}
-In \chpref{chp:static_semantics} we have introduced static semantics and construction rules for processes. In this chapter, we give an inductive definition of process semantics. 
+In \chpref{chp:syntax} we have introduced syntactical rules for process construction and in \chpref{chp:static_semantics} we have introduced static semantics of processes. In this chapter, we define the semantics of processes. 
 
 For the definition of process semantics, we introduce the polymorphic partial function 
 \begin{equation*}
-  sem \colon \mathcal{P} \to a \to b
+  sem \colon \mathcal{P} \to a \to b.
 \end{equation*}
-$sem$ takes a process $P \in \mathcal{P}$ with $\typesignature{P}{a}{b}$, an input $x$ of type $a$ and defines the semantics of $P$ when applied to $x$, i.e. the function computed by $P$. We write $\sem{P}$ for that. For a concrete value, $P$'s output can be obtained by function application.
+$sem$ takes a process $P \in \mathcal{P}$ and returns its meaning, i.e. the function computed by $P$. We write $\sem{P}$ for that. For a concrete value $x$, if of appropriate type to serve as input for $P$, we can apply the function returned by $sem$ to $x$ and receive the semantics of a process, applied to that value $x$. We write $\sem{P} \left( x \right)$ for that. The expression $\sem{P} \left( x \right)$ is legal iff $x$ is of appropriate type to serve as input for $P$.
 
-Note that the expression $\sem{P}$ is only legal if $x$ is of appropriate type to serve as input for $P$.
-
-\nomenclature{$sem$}{Function that gives the semantics of a process}
+\begin{definition}[Strictness of processes\index{Strictness}]
+\label{def:sem_strictness}
+Processes are strict in the undefined value. If the undefined value $\bot$ is presented to a process as its input, then the output of the process is the undefined value $\bot$. For every process $P \in \mathcal{P}$, the following equation holds:
+\begin{equation*}
+  \sem{P} \left( \bot \right) = \bot
+\end{equation*}
+\hfill\qedsymbol
+\end{definition}
 
 % ------------------------------------------------------------------------------
 % atomic process
 % ------------------------------------------------------------------------------
-The semantics of an atomic\index{Process!atomic} process $P \in \mathcal{P}$ is directly given by the function it calculates. For an atomic process $P$, let $f_P$ be its intrinsic function. 
+For every atomic process, there is a function that is intrinsic to that particular process: for an atomic process $P \in \mathcal{P}$, let its intrinsic function be called $f_P$. Composed processes do not involve an atomic function and the notation $f_P$ does not make sense if $P$ is not an atomic process. The semantics of an atomic\index{Process!atomic} process $P \in \mathcal{P}$ is directly given by its intrinsic function.
 \begin{definition}[Semantics of atomic processes\index{Semantics!atomic process}]
   \label{def:sem_atomic}
   Let $P$ be an atomic process, then the semantics $\sem{P}$ is given by $P$'s intrinsic function $f_P$.
-  \begin{equation}
+  \begin{equation*}
     \label{eqn:sem_atomic}
     \sem{P} = f_P
-  \end{equation}
+  \end{equation*}
   \hfill\qedsymbol
 \end{definition}
-
-\nomenclature{$f_P$}{Intrinsic function of a basic process $P$}
-
 
 % ------------------------------------------------------------------------------
 % id
@@ -217,25 +215,24 @@ The semantics of an atomic\index{Process!atomic} process $P \in \mathcal{P}$ is 
 \begin{definition}[Semantics of the identity process\index{Semantics!identity process}\index{Process!identity}\index{Identity process}]
 \label{def:sem_id}
 Let $Id \in \mathcal{P}$ be the identity process, i.e. the process that always outputs its input, and $x$ be an input for $Id$.
-\begin{equation}
+\begin{equation*}
   \label{eqn:sem_id}
   \sem{Id} = x \mapsto x
-\end{equation}
+\end{equation*}
 \hfill\qedsymbol
 \end{definition}
 
 
 \begin{example}[Semantics of an atomic process]
   \label{exp:sem_atomic}
-  Let $\sigma \colon \mathbb{N} \to \mathbb{N}, x \mapsto x+1$ be the function that is intrinsic to the atomic process $S \in \mathcal{P}$. Then the semantics $\sem{S}$ of $S$ applied to $x$ is given by its intrinsic function $\sigma$:
+  Let $\sigma \colon \mathbb{N} \to \mathbb{N}, x \mapsto x+1$ be the function that is intrinsic to the atomic process $S \in \mathcal{P}$. Then the semantics $\sem{S}$ of $S$ is given by $\sigma$:
   \begin{equation*}
     \sem{S} = \sigma = x \mapsto x+1
   \end{equation*}
-  Let $\delta \colon \mathbb{N} \to \mathbb{N}, x \mapsto 2x$ be the function that is intrinsic to the atomic process $D \in \mathcal{P}$. Then the semantics $\sem{D}$ of $D$ applied to $x$ is given by its intrinsic function $\delta$:
+  Let $\delta \colon \mathbb{N} \to \mathbb{N}, x \mapsto 2x$ be the function that is intrinsic to the atomic process $D \in \mathcal{P}$. Then the semantics $\sem{D}$ of $D$ is given by $\delta$:
   \begin{equation*}
     \sem{D} = \delta = x \mapsto 2x
   \end{equation*}
-  \hfill\qedsymbol
 \end{example}
 
 
@@ -243,17 +240,17 @@ The semantics of the error process $Err$, no matter which input it receives, is 
 \begin{definition}[Semantics of the error process\index{Semantics!error process}\index{Process!error}\index{Error process}]
 \label{def:sem_err}
 Let $Err \in \mathcal{P}$ be the error process, i.e. the process that always outputs the undefined value $\bot$.
-  \begin{equation}
+  \begin{equation*}
     \label{eqn:sem_error}
     \sem{Err} = x \mapsto \bot
-  \end{equation}
+  \end{equation*}
   \hfill\qedsymbol
 \end{definition}
 
 % ------------------------------------------------------------------------------
 % composed processes
 % ------------------------------------------------------------------------------
-The semantics of composed\index{Process!composed} processes is determined by their structure and the involved sub-processes.
+The semantics of composed\index{Process!composed} processes is determined by their structure and the involved sub-processes. The statement made in \defref{def:sem_strictness} remains true for composed processes: when the undefined value $\bot$ is presented as input, every process must output the undefined value. By convention, this does not need to be modelled explicitly for every process.
 
 \begin{definition}[Sub-process\index{Sub-process}]
 Let $P \in \mathcal{P}$ be a composed process. Then the processes $P$ is composed of are called the sub-processes of $P$.
@@ -270,17 +267,18 @@ Let $B \in \mathcal{B}$ be a predicate process. Then $B \left( x \right)$ is a s
 \hfill\qedsymbol
 \end{definition}
 
+The semantics of a process with the structure of choice composition is that of one of its sub-processes. A predicate is employed to inspect the input and decide which of the sub-processes determines the semantics.
 \begin{definition}[Semantics of choice composition\index{Semantics!Choice}]
 \label{def:sem_choice}
 Let $B \in \mathcal{B}$ and $P, Q \in \mathcal{P}$ be processes and let them be composed using choice composition, i.e. $\choice{B}{P}{Q}$. Let $x$ be an input of matching type for $B, Q, P$. Then, based on $\sem{B}$, the resulting process behaves either like $P$ or $Q$. The semantics of $\choice{B}{P}{Q}$ is given by:
-  \begin{equation}
+  \begin{equation*}
     \label{eqn:sem_choice}
     \sem{\choice{B}{P}{Q}} = x \mapsto \left\{ \begin{array}{ll}
       \sem{P}\left(x\right) & \text{if } B \left( x \right) \\
       \sem{Q}\left(x\right) & \text{if } \overline{B \left( x \right)} \\
       \bot & \text{otherwise}
     \end{array}\right.
-  \end{equation}
+  \end{equation*}
   
   \hfill\qedsymbol
 \end{definition}
@@ -291,24 +289,24 @@ Consider the definitions of $S$ and $D$ from \expref{exp:sem_atomic}. Furthermor
   \begin{equation*}
     \sem{\choice{Even}{S}{D}} = x \mapsto \left\{\begin{array}{ll}
       \sem{S}\left(x\right) & \text{if } x \text{ is even} \\
-      \sem{D}\left(x\right) & \text{if } x \text{ is odd} \\
+      \sem{D}\left(x\right() & \text{if } x \text{ is odd} \\
       \bot & \text{otherwise}
     \end{array}\right.
   \end{equation*}
-  \hfill\qedsymbol
 \end{example}
 
 
 % ------------------------------------------------------------------------------
 % parallel
 % ------------------------------------------------------------------------------
+The semantics of a process with the structure of parallel composition is given by the semantics of its sub-processes, combined by a combinator process.
 \begin{definition}[Semantics of parallel composition\index{Semantics!Parallel}]
 \label{def:sem_parallel}
 Let $P, Q, R \in \mathcal{P}$ be processes and let them be composed using parallel composition, i.e. $\parallel{R}{P}{Q}$. Then the semantics of the resulting process $\parallel{R}{P}{Q}$ is given by
-  \begin{equation}
+  \begin{equation*}
     \label{eqn:sem_parallel}
     \sem{\parallel{R}{P}{Q}} = x \mapsto \sem{R} \left( \sem{P} \left( x \right), \sem{Q} \left( x \right) \right)
-  \end{equation}
+  \end{equation*}
   \hfill\qedsymbol
 \end{definition}
 
@@ -324,23 +322,23 @@ Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_ato
                                & = & x \mapsto \left( x+1 \right) + \left( 2x \right) \\
                                & = & x \mapsto 3x + 1
   \end{eqnarray*}
-  \hfill\qedsymbol
 \end{example}
+
 
 % ------------------------------------------------------------------------------
 % sequence
 % ------------------------------------------------------------------------------
+The semantics of a process with the structure of sequence composition is given by applying the semantics, i.e. functions, of its sub-processes sequentially. This can be achieved using function composition.
 \begin{definition}[Semantics of sequence composition\index{Semantics!Sequence}]
 \label{def:sem_sequence}
 Let $P, Q \in \mathcal{P}$ be processes and let them be composed using sequence composition, i.e. $\sequence{P}{Q}$. Then the semantics of the resulting process is given by function composition:
-  \begin{equation}
+  \begin{equation*}
     \label{eqn:sem_sequence}
-    \sem{\sequence{P}{Q}} = \sem{Q} \circ \sem{P}
-  \end{equation}
+    \sem{\sequence{P}{Q}} = \sem{Q} \circ \sem{P} = x \mapsto \sem{Q} \left( \sem{P} \left( x \right) \right)
+  \end{equation*}
   \hfill\qedsymbol
 \end{definition}
 
-\nomenclature{$\circ$}{Function composition}
 
 \begin{example}[Semantics of sequence composition]
 \label{exp:sem_sequence}
@@ -358,48 +356,54 @@ Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_ato
                           & = & x \mapsto \sigma \left( \delta \left( x \right) \right) \\
                           & = & x \mapsto 2x + 1
   \end{eqnarray*}
-  \hfill\qedsymbol
 \end{example}
-
 
 
 % ------------------------------------------------------------------------------
 % repetition
 % ------------------------------------------------------------------------------
+The semantics of a process with the structure of repetition composition is either that of the identity process $Id$ or the sequential composition of another process and the repetition process itself, depending on a property of its input. A predicate is employed to check the input for a property and determine the semantics of the repetition process.
 \begin{definition}[Semantics of repetition composition\index{Semantics!Repetition}]
 \label{def:sem_repetition}
 Let $B \in \mathcal{B}$ and $P \in \mathcal{P}$ be processes and let them be composed using repetition composition, i.e. $\repetition{B}{P}$. Then the semantics of $\repetition{B}{P}$ is given by the recursive equation
-  \begin{equation}
+  \begin{equation*}
     \label{eqn_sem_repetition}
     \sem{\repetition{B}{P}} = \sem{\choice{B}{\sequence{P}{\repetition{B}{P}}}{Id}}
-  \end{equation}
-
-\hfill\qedsymbol
+  \end{equation*}
+  \hfill\qedsymbol
 \end{definition}
 
 \begin{example}[Semantics of repetition composition\index{Semantics!Repetition}]
 \label{exp:sem_repetition}
-Consider the definition of $\delta$ and $D$ from \expref{exp:sem_atomic} ... ToDo...
+Consider the definition of $\delta$ and $D$ from \expref{exp:sem_atomic} and let $B \in \mathcal{B}$ be a predicate that returns $True$ if its input is smaller than 1024 and $False$ if its input is equal to 1024 or bigger.
   \begin{eqnarray*}
-    \sem{x}
+    \sem{\repetition{B}{D}} & = & \sem{\choice{B}{\sequence{D}{\repetition{B}{D}}}{Id}} \\
+                            & = & x \mapsto \left\{ \begin{array}{ll} 
+                                                      \sem{\sequence{D}{\repetition{B}{D}}} \left( x \right) & \text{if } x < 1024 \\
+                                                      \sem{Id} \left( x \right)                              & \text{if } x \geq 1024 
+                                                    \end{array}
+                                            \right. \\
+                            & = & \ldots
   \end{eqnarray*}
-  \hfill\qedsymbol
+$\repetition{B}{D}$ yields a process that takes its input, doubles it and passes it on recursively to itself as long as its input is smaller than 1024. If its input is bigger than 1024, it outputs its input.
 \end{example}
 
 
 % ------------------------------------------------------------------------------
 % equivalence
 % ------------------------------------------------------------------------------
-\section{Semantic equivalence\index{Semantic equivalence}}
-ToDo: some text...
+\clearpage
+\section{Semantic equivalence and substitution\index{Semantic equivalence}\index{Substitution}}
+\label{chp:semantic_equivalence}
+Based on the definition of process semantics from \chpref{chp:semantics}, we have a tool at hand to reason about processes and perform transformations on them.
 
 \begin{definition}[Equivalence of processes\index{Process!Equivalence}]
 \label{def:process_equivalence}
-Let $P, Q \in \mathcal{P}$ be processes. Then $P$ and $Q$ are equivalent if their semantics are the same.
-  \begin{equation}
+Let $P, Q \in \mathcal{P}$ be processes. Then $P$ and $Q$ are equivalent iff their semantics are the same. We write $P \equiv Q$ to indicate equivalence of $P$ and $Q$.
+  \begin{equation*}
     \label{eqn:equivalence}
     P \equiv Q \Leftrightarrow \sem{P} = \sem{Q}
-  \end{equation}
+  \end{equation*}
   \hfill\qedsymbol
 \end{definition}
 
@@ -407,7 +411,7 @@ Let $P, Q \in \mathcal{P}$ be processes. Then $P$ and $Q$ are equivalent if thei
 
 \begin{definition}[Process substitution\index{Process!substitution}]
 \label{def:process_substitution}
-Let $P, Q, R \in \mathcal{P}$ be processes and let $Q$ be a sub-process of $P$, i.e. $P$ contains $Q$ at some point in its structure. Then we can transform $P$ into a new process by replacing every occurrence of $Q$ with $R$ and write $P_{\left[ Q / R \right]}$ for this.
+Let $P, Q, R \in \mathcal{P}$ be processes and let $Q$ be a sub-process of $P$. Then we can transform $P$ into a new process by replacing one or more occurrence of $Q$ in $P$ with $R$ and write $P_{\left[ Q / R \right]}$ for this. The notion $P_{\left[ Q / R \right]}$ is only legal if $Q$ occurs in $P$ \textbf{at least} once.
 
 \hfill\qedsymbol
 \end{definition}
@@ -415,18 +419,17 @@ Let $P, Q, R \in \mathcal{P}$ be processes and let $Q$ be a sub-process of $P$, 
 \nomenclature{$P_{\left[ Q / R \right]}$}{Substitution of sub-process $Q$ by $R$ in $P$}
 
 
-\begin{corollary}[Substitution with an equivalent process]
-\label{crl:process_substitution}
-Let $P, Q, R \in \mathcal{P}$ be processes and $Q \equiv R$. Then it follows from \defref{def:process_equivalence} and \defref{def:process_substitution} that $P_{\left[ Q / R \right]}$ is equivalent to $P$ iff $Q$ and $R$ are equivalent:
-  \begin{equation}
-    P \equiv P_{\left[ Q / R \right]} \Leftrightarrow Q \equiv R.
-  \end{equation}
+\begin{theorem}[Substitution with an equivalent process leaves semantics unchanged]
+\label{thm:process_substitution}
+Let $P, Q, R \in \mathcal{P}$ be processes with $Q$ being a sub-process of $P$. Then, substituting one or more occurrences of $Q$ in $P$ with $R$ leaves $\sem{P}$ unchanged iff $Q \equiv R$.
+  \begin{equation*}
+    P \equiv P_{\left[ Q / R \right]} \Leftrightarrow Q \equiv R
+  \end{equation*}
   \hfill\qedsymbol
-\end{corollary}
+\end{theorem}
 
-ToDo: make this sound nicer...
-The equivalence from \crlref{crl:process_substitution} can be used to perform transformations\index{Process!transformation} on processes and optimise\index{Optimisation} them according to some measurable property. E.g. assume that we have a process $P$ that involved $Q$ as a sub-process. Now if $Q$ has high time complexity and we have another process $R$ with low time complexity and $Q \equiv R$, then we might want to use $P_{\left[ Q / R \right]}$ in a productive system instead of $P$ in order to save run time.
 
+The property stated in \thmref{thm:process_substitution} allows us to transforms processes into a different representation without altering their semantics and optimising them according to some measurable property. E.g. one might want to find more \enquote{simple} representation of a process or reduce its complexity by replacing sub-processes. A proof of \thmref{thm:process_substitution} can be found in \appref{chp:proofs}.
 
 % ------------------------------------------------------------------------------
 % inverse process
@@ -434,55 +437,57 @@ The equivalence from \crlref{crl:process_substitution} can be used to perform tr
 \begin{definition}[Inverse process\index{Process!inverse}\index{Inverse process}]
 \label{def:inverse_process}
 Let $P \in \mathcal{P}$ be a process. Then an inverse process $\overline{P}$ for $P$ is a process that satisfies the following property:
-  \begin{equation}
+  \begin{equation*}
     \sequence{P}{\overline{P}} \equiv Id.
-  \end{equation}
+  \end{equation*}
   \hfill\qedsymbol
 \end{definition}
 
 \nomenclature{$\overline{P}$}{Process that is inverse to $P$}
 
 
-As a final remark, we want to point out that, for a process $P$ an inverse process as defined in \defref{def:inverse_process} does \textbf{not} exist in general since not every computable function is invertible\footnote{Take, e.g. the function $f \colon x \mapsto x^2$. Clearly, $f$ is not injective since $f \left( x \right) = f \left( -x \right)$ and therefore not invertible. However, there is an inverse relation $\overline{f_r} \colon x \mapsto \left\{ \overline{x} \,|\, f \left( \overline{x} \right) = x \right\}$ that maps a value $x$ to the set of values that, if $f$ is applied to them, will yield $x$.}.
+As a final remark, we point out that, for a process $P$, an inverse process as defined in \defref{def:inverse_process} does \textbf{not} exist in general since not every computable function is invertible\footnote{Take, e.g. the function $f \colon x \mapsto x^2$. Clearly, $f$ is not injective since $f \left( x \right) = f \left( -x \right)$ and therefore not invertible. However, there is an inverse relation $\overline{f_r} \colon x \mapsto \left\{ \overline{x} \,|\, f \left( \overline{x} \right) = x \right\}$ that maps a value $x$ to the set of values that, if $f$ is applied to them, will yield $x$.}.
 
 
 
 % ==============================================================================
 % laws
 % ==============================================================================
-
+\clearpage
 \section{Laws\index{Laws}}
 \label{chp:laws}
-Based on the defined semantics of our process algebra, i.e. $sem$, we can find a set of laws that allow us to transform processes into an equivalent representation. This is a useful tool for the developer: the laws allow him to transform his processes into a different, equivalent representation.
+In \chpref{chp:semantic_equivalence}, \defref{def:process_equivalence}, we have defined under which circumstances two processes are equivalent. This definition, together with the definitions for process semantics given in \chpref{chp:semantics}, allows us to find a set of laws regarding process equivalence in our model.
 
-In the following, let $B \in \mathcal{B}$ and $C, P, Q, R \in \mathcal{P}$ and assume that their types are suitable for the desired composition in the respective cases. Proofs for the stated laws can be found in \appref{chp:proofs}.
+In the following, let $B \in \mathcal{B}$ and $C, P, Q, R \in \mathcal{P}$ be processes with suitable type signatures for composition in the respective cases. Proofs for the stated laws can be found in \appref{chp:proofs}.
 
 \subsection{Associativity\index{Associativity}\index{Laws!Associativity}}
-The associative property holds for sequential composition.
+The associative property holds for sequence composition.
 \begin{eqnarray*}
   \sequence{P}{\sequence{Q}{R}} & \equiv & \sequence{\sequence{P}{Q}}{R}
 \end{eqnarray*}
 
 \subsection{Distributivity\index{Distributivity}\index{Laws!Distributivity}}
-In our algebra, parallel composition and sequence composition distribute over choice composition. Furthermore, sequence composition distributes over parallel composition.
+Parallel and sequence composition distribute over choice composition. Also, sequence composition distributes over parallel composition.
 \begin{eqnarray*}
   \parallel{C}{P}{\choice{B}{Q}{R}} & \equiv & \choice{B}{\parallel{C}{P}{Q}}{\parallel{C}{P}{R}} \\
   \sequence{P}{\choice{B}{Q}{R}} & \equiv & \choice{B}{\sequence{P}{Q}}{\sequence{P}{R}} \\
-  & & \\
   \sequence{P}{\parallel{C}{Q}{R}} & \equiv & \parallel{C}{\sequence{P}{Q}}{\sequence{P}{R}}
-\end{eqnarray*}
-
-\subsection{Idempotence\index{Idempotence}\index{Laws!Idempotence}}
-Idempotence properties are dependant on both the operation at hand and a specific element. For every process $P$, choice composition with itself doesn't alter its meaning, regardless of the used predicate. Sequence composition shows idempotence properties for both the identity process $Id$ and the error process $Err$.
-\begin{eqnarray*}
-  \choice{B}{P}{P} & \equiv & P \\
-  \sequence{Id}{Id} & \equiv & Id \\
-  \sequence{Err}{Err} & \equiv & Err \\
 \end{eqnarray*}
 
 \subsection{Neutral elements\index{Neutral element}\index{Laws!Neutral Element}}
 The identity process $Id$ is both a left and right neutral element for sequential composition.
+\vspace*{-1em}
 \begin{eqnarray*}
   \sequence{Id}{P} & \equiv & P \\
   \sequence{P}{Id} & \equiv & P
+\end{eqnarray*}
+
+\subsection{Idempotence\index{Idempotence}\index{Laws!Idempotence}}
+Regardless of the used predicate, every process is idempotent regarding choice composition. The identity process $Id$ is idempotent regarding sequence composition since it is both a left and right neutral element of choice composition. The error process $Err$ is idempotent regarding sequence composition due to process' strictness in the undefined value. Furthermore, both $Id$ and $Err$ are idempotent respective to repetition composition, regardless of the used predicate.
+\begin{eqnarray*}
+  \choice{B}{P}{P} & \equiv & P \\
+  \sequence{Id}{Id} & \equiv & Id \\
+  \sequence{Err}{Err} & \equiv & Err \\
+  \repetition{B}{Id} & \equiv & Id \\
+  \repetition{B}{Err} & \equiv & Err
 \end{eqnarray*}
