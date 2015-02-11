@@ -141,7 +141,6 @@ runProcess (Sequence p1 p2) x =
   runProcess p1 x >>= runProcess p2
 \end{lstlisting}
 
-\clearpage
 Finally, there is the \texttt{Repetition}\index{Process interpreter!Repetition} process that is used to express repeated execution of a process. As stated in \defref{def:sem_repetition}, repetition is expressed using a combination of choice composition and sequence composition.
 \begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Repetition} processes.,numbers=left,frame=bt,firstnumber=23]
 runProcess rep@(Repetition pr p) x =
@@ -164,54 +163,49 @@ runProcess (Multilel ps ib fold) x = do
 
 \section{Implementation in the Cloud Haskell Process monad}
 \label{chp:distributed}
-In the implementation for distributed parallelisation of process interpretation, we use \textsf{Cloud Haskell}'s \texttt{Process} monad. The involvement of network communication requires that we provide instances of specific type classes for the types that are to be sent over network. Furthermore, we need to adapt our representation of basic processes and some process types to the specifics of \textsf{Cloud Haskell}. 
+In the implementation for distributed parallelisation of process interpretation, we use \textsf{Cloud Haskell}'s \texttt{Process} monad. The involvement of network communication requires instances of specific type classes for the types that are sent to other processes. Furthermore, the representation of basic processes needs to be adapted to the specifics of \textsf{Cloud Haskell}. 
 
 \subsection{\index{Cloud Haskell}Cloud Haskell}
 \label{chp:cloud_haskell}
-\textsf{Cloud Haskell} \cite{Epstein:2011:THC:2034675.2034690} is a domain specific language for distributed programming in Haskell. It is highly inspired by Erlang\index{Erlang} and its message passing\index{Message passing} mechanism for communication between processes. Like it is typical for \textsf{Haskell}, there is no implicitly shared memory involved.
+\textsf{Cloud Haskell} \cite{Epstein:2011:THC:2034675.2034690} is a domain specific language for distributed programming in Haskell. It is highly inspired by Erlang\index{Erlang} and its message passing\index{Message passing} mechanism for communication between processes with no implicit shared memory involved.
 
 A \textsf{Cloud Haskell} process is essentially a function\index{Function} that is evaluated in the \texttt{Process} monad\index{Monad} and can be spawned on a local\index{Node!local} or remote\index{Node!remote} node. Processes can send messages to other processes if they have knowledge about their process identifier, which serves as an address. The \texttt{Process} monad builds on top of the \texttt{IO} monad and thus, as mentioned in \chpref{chp:local}, we can not force processes to be free of side-effects.
 
 While Erlang\index{Erlang} uses atoms as tags for messages, \textsf{Cloud Haskell} uses data types that need to have an instance of \texttt{Serializable}. \texttt{Serializable} itself is only a combination of both \texttt{Binary} and \texttt{Typeable}. \texttt{Binary} is neccessary to serialise a message into a \texttt{ByteString}, \texttt{Typeable} is used to identify the type of a value. This way, serialisation\index{Serialisation} is made explicit, in contrast to Erlang where it is implicit \cite{Epstein:2011:THC:2034675.2034690}.
 
-In \textsf{Haskell}, functions can only be executed, composed and passed as arguments, they cannot be serialised. However, this is be necessary in order to send a function to a remote\index{Node!remote} node and execute it there. \textsf{Cloud Haskell} avoids this problem by using a table of static code pointers, i.e. fully qualified top level names of functions that are known at compile time, to refer to functions by a name. For remote execution, a function's name is put into a \texttt{Closure}\index{Closure}, together with its serialised environment\index{Environment}, i.e. its argument, and sent to a remote node where it is deserialised and executed. A \texttt{Closure} is nothing more than just mentioned: a function (name) together with its argument \cite{Epstein:2011:THC:2034675.2034690} and can be created using \textsf{Cloud Haskell}'s function \texttt{mkClosure} and \textsf{Template Haskell}. \texttt{mkClosure} takes the top level name of a function and returns a closure generator. The function supplied to \texttt{mkClosure} needs to be of 1-ary type \texttt{a $\to$ Process b} and return a \textsf{Cloud Haskell} process. For a function \texttt{f} of type \texttt{a $\to$ Process b}, the type of \texttt{\$(mkClosure 'f)} resolves to \texttt{a $\to$ Closure (Process b)}, i.e. it is a closure generator that generates a closure when supplied with a value of type \texttt{a}.
+In \textsf{Haskell}, functions can only be executed, composed and passed as arguments, they cannot be serialised. However, this is be necessary in order to send a function to a remote\index{Node!remote} node and execute it there. \textsf{Cloud Haskell} avoids this problem by using fully qualified top level names of functions that are known at compile time in a table of static code pointers to refer to functions by their name. For remote execution, a function's name is put into a \texttt{Closure}\index{Closure}, together with its serialised environment\index{Environment}, i.e. its argument, and sent to a remote node where it is deserialised and executed. A \texttt{Closure} is a function (name) together with and its argument \cite{Epstein:2011:THC:2034675.2034690} and can be created using \textsf{Cloud Haskell}'s function \texttt{mkClosure} and \textsf{Template Haskell}\footnote{Using this approach, the function that should be executed remotely is actually combined with the matching decoder for its input.}. \texttt{mkClosure} takes the top level name of a function and returns a closure generator. The function supplied to \texttt{mkClosure} has to be of 1-ary type \texttt{a $\to$ Process b} and return a \textsf{Cloud Haskell} process. For a function \texttt{f} of type \texttt{a $\to$ Process b}, the type of \texttt{\$(mkClosure 'f)} resolves to \texttt{a $\to$ Closure (Process b)}, i.e. it is a closure generator that generates a closure when supplied with a value of type \texttt{a}.
 
-After a \texttt{Closure} has been executed, the result is serialised and sent back to the caller. However, in some cases, the type system cannot infer the serialisability of the result type and therefore additional information needs to be provided\footnote{Specifically, the problem is that the type constructors can be constrained with required type class instances for parameters. On deconstruction, this information is not available and therefore needs to be added explicitly again.}. For a type \texttt{a}, serialisation information can be provided with a value of type \texttt{Static (SerializableDict a)}. Essentially this is only an explicit type tag that enables the selection of the correct serialisation function for type \texttt{a}.
+After a \texttt{Closure} has been executed, the result is serialised and sent back to the caller. However, the type system cannot infer the type and serialisability of the result and therefore additional information needs to be provided\footnote{Specifically, the problem is that the type constructors can be constrained with required type class instances for parameters. On deconstruction, this information is not available and therefore needs to be added explicitly again.}. For a type \texttt{a}, serialisation information can be provided with a value of type \texttt{Static (SerializableDict a)}. Basically, this is an explicit type tag that enables the selection of the correct serialisation function for type \texttt{a}.
 
 \subsection{Data model}
 \label{chp:distributed_model}
-The data model for the representation of processes in the \textsf{Cloud Haskell} \texttt{Process} monad is essentially the same as what we saw in \chpref{chp:local_model}. Predicates are still processes that output a boolean value and basic processes are computations in the \textsf{Cloud Haskell} \texttt{Process} monad. In the following \texttt{CH} is the name for the qualified import of \texttt{Control.Distributed.Process}.
+The data model for the representation of processes in the \textsf{Cloud Haskell} \texttt{Process} monad is almost unchanged: only the definition of basic processes and the \texttt{Basic} data constructor for processes have to be adapted. Basic processes are now functions that take an input of type \texttt{a} and return a closure that contains a \textsf{Cloud Haskell} process which produces an output of type \texttt{b} when executed.
 \begin{lstlisting}[language=Haskell,caption=Representation of basic processes as computations in the \texttt{Process} monad.,numbers=left,frame=bt]
 import qualified Control.Distributed.Process as CH
 
-type BasicProcess b = CH.Process b
+type BasicProcess a b = a -> CH.Closure (CH.Process b)
 \end{lstlisting}
 
-The signature of our representation of processes remains unchanged, only the data constructors need to be changed slightly.
+The data type for the representation of processes remains unchanged.
 \begin{lstlisting}[language=Haskell,caption=Data type for the representation of processes.,label=fig:distributed_datatypes,numbers=left,frame=bt,firstnumber=4]
 data Process a b where
 \end{lstlisting}
 
-The wrappers for basic processes, i.e. \texttt{Const} and \texttt{Simple} reflect the necessary adaptations that come with \textsf{Cloud Haskell}: they constrain the output type of the wrapped basic process to be an instance of the type class \texttt{Serializable} and require a static \texttt{SerializableDict} for the same type. As mentioned in \chpref{chp:cloud_haskell}, this is necessary so remotely\footnote{This is true for locally spawned processes as well, as we can conceptually not distinguish between them: \textsf{Cloud Haskell} transparently takes care of that we can use both local and remote processes in the same way. Technically, however, we could inspect the process identifier and tell if the respective process is running on the same or a different node.} spawned processes know how to serialise their output and send it back to the caller. Instead of a value of type \texttt{BasicProcess} as before, \texttt{Const} takes a closure that contains a basic process. Similarly, \texttt{Simple} takes a closure generator, i.e. a function that, supplied with a value of the appropriate type, generates a closure. %ToDo
+\texttt{Basic} reflects the adaptations that are necessary to use \textsf{Cloud Haskell} for remote interpretation of processes: the output type of the wrapped basic process must have an instance of \texttt{Serializable} and a static \texttt{SerializableDict} for the same type must be provided. As mentioned in \chpref{chp:cloud_haskell}, this is necessary so remotely\footnote{This is true for locally spawned processes as well, as we can conceptually not distinguish between them: \textsf{Cloud Haskell} transparently takes care of that we can use both local and remote processes in the same way. Technically, however, we could inspect the process identifier and tell if the respective process is running on the same or a different node.} spawned processes know how to serialise their output and send it back to the caller.
 \begin{lstlisting}[language=Haskell,caption=Signature of the \texttt{Const} and \texttt{Simple} data constructors.,numbers=left,frame=bt,firstnumber=5]
-Const  :: (Serializable b) 
-       => CH.Static (SerializableDict b)
-       -> CH.Closure (BasicProcess b)
-       -> Process a b
-
-Simple :: (Serializable b)
-       => CH.Static (SerializableDict b)
-       -> (a -> CH.Closure (BasicProcess b))
-       -> Process a b
+Basic :: (Serializable b)
+      => CH.Static (SerializableDict b)
+      -> BasicProcess a b
+      -> Process a b
 \end{lstlisting}
 
-We extend our model for processes and add the \texttt{Local}\index{Data constructor!Local} data constructor. \texttt{Local} is a simple decorator\index{Decorator} \cite{Gamma:1995:DPE:186897}, with the purpose to give an indication to the process interpreter that the wrapped process should be executed locally. Typically, the reason for this arises from the expectation that serialising a closure, sending it to a remote node, executing it there and obtaining the result is more expensive\footnote{Expensive in terms of the necessary amount of time to run the process.} than executing the respective process locally. Since there is no general approach to estimate the necessary amount of time to run a process, we decide to equip the user with a tool to force local execution of a process and burden him with the obligation to make appropriate use of it.
-\begin{lstlisting}[language=Haskell,caption=Signature of the additional \texttt{Local} data constructor.,numbers=left,frame=bt,firstnumber=14]
+A new processes type, \texttt{Local}\index{Data constructor!Local}, is added to the model. \texttt{Local} is a simple decorator\index{Decorator} \cite{Gamma:1995:DPE:186897}, with the purpose of giving an indication to the process interpreter that the wrapped process should be executed locally. Typically, the reason for this arises from the expectation that serialising a closure, sending it to a remote node, executing it there and obtaining the result is more expensive\footnote{Expensive in terms of the necessary amount of time to run the process.} than executing the respective process locally. Since there is no general approach to estimate the necessary amount of time to run a process, the decision has been made to equip the developer with a tool to force local execution of a process and burden him with the obligation to make appropriate use of it.
+\begin{lstlisting}[language=Haskell,caption=Signature of the additional \texttt{Local} data constructor.,numbers=left,frame=bt,firstnumber=9]
 Local :: Process a b
       -> Process a b
 \end{lstlisting}
 
-The signature of the rest of the data constructors, i.e. \texttt{Sequence}, \texttt{Parallel}, \texttt{Multilel} and \texttt{Repetition}, remain unchanged.
+The signatures of the rest of the data constructors, i.e. \texttt{Parallel}, \texttt{Sequence}, \texttt{Repetition} and \texttt{Multilel}, remain unchanged.
 
 \subsection{Architecture of the infrastructure\index{Architecture}}
 \label{chp:infrastructure}
