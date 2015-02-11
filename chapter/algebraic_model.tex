@@ -82,6 +82,7 @@ The type signature of a process states of which types the input and the output o
 % ------------------------------------------------------------------------------
 
 \begin{definition}[Identity\index{Process!Identity} and error\index{Process!Error} process]
+\label{def:static_id_err}
 Let $Id \in \mathcal{P}$ be the identity process, i.e. the process that outputs its input, and let $Err \in \mathcal{P}$ be the error process, i.e. the process that always returns the undefined value. To be precise, there is an identity process $Id_i$ with $\typesignature{Id_i}{T_i}{T_i}$ and an error process $Err_i$ with $\typesignature{Err_i}{T_i}{T_i})$ for every $T_i \in \mathcal{T}$. For simplicity, we refer to them as $Id$ and $Err$, but keep in mind that for every type, there is a specific identity and error process. Let their type signatures be $\typesignature{Id}{a}{a}$ and $\typesignature{Err}{a}{a}$, where $a$ is a type variable which resembles the fact that $Id$ and $Err$ represent a family of processes.
 
 \hfill\qedsymbol
@@ -96,6 +97,7 @@ Let $Id \in \mathcal{P}$ be the identity process, i.e. the process that outputs 
 % processes as predicates
 % ------------------------------------------------------------------------------
 \begin{definition}[Processes as predicates]
+\label{def:predicate}
 Let $\mathcal{B} \subset \mathcal{P}$ be the set of processes with output type $T_{Boolean}$. A process $B \in \mathcal{B}$ with $\rho \left( B \right) = \left( a, T_{Boolean} \right)$ is a predicate.
 
 \hfill\qedsymbol
@@ -123,6 +125,7 @@ and invalid otherwise. The type signature of the resulting process is $\typesign
 % parallel
 % ------------------------------------------------------------------------------
 \begin{definition}[Static semantics of parallel composition\index{Static Semantics!Parallel}]
+\label{def:static_parallel}
 Let $P, Q, R \in \mathcal{P}$ be processes and let $a, b, c, d$ be type variables. Then the composition $\parallel{R}{P}{Q}$ is valid iff
 \begin{eqnarray*}
   \rho \left( P \right) & = & \left( a, c \right) \\
