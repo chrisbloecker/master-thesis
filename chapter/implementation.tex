@@ -57,9 +57,9 @@ Choice :: Predicate a
 
 The \texttt{Parallel}\index{Data constructor!Parallel} data constructor is used to model parallel composition of processes, its type signature reflects \defref{def:static_parallel}. It takes two processes for parallel composition, with type signatures \texttt{Process a c} and \texttt{Process a d}, as well as a third process of type \texttt{Process (c, d) b} that is used to combine the results of the other two processes.
 \begin{lstlisting}[language=Haskell,caption=Signature of the \texttt{Parallel} data constructor.,numbers=left,frame=bt,firstnumber=16]
-Parallel :: Process a c
+Parallel :: Process (c, d) b
+         -> Process a c
          -> Process a d
-         -> Process (c, d) b
          -> Process a b
 \end{lstlisting}
 
@@ -86,26 +86,32 @@ Multilel :: [Process a c]
 \end{lstlisting}
 
 \subsection{Process interpreter}
-In this chapter we discuss how the \texttt{Process} interpreter works in detail by taking a look at the implementation.
+In this chapter we discuss how the \texttt{Process} interpreter works in detail by taking a look at its implementation.
 
-\texttt{Process}es can be run using the \texttt{runProcess} function. It takes a process of type \texttt{Process a b} and an input of type \texttt{a} for the process. It runs in the \texttt{IO} monad and produces a result of type \texttt{b}.
+Processes can be applied to an input using the \texttt{runProcess} function: it takes a process of type \texttt{Process a b} and an input of type \texttt{a} for that process. It runs in the \texttt{IO} monad and produces a result of type \texttt{b}. \texttt{runProcess} is the implementation of the function $sem$ introduced in \chpref{chp:semantics} that defines the semantics of a process.
 \begin{lstlisting}[language=Haskell,caption=Signature of the process interpreter.,label=lst:local_runprocess_signature,numbers=left,frame=bt]
 runProcess :: Process a b -> a -> IO b
 \end{lstlisting}
 
-The interpretation of a \texttt{Const}\index{Process interpreter!Const} process is straightforward. Since \texttt{Const} processes don't take an input, we simply discard it and run the wrapped basic process \texttt{bp}, as shown in \lstref{lst:local_runprocess_const}.
-\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter of \texttt{Const} processes.,label=lst:local_runprocess_const,numbers=left,frame=bt,firstnumber=2]
-runProcess (Const bp) _ =
-  bp
+The semantics of an \texttt{Id}\index{Process interpreter!Id} process is as given in \defref{def:sem_id}: it simply outputs its input.
+\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter of \texttt{Id} processes.,label=lst:local_runprocess_const,numbers=left,frame=bt,firstnumber=2]
+runProcess Id x =
+  return x
 \end{lstlisting}
 
-The interpretation of \texttt{Simple}\index{Process interpreter!Simple} processes is similarly simple. We take the wrapped basic process \texttt{bp} and pass the argument \texttt{x} to it, as \lstref{lst:local_runprocess_simple} shows.
-\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Simple} processes.,label=lst:local_runprocess_simple,numbers=left,frame=bt,firstnumber=4]
-runProcess (Simple bp) x =
-  bp x
+The semantics of an \texttt{Err}\index{Process interpreter!Err} process is as stated in \defref{def:sem_err}. The error process outputs the undefined value regardless of its input.
+\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter of \texttt{Id} processes.,label=lst:local_runprocess_const,numbers=left,frame=bt,firstnumber=2]
+runProcess Err _ =
+  return undefined
 \end{lstlisting}
 
-For the interpretation of \texttt{Choice} processes, we have to run \texttt{predicate} with input \texttt{x} first by making use of the interpreter function \texttt{runProcess}. Then, based on the predicate's output, we make the choice between executing either \texttt{p1} or \texttt{p2} as defined in \defref{def:sem_choice} and shown on \lstref{lst:local_runprocess_choice}.
+A \texttt{Basic}\index{Process interpreter!Basic} process is simply a wrapper for a computation \texttt{f} in the \texttt{IO} monad, which is the equivalent of an intrinsic function of a basic process as described in \chpref{chp:semantics}. The interpretation of a \texttt{Basic} process is done by applying the process' intrinsic function \texttt{f} to the process' input \texttt{x}, as given in \defref{def:sem_atomic}.
+\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Basic} processes.,label=lst:local_runprocess_simple,numbers=left,frame=bt,firstnumber=4]
+runProcess (Basic f) x =
+  f x
+\end{lstlisting}
+
+For the interpretation of \texttt{Choice} processes, the output of \texttt{predicate} when supplied with input \texttt{x} has to be obtained first by making use of the interpreter function \texttt{runProcess}. Then, based on the predicate's output, the choice between executing either \texttt{p1} or \texttt{p2} is made as defined in \defref{def:sem_choice}.
 \index{Process interpreter!Choice}
 \begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Choice} processes.,label=lst:local_runprocess_choice,numbers=left,frame=bt,firstnumber=6]
 runProcess (Choice predicate p1 p2) x = do
@@ -113,30 +119,37 @@ runProcess (Choice predicate p1 p2) x = do
   runProcess (if b then p1 else p2) x
 \end{lstlisting}
 
-For the interpretation of a \texttt{Sequence}\index{Process interpreter!Sequence} process, we have to run the first process \texttt{p1} on the argument \texttt{x} first by making use of the interpreter function \texttt{runProcess}. Then, using the result from \texttt{p1}, we run the second process \texttt{p2}. The implementation of this is straightforward, using the bin operator \texttt{>}\texttt{>=}, as shown in \lstref{lst:local_runprocess_sequence}.
+A \texttt{Parallel}\index{Process interpreter!Parallel} process involves two process that have to be interpreted at the same time, namely \texttt{p1} and \texttt{p2}, as well as a combinator process \texttt{combinator} to combine the outputs of \texttt{p1} and \texttt{p2}. In order to interpret two processes at the same time, a second thread needs to be forked and the interpretation of one of the processes has to be delegated there. To do so, the auxiliary function \texttt{runProcessHelper} is implemented: \texttt{runProcessHelper} takes a process \texttt{p} that should be interpreted, an input \texttt{x} for \texttt{p} and an mvar. \texttt{runProcessHelper} determined the output of \texttt{p} applied to \texttt{x} by making use of \texttt{runProcess} and saves the output to the mvar.
+\begin{lstlisting}[language=Haskell,caption=Auxiliary function for the interpretation of \texttt{Parallel} processes.,label=lst:local_runprocesshelper,numbers=left,frame=bt,firstnumber=10]
+runProcessHelper :: Process a b -> a -> MVar b -> IO ()
+runProcessHelper p x mvar = putMVar mvar =<< runProcess p x
+\end{lstlisting}
+
+To interpret a \texttt{Parallel} process, an empty mvar is created and, together with \texttt{p1} and input \texttt{x}, passed on to \texttt{runProcessHelper} that is forked in a new thread using \texttt{forkIO}. While the output of \texttt{p1} is determined in the new thread, the interpreter determines the output of \texttt{p2} in its local thread. The previously created mvar is used to comfortably wait for the output of \texttt{p1} that \texttt{runProcessHelper} saves to it once it has been obtained. Finally, \texttt{combinator} is used to combine the outputs of \texttt{p1} and \texttt{p2} into a single value, as given in \defref{def:sem_parallel}.
+\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Parallel} processes.,numbers=left,frame=bt,label=lst:local_runprocess_parallel,firstnumber=12]
+runProcess (Parallel p1 p2 combinator) x = do
+  mvar <- newEmptyMVar
+  _    <- forkIO $ runProcessHelper p1 x mvar
+  r2   <- runProcess p2 x
+  r1   <- takeMVar mvar
+  runProcess combinator (r1, r2)
+\end{lstlisting}
+
+For the interpretation of a \texttt{Sequence}\index{Process interpreter!Sequence} process, \texttt{runProcess} is employed to determine the output of \texttt{p1} for input \texttt{x}. Then, the output of \texttt{p1} if used as input for the interpretation of \texttt{p2} with \texttt{runProcess}, as defined in \defref{def:sem_sequence}. The implementation of this is straightforward, using the bind operator \texttt{>}\texttt{>=}.
 \begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Sequence} processes.,label=lst:local_runprocess_sequence,numbers=left,frame=bt,firstnumber=8]
 runProcess (Sequence p1 p2) x =
   runProcess p1 x >>= runProcess p2
 \end{lstlisting}
 
-In the implementation of the interpreter function \texttt{runProcess} so far, there has been no parallelism introduced. However, the purpose of our process calculus is to make parallel programming easy and intuitive. Hence, we need a mechanism to introduce parallelism. This is done with the \texttt{Parallel} and \texttt{Multilel} combinators for processes. Whereas \texttt{Parallel} allows for parallel composition of two processes with arbitrary types, \texttt{Multilel} allows for parallel composition of arbitrary many processes of a common type.
-
-So far, we could simply perform the interpretation of processes in the interpreter thread because we only had one program flow. This changes in the case of the \texttt{Parallel} and \texttt{Multilel} processes where we explicitly have two or more program flows. That means we have to fork at least one more thread for parallel interpretation of the processes. We introduce an auxiliary interpreter function \texttt{runProcessHelper} for this. It takes a process of type \texttt{Process a b}, an argument of type \texttt{a} for the process and an \texttt{MVar b} that is used to communicate the process' output back to the caller. \texttt{runProcessHelper} runs in the \texttt{IO} monad and its behaviour is fairly simple: it runs the process interpreter \texttt{runProcess} for the submitted process by passing process \texttt{p} and input \texttt{x} to it and saving the obtained output in \texttt{mvar}, then it terminates. The implementation of \texttt{runProcessHelper} is shown in \lstref{lst:local_runprocesshelper}.
-\begin{lstlisting}[language=Haskell,caption=Auxiliary process for the interpretation of \texttt{Parallel} and \texttt{Multilel} processes.,label=lst:local_runprocesshelper,numbers=left,frame=bt,firstnumber=10]
-runProcessHelper :: Process a b -> a -> MVar b -> IO ()
-runProcessHelper p x mvar = putMVar mvar =<< runProcess p x
+\clearpage
+Finally, there is the \texttt{Repetition}\index{Process interpreter!Repetition} process that is used to express repeated execution of a process. As stated in \defref{def:sem_repetition}, repetition is expressed using a combination of choice composition and sequence composition.
+\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Repetition} processes.,numbers=left,frame=bt,firstnumber=23]
+runProcess rep@(Repetition pr p) x =
+  runProcess (Choice pr (Sequence p rep) Id) x
 \end{lstlisting}
 
-A \texttt{Parallel}\index{Process interpreter!Parallel} process incorporates three processes: processes \texttt{p1} and \texttt{p2} that should be run in parallel as well as a combinator process, \texttt{combinator}, that is used to combine the outputs of \texttt{p1} and \texttt{p2}. To accomplish parallel execution of \texttt{p1} and \texttt{p2}, we create a new empty \texttt{MVar} and use \texttt{forkIO} to fork a new thread which we run \texttt{runProcessHelper} in. Together with its argument \texttt{x} and the \texttt{mvar}, Process \texttt{p1} is passed to \texttt{runProcessHelper} in the thread for interpretation. At the same time, we start interpretation of process \texttt{p2} in the current interpreter thread. After the interpretation of \texttt{p2} has finished, we retrieve the output of \texttt{p1} from \texttt{mvar}. If execution of \texttt{p1} hasn't finished yet, this operation blocks until its output has been saved to \texttt{mvar} by \texttt{runProcessHelper} running in other thread. Once we have the outputs of both \texttt{p1} and \texttt{p2}, we start the interpretation of \texttt{combinator} that combines these outputs into one value.
-\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Parallel} processes.,numbers=left,frame=bt,label=lst:local_runprocess_parallel,firstnumber=12]
-runProcess (Parallel p1 p2 combinator) x = do
-  mvar <- newEmptyMVar
-  _ <- forkIO $ runProcessHelper p1 x mvar
-  r2 <- runProcess p2 x
-  r1 <- takeMVar mvar
-  runProcess combinator (r1, r2)
-\end{lstlisting}
 
+ToDo: rephrase...\\
 The interpretation of a \texttt{Multilel}\index{Process interpreter!Multilel} process follows the same principles as the interpretation of a \texttt{Parallel} process. The difference only lies in that we have to deal with a list of processes that should be run in parallel instead of exactly two. This has some consequences: we require all of these processes to have the same type, otherwise we would end up with $n-1$ combinator processes for the combination of the results from $n$ processes. By requiring the same type for every process and thus, the same result type, we can reduce the requirement for combinator processes to only one process, namely \texttt{fold}, and one value, namely \texttt{ib}, as can be seen in \lstref{lst:local_runprocess_multilel}. As the name \texttt{fold} suggests, this process behaves like a fold: it takes a pair that contains the initial fold value \texttt{ib} and a sequence of values, namely \texttt{ress}, that should be folded together into one result value. For parallel execution of all the processes in \texttt{ps}, we create a new empty \texttt{MVar} for each of them and start a \texttt{runProcessHelper} in a new thread for each of them, supplying one of the \texttt{mvars} per thread. Then we wait for all of the processes to finish execution by reading their results from the \texttt{mvars}. Should there be even a single process that hasn't finished execution, the according \texttt{MVar} blocks the reading action until a value has been saved into it. Finally, the \texttt{fold} process is run, folding the results together and returning a single result.
 \begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Multilel} processes.,label=lst:local_runprocess_multilel,numbers=left,frame=bt,firstnumber=18]
 runProcess (Multilel ps ib fold) x = do
@@ -145,13 +158,6 @@ runProcess (Multilel ps ib fold) x = do
   ress  <- forM mvars takeMVar
   runProcess fold (ib, ress)
 \end{lstlisting}
-
-Finally, there is the \texttt{Repetition}\index{Process interpreter!Repetition} process that is used to express repeated execution of a process. As stated in \defref{def:sem_repetition}, repetition can be expressed using choice and sequence composition, which is made use of for interpretation of \texttt{Repetition} processes.
-\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Repetition} processes.,numbers=left,frame=bt,firstnumber=23]
-runProcess rep@(Repetition pr p) x =
-  runProcess (Choice pr (Sequence p rep) Id) x
-\end{lstlisting}
-
 
 \clearpage
 
