@@ -207,69 +207,42 @@ Local :: Process a b
 
 The signatures of the rest of the data constructors, i.e. \texttt{Parallel}, \texttt{Sequence}, \texttt{Repetition} and \texttt{Multilel}, remain unchanged.
 
-\subsection{Architecture of the infrastructure\index{Architecture}}
+\subsection{Architecture of the distribution infrastructure\index{Architecture}\index{Infrastructure}}
 \label{chp:infrastructure}
-For the interpretation of process structures in a distributed system, we need some kind of infrastructure and management of involved nodes, so we can delegate process execution to them. In this chapter, we describe the architecture and functioning of our system.
+For the interpretation of process structures in a distributed system, some kind of infrastructure and management of involved nodes is needed, so process execution can be delegated to them. In this chapter, we describe the architecture and functioning of our system.
 \begin{figure}[h!]
   \centering
-  \begin{tikzpicture} [every node/.style={fill=black, circle, inner sep = 2pt}]
-    \pgftext{
-      \includegraphics[width=\textwidth]{img/architecture.pdf}
-    }
-    \node at (-4.25, 0.25) {\tiny \color{white} 1};
-    \node at (-3.75, 0.25) {\tiny \color{white} 2};
-    \node at ( 1.50, 0.25) {\tiny \color{white} 3};
-    \node at (-0.10, 1.75) {\tiny \color{white} 4};
-    \node at (-3.25, 0.25) {\tiny \color{white} 5};
-    \node at ( 2.00, 0.25) {\tiny \color{white} 6};
-    \node at (-0.10, 1.25) {\tiny \color{white} 7};
-    \node at (-2.75, 0.25) {\tiny \color{white} 8};
-    \node at (-0.10, 0.75) {\tiny \color{white} 9};
-    \node at (-2.30,-1.25) {\tiny \color{white} 10};
-    \node at (-0.80,-1.25) {\tiny \color{white} 10};
-    \node at ( 2.50,-1.25) {\tiny \color{white} 10};
-    \node at ( 1.00,-3.60) {\tiny \color{white} 11};
-    \node at ( 6.10, 0.65) {\tiny \color{white} 12};
-    \node at ( 2.50, 0.30) {\tiny \color{white} 13};
-    \node at ( 3.10, 0.30) {\tiny \color{white} 14};
-    \node at ( 3.70, 0.30) {\tiny \color{white} 15};
-  \end{tikzpicture}
-  \caption{Architecture of the infrastructure }
+  \includegraphics[width=\textwidth]{img/architecture.pdf}
+  \caption{Architecture of the distribution infrastructure.}
   \label{fig:architecture}
 \end{figure}
 
-The architecture of our system's infrastructure is intentionally kept simple as shown in \figref{fig:architecture}. It involves a designated \textbf{master}\index{Node!master} node and a collection of \textbf{worker}\index{Node!worker} nodes. In addition to that, we need an interface\index{Interface} through which we can insert processes into the system. The easiest way to do so is a command line interface, however, a web interface would be much more convenient and easier to use. We employ Yesod\footnote{Yesod is a Haskell web framework. More information about Yesod can be found at \url{http://www.yesodweb.com/} and \url{https://github.com/yesodweb/yesod}}\index{Yesod} to build a RESTful\index{REST} web interface.
+The architecture of the system's infrastructure is intentionally kept simple and is as shown in \figref{fig:architecture}. It involves a designated \textbf{master}\index{Node!master} node and a collection of \textbf{worker}\index{Node!worker} nodes. The master node provides an interface\index{Interface} through which processes can be inserted into the system.
 
-When a client\index{Client} wants to submit a request\index{Request} \figannotation{1}, it has to make use of the web interface and supply a JSON\footnote{JavaScript Object Notation \url{http://www.json.org/}}\index{JSON} document in an appropriate format. In a productive environment, there would be a parser that reads a submitted JSON document, generates a corresponding process structure from its content and passes it on to the process interpreter if the document is valid. For simplicity, we assume for now that a request equals a valid process description and can be interpreted.
+When a client\index{Client} wants to submit a request\index{Request}, he has to make use of the interface and supply a problem description in an appropriate format, e.g. a JSON\footnote{JavaScript Object Notation \url{http://www.json.org/}}\index{JSON}. A parser then reads the submitted JSON document, generates a corresponding process structure from its content and passes it on to the process interpreter if the document is valid. For simplicity, assume in the following that a request immediately equals a process description that can be interpreted.
 
-The master\index{Node!master} node is responsible for handling client\index{Client} requests, logging information related to the received requests and managing connected nodes. When a request is received \figannotation{2}, the master spawns a new \textsf{Cloud Haskell} \texttt{Process} that runs the \textsc{Hive} process interpreter\index{Interpreter} and passes the request to the new process where it is interpreted \figannotation{3}. At the same time, the master assigns a ticket id to the request, logs the request together with its id to a database\footnote{For this purpose, we make use the \texttt{acid-state} library. \texttt{acid-state} allows to save Haskell values into a file-based database if their type has an instance of \texttt{SafeCopy}. Further information on \texttt{acid-state} can be found at \url{http://acid-state.seize.it/} and \url{https://github.com/acid-state/acid-state}} \figannotation{4} and reports the ticket id to the client \figannotation{5}. When the interpreter finishes interpreting the process structure from the request, it reports the result to the master \figannotation{6}. The master then updates the database \figannotation{7} by logging the result to the database and linking it to the according id. At any time, a client can try to retrieve the result to its request by supplying the request's ticket id to the master through the interface \figannotation{8}. The master then tries to read the result from the database \figannotation{9}, but only replies to the client's satisfaction after the interpretation of its request has been finished and logged to the database.
+The master\index{Node!master} node is responsible for handling client\index{Client} requests, logging information related to the received requests and managing connected nodes. When a request is received, the master spawns a new \textsf{Cloud Haskell} \texttt{Process} that runs the process interpreter\index{Interpreter} and passes the request to the new process where it is interpreted. At the same time, the master assigns a ticket id to the request, logs the request together with its id to a database\footnote{For this purpose, the \texttt{acid-state} library is used. \texttt{acid-state} allows to save \textsf{Haskell} values into a file-based database if their type has an instance of \texttt{SafeCopy}. Further information on \texttt{acid-state} can be found at \url{http://acid-state.seize.it/} and \url{https://github.com/acid-state/acid-state}} and reports the ticket id to the client. When the interpreter finishes interpretation of the process structure from the request, it reports the result to the master. The master saves the result to the database and associated it with the according ticket id. At any time, the client can try to retrieve the result by supplying the request's ticket id to the master through the interface. The master then tries to read the result from the database, but only replies to the client's satisfaction after the interpretation of his request has been finished and logged to the database.
 
-Worker nodes\index{Node!worker} are kept very simple. When started and supplied with the master's address, they report their availability to the master \figannotation{10} and wait for further instruction.
+Worker nodes\index{Node!worker} are kept very simple. When started and supplied with the master's address, they report their availability to the master and wait for further instruction.
 
-The \textsc{Hive} process interpreter\index{Interpreter}, which we discuss in full detail in \chpref{chp:interpreter}, is run in a new process by the master for every client request\index{Request} that is received. The interpreter inspects the structure of the received request, transforms it into a \textsc{Hive} process structure and distributes the incorporated sub-processes\index{Sub-process} to worker\index{Node!worker} nodes \figannotation{11} or executes them locally \figannotation{12} if they have been marked for local execution using the \texttt{Local} wrapper. For every basic sub-process, the interpreter asks the master for a worker node \figannotation{13} where it can run the sub-process. For such a request, the master fetches a worker node from a FIFO queue and returns it to the interpreter \figannotation{14}. After a sub-process has finished execution on a worker node, the interpreter returns the respective worker node to the master \figannotation{15} for future allocation to other interpreters. It would very well be possible to employ a more sophisticated scheduling\index{Scheduling} algorithm, but the combination of a FIFO\index{FIFO} queue and a work stealing\index{Work stealing} \cite{} alike behaviour of the process interpreter is fairly efficient and easy to implement. At this time, our primary goal is not to achieve the best possible load balancing or employ the most efficient technique for queueing worker nodes, however this leaves room for future improvement.
+The process interpreter\index{Interpreter}, is run in a new process by the master for every client request\index{Request} that is received. The interpreter takes the process description from the request and distributes the incorporated sub-processes\index{Sub-process} to worker\index{Node!worker} nodes or executes them locally if they have been marked for local execution using the \texttt{Local} wrapper. For every basic process, the interpreter asks the master for a worker node where it can run the basic process on. When receiving a request for a worker node, the master fetches one from a FIFO queue and returns it to the interpreter as soon as there is one available. After a basic process has finished execution on a worker node, the interpreter returns the respective worker node to the master for future allocation to other interpreters. %It would very well be possible to employ a more sophisticated scheduling\index{Scheduling} algorithm, but the combination of a FIFO\index{FIFO} queue and a work stealing\index{Work stealing} \cite{} alike behaviour of the process interpreter is fairly efficient and easy to implement. At this time, our primary goal is not to achieve the best possible load balancing or employ the most efficient technique for queueing worker nodes, however this leaves room for future improvement.
 
 
 \subsection{Process interpreter\index{Process interpreter}\index{Interpreter}}
 \label{chp:interpreter}
-With the involvement of a distributed system, we need to change the implementation of the process interpreter. Where there was only local parallelisation in the \texttt{IO} monad involved before, we have to adapt process interpretation to the specifics of the \textsf{Cloud Haskell} \texttt{Process} monad. This particularly involves remote execution of processes.
+Now that a distributed system is involved, the implementation of the process interpreter needs to be adapted to this situation. Where there was only local parallelisation in the \texttt{IO} monad involved before, process interpretation has to be adapted to the specifics of the \textsf{Cloud Haskell} \texttt{Process} monad. This particularly involves execution of processes on remote nodes.
 
-When the master\index{Node!master} node receives a client\index{Client} request\index{Request}, it spawns a process interpreter on its local node and passes the process structure from the request to the interpreter. The interpreter then inspects the process structure and distributes the incorporated sub-processes\index{Sub-process} to connected worker nodes accordingly. To do so, the interpreter asks the master node for an available worker node for every sub-process that has to be executed\footnote{Except for processes wrapped into a \texttt{Local} process, of course.}. We represent the master\index{Node!master} node by a \texttt{ProcessId} that is wrapped into a value of type \texttt{Master}.
+When the master\index{Node!master} node receives a client\index{Client} request\index{Request}, it spawns a process interpreter on its local node and passes the process structure from the request to the interpreter. The interpreter then inspects the process structure and distributes the incorporated sub-processes\index{Sub-process} to connected worker nodes accordingly. To do so, the interpreter asks the master node for an available worker node for every sub-process that has to be executed\footnote{Except for processes wrapped into a \texttt{Local} process, of course.}. The master\index{Node!master} node is represented by a \texttt{ProcessId} wrapped into a value of type \texttt{Master}.
 \begin{lstlisting}[language=Haskell,caption=Data type for the address of a master node.,numbers=left,frame=bt]
 newtype Master = Master ProcessId
 \end{lstlisting}
 
-We have to adapt the signature of \texttt{runProcess} and introduce an additional parameter, as shown in \lstref{lst:interpreter_signature}. As before, \texttt{runProcess} takes a process of type \texttt{Process a b}, an argument for the process of type \texttt{a} and returns a value of type \texttt{b}. Furthermore, for process distribution, \texttt{runProcess} requires a value of type \texttt{Master}, so it can request worker nodes to run processes on.
+The signature of \texttt{runProcess} has to be extended by an additional parameter: a value of type \texttt{Master} that carries information on how to reach the master node.
 \begin{lstlisting}[language=Haskell,caption=Signature of the process interpreter.,label=lst:interpreter_signature,numbers=left,frame=bt,firstnumber=2]
 runProcess :: Master -> Process a b -> a -> CH.Process b
 \end{lstlisting}
 
-For the interpretation of a \texttt{Const}\index{Process interpreter!Const} process, we take the \texttt{sDict} value of type \texttt{SerializableDict b} and the \texttt{closure} of type \texttt{CH.Closure (BasicProcess b)} from the \texttt{Const} process and create a new \texttt{Simple} process out of that. For that we can simply keep the \texttt{sDict} as it is but need to turn the \texttt{closure} into a closure generator\index{Closure!generator}, i.e. a function that takes a value of type \texttt{a} and generates a closure\index{Closure} from it. Since we're dealing with a \texttt{Const} process which simply discards its input value and always behaves the same, we have to respect this when creating the closure generator for the new \texttt{Simple} process. This can be done by using Haskell's standard function \texttt{const} which takes two values, discards the second one and always returns the first one. Then, all we have to do is pass the new \texttt{Simple} process into the process interpreter.
-\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter of \texttt{Const} processes.,label=lst:runprocess_const,numbers=left,frame=bt,firstnumber=3]
-runProcess master (Const sDict closure) x =
-  runProcess master (Simple sDict (const closure)) x
-\end{lstlisting}
-
-When encountering a \texttt{Simple}\index{Process interpreter!Simple} process in a process structure, the process interpreter asks the master node for an available worker node where it can run this basic process, as shown in line 2 of \lstref{lst:runprocess_simple}. This operation blocks until the master node is able to satisfy the request for an available worker node and supplies it to the interpreter. The interpreter then uses the closure generator \texttt{closureGen}, which has type \texttt{a $\to$ CH.Closure (BasicProcess b)}, to generate a closure that is then serialised and sent to the available worker node for execution. This operation blocks the interpreter until execution of the remotely spawned process on the worker node has terminated and a result value is obtained. The interpreter then returns the worker node to the master and the remotely calculated result to its caller.
+For a \texttt{Basic}\index{Process interpreter!Simple} process in a process structure, the process interpreter asks the master node for an available worker node where it can run the wrapped basic process on. This operation blocks until the master node is able to satisfy the request for an available worker node and supplies it to the interpreter. The interpreter then uses the closure generator \texttt{closureGen}, to generate a closure that is serialised and sent to the worker node for execution. This operation blocks until execution of the remotely spawned process has terminated and a result is obtained. The interpreter gives the worker node back to the master and returns the remotely calculated result to its caller.
 \begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Simple} processes.,label=lst:runprocess_simple,numbers=left,frame=bt,firstnumber=5]
 runProcess master (Simple sDict closureGen) x = do
   node <- getNode master =<< getSelfPid
@@ -278,7 +251,7 @@ runProcess master (Simple sDict closureGen) x = do
   return res
 \end{lstlisting}
 
-Processes that are wrapped into a \texttt{Local}\index{Process interpreter!Local} wrapper are supposed to be executed locally on the same node by the process interpreter instead of being distributed to remote nodes, this also includes sub-processes. To accomplish this behaviour, we apply a little trick: we create a fake master that always returns the local node when asked for an available worker node and we're discarding the real master node that is passed as first argument to \texttt{runProcess}, as shown in \lstref{lst:runprocess_local}. We use the fake master to pass it to a recursive call of \texttt{runProcess} that interprets the process that is wrapped into the \texttt{Local} wrapper at hand. Thereby, we're making sure that for the interpretation of the tree of sub-process the fake master is used and all sub-processes are interpreted locally. When the interpretation of the process structure has been finished, we terminate the fake master we had created before.
+Processes that are wrapped into a \texttt{Local}\index{Process interpreter!Local} wrapper are supposed to be executed locally on the same node by the process interpreter instead of being distributed to remote nodes, this includes all sub-processes\index{Sub-process}. To accomplish this behaviour, a little trick is applied: a fake master that always returns the local node when asked for an available worker node is created and used for all sub-processes of the \texttt{Local} process. When interpretation of all sub-process has finished, the fake master is terminated.
 \begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Local} processes.,label=lst:runprocess_local,numbers=left,frame=bt]
 runProcess _ (Local p) x = do
   fakeMaster <- getFakeMaster =<< getSelfPid
@@ -287,14 +260,13 @@ runProcess _ (Local p) x = do
   return res
 \end{lstlisting}
 
-The adaptations that have to be made for the remaining process types, i.e. \texttt{Choice}, \texttt{Sequence}, \texttt{Parallel}, \texttt{Multilel} and \texttt{Repetition} are minimal. They involve adding the necessary \texttt{master} parameter and adaptations specific to the \textsf{Cloud Haskell} \texttt{Process} monad, i.e. using \texttt{spawnLocal} instead of \texttt{forkIO} and lifting action on MVars from the \texttt{IO} monad into the \texttt{Process} monad using \texttt{liftIO}. The implementation can be found in \appref{app:distributed_split_slice}.
+The adaptations that have to be made for the remaining process types, i.e. \texttt{Choice}, \texttt{Parallel}, \texttt{Sequence}, \texttt{Repetition} and \texttt{Multilel} are minimal. They involve adding the necessary \texttt{master} parameter and adaptations specific to the \textsf{Cloud Haskell} \texttt{Process} monad, i.e. using \texttt{spawnLocal} instead of \texttt{forkIO} and lifting action on MVars into the \texttt{Process} monad using \texttt{liftIO}. The implementation can be found in \appref{app:distributed_split_slice}.
 
-\index{Hive process interpreter!Choice}
 
 \subsection{Handling a request}
-Now that we have taken a look at how our system is structured and how the \textsc{Hive} process interpreter works, we want to take a look at what happens in the system when a client submits a request.
+Now that we have taken a look at how our system is structured and how the process interpreter works, we want to take a look at what happens in the system when a client submits a request.
 
-For this purpose, assume that the master node is already running with a set of worker nodes connected. The client has knowledge about the address of the master and the ability to directly send requests to it. \Figref{fig:request_handling} shows the behaviour of the system that follows when a client submits a request. Note that we do not explicitly show all the worker nodes involved but symbolically combine them as \enquote{Worker}.
+Assume the master node is running already with a set of worker nodes connected. The client has knowledge about the master's address and the ability to directly send requests to it. \Figref{fig:request_handling} shows the behaviour of the system in the event a request is submitted by a client. Note that not all involved worker nodes are shown explicitly, but symbolically combined as \enquote{Worker}.
 
 \begin{figure}[h!]
   \centering
@@ -303,27 +275,27 @@ For this purpose, assume that the master node is already running with a set of w
   \label{fig:request_handling}
 \end{figure}
 
-\begin{itemize}
-  \item [\figannotation{1}] The client submits a request to the master node.
-  \item [\figannotation{2}] The master node replies with the assigned ticket to the client.
-  \item [\figannotation{3}] The master node spawns a new process interpreter on its own node and passes the request to it.
-  \item [\figannotation{4}] The interpreter asks the master node for worker nodes for the purpose of spawning processes on them.
-  \item [\figannotation{5}] The master node replies with available worker nodes to the interpreter. If there are no worker nodes available, the master waits with this reply until worker nodes become available.
-  \item [\figannotation{6}] The interpreter spawns processes on the worker nodes.
-  \item [\figannotation{7}] Once a process on a worker node has calculated its result, it sends it back to the interpreter and terminates.
-  \item [\figannotation{8}] The client supplies the previously received ticket number to the master, hoping the request has been processes completely.
-  \item [\figannotation{9}] The master tells the client that its request hasn't been completely processes yet. There is no solution to the client's problem available yet.
-  \item [\figannotation{10}] After execution of processes on the worker nodes, the interpreter returns them to the master node for further allocation to other interpreters. Note that steps \figannotation{4} to \figannotation{10} can, and most likely will, happen multiple times while processing a request.
-  \item [\figannotation{11}] Once the interpreter has finished processing the client's request, it submits the solution to the problem to the master.
-  \item [\figannotation{12}] The client supplies the ticket to the master again.
-  \item [\figannotation{13}] The master responds to the client with the calculated solution.
-\end{itemize}
+\begin{enumerate}
+  \item The client submits a request to the master.
+  \item The master replies with the assigned ticket to the client.
+  \item The master spawns a process interpreter on its local node and passes the request to it.
+  \item The interpreter asks the master for workers for the purpose of spawning processes on them.
+  \item The master replies with available workers to the interpreter. If there are no workers available, the master waits with its reply until workers are available.
+  \item The interpreter spawns processes on the workers .
+  \item Once a process on a worker has calculated its result, it sends it back to the interpreter and terminates.
+  \item The client supplies the previously received ticket number to the master, hoping the request has been processes completely.
+  \item The master tells the client that there is no response available yet.
+  \item After execution of processes on the workers, the interpreter returns them to the master for further allocation to other interpreters. Note that steps 4 to 10 can, and most likely will, happen multiple times while processing a request.
+  \item Once the interpreter has finished processing the client's request, it submits the solution to the problem to the master.
+  \item The client supplies the ticket to the master again.
+  \item The master responds to the client with the calculated solution.
+\end{enumerate}
 
 \section{Example: arithmetic expressions - hello world for interpreters\index{Example}}
 \label{chp:example}
-After discussing the process model and the interpreter that takes care of processes interpretation, we give an example of how to apply our calculus. To do so, we develop the typical hello world program for interpreters, i.e. an interpreter\index{Interpreter} for arithmetic expressions\index{Arithmetic expression} with parallel evaluation of sub-expressions. Except for some imports of standard \textsf{Haskell} libraries, this example is self-contained. It is intentionally kept very simple and the necessity for a parallelised interpreter for arithmetic expressions is certainly not given. However, an interpreter for arithmetic expressions is fairly simple and thus well suited to illustrate how to apply the our process calculus to it.
+After discussing the process model and the interpreter that takes care of processes interpretation, we give an example of how to apply the process calculus. To do so, we develop the typical hello world program for interpreters, i.e. an interpreter\index{Interpreter} for arithmetic expressions\index{Arithmetic expression} with parallel evaluation of sub-expressions. Except for some imports of standard \textsf{Haskell} libraries, this example is self-contained. It is intentionally kept very simple and the necessity of a parallelised interpreter for arithmetic expressions is certainly not given. However, an interpreter for arithmetic expressions is fairly simple and thus well suited to illustrate how to apply the process calculus to it.
 
-First, we need an appropriate data type to represent arithmetic expressions. An arithmetic expression \texttt{Expr} is either a value \texttt{Val} containing an \texttt{Int} or a combination of two arithmetic expressions. The combinators we want to support are addition \texttt{Add}, subtraction \texttt{Sub}, multiplication \texttt{Mul} and division \texttt{Div}. The relevant data type together with the data constructors can be found in \lstref{lst:arith_model} 
+An arithmetic expression \texttt{Expr} is either a value \texttt{Val} containing an \texttt{Int} or a combination of two arithmetic expressions. Supported combinators for \texttt{Expr} are addition \texttt{Add}, subtraction \texttt{Sub}, multiplication \texttt{Mul} and division \texttt{Div}.
 \begin{lstlisting}[language=Haskell, caption=Data model for the representation of arithmetic expressions., label=lst:arith_model, numbers=left, frame=bt]
 data Expr = Val Int
           | Add Expr Expr
