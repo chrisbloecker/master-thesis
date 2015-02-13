@@ -295,7 +295,7 @@ Assume the master node is running already with a set of worker nodes connected. 
 \label{chp:example}
 After discussing the process model and the interpreter that takes care of processes interpretation, we give an example of how to apply the process calculus. To do so, we develop the typical hello world program for interpreters, i.e. an interpreter\index{Interpreter} for arithmetic expressions\index{Arithmetic expression} with parallel evaluation of sub-expressions. Except for some imports of standard \textsf{Haskell} libraries, this example is self-contained. It is intentionally kept very simple and the necessity of a parallelised interpreter for arithmetic expressions is certainly not given. However, an interpreter for arithmetic expressions is fairly simple and thus well suited to illustrate how to apply the process calculus to it.
 
-An arithmetic expression \texttt{Expr} is either a value \texttt{Val} containing an \texttt{Int} or a combination of two arithmetic expressions. Supported combinators for \texttt{Expr} are addition \texttt{Add}, subtraction \texttt{Sub}, multiplication \texttt{Mul} and division \texttt{Div}.
+An arithmetic expression \texttt{Expr} is either a value \texttt{Val} containing an \texttt{Int} or a combination of two arithmetic expressions. The combinators for arithmetic expressions are addition \texttt{Add}, subtraction \texttt{Sub}, multiplication \texttt{Mul} and division \texttt{Div}.
 \begin{lstlisting}[language=Haskell, caption=Data model for the representation of arithmetic expressions., label=lst:arith_model, numbers=left, frame=bt]
 data Expr = Val Int
           | Add Expr Expr
@@ -304,8 +304,8 @@ data Expr = Val Int
           | Div Expr Expr
 \end{lstlisting}
 
-When we use an interpreter to interpret an arithmetic expression, we expect it to return a value of type \texttt{Int}. The implementation of such an interpreter \texttt{eval} can be found in \lstref{lst:arith_eval} and is straightforward. The interpreted value of a \texttt{Val} expression is simply its wrapped \texttt{Int} value. The interpreted value of a more complicated expression is given by recursively interpreting the involved sub-expressions and combining the results with the appropriate operator, i.e. \texttt{+} for \texttt{Add}, \texttt{-} for \texttt{Sub}, \texttt{*} for \texttt{Mul} and \texttt{div} for \texttt{Div}.
-\begin{lstlisting}[language=Haskell, caption=Implementation of an interpreter for arithmetic expressions of type \texttt{Expr}., label=lst:arith_eval, numbers=left, frame=bt, firstnumber=6]
+The semantics of and \texttt{Expr} is a value of type \texttt{Int} and can be obtained by interpreting the \texttt{Expr}. The semantics of a \texttt{Val} expression is simply its wrapped \texttt{Int} value. The semantics of a more complicated expression can be obtained by recursively interpreting the involved sub-expressions and combining the results with the appropriate operator, i.e. \texttt{+} for \texttt{Add}, \texttt{-} for \texttt{Sub}, \texttt{*} for \texttt{Mul} and \texttt{div} for \texttt{Div}.
+\begin{lstlisting}[language=Haskell, caption=Implementation of an interpreter for arithmetic expressions., label=lst:arith_eval, numbers=left, frame=bt, firstnumber=6]
 eval :: Expr -> Int
 eval (Val i) = i
 eval (Add x y) = eval x + eval y
@@ -314,40 +314,37 @@ eval (Mul x y) = eval x * eval y
 eval (Div x y) = eval x `div` eval y
 \end{lstlisting}
 
-Now, if we want to make use of the process interpreter \texttt{runProcess} to parallelise the interpretation of arithmetic expressions, we need to define a transformation from arithmetic expressions \texttt{Expr} to processes \texttt{Process a b}. Arithmetic expressions of type \texttt{Expr} do not take any parameter, they are fully defined by the values incorporated into \texttt{Val} values and yield a value of type \texttt{Int} when interpreted and hence need to be mapped to processes of type \texttt{Process () Int}.
+For parallel interpretation of arithmetic expressions using the process interpreter \texttt{runProcess}, the expressions need to be transformed and represented as processes.
 
-For the representation of arithmetic expressions that have the form of \texttt{Val}, we implement a function \texttt{val} that returns a basic processes that can be turned into a process by wrapping it into a \texttt{Const} wrapper. The implementation of \texttt{val} can be found in \lstref{lst:arith_val}.
-\begin{lstlisting}[language=Haskell, caption=A function that generates basic processes for the representation of \texttt{Val} nodes., label=lst:arith_val, numbers=left, frame=bt, firstnumber=12]
-val :: Int -> BasicProcess Int
-val i = return i
+An expression of type \texttt{Val} wraps a value of type \texttt{Int} and its semantic is exactly that of the wrapped value. The equivalent in form of a process is a process that disregards its input and returns a constant value. The function \texttt{val} creates a process like that: it takes a value of type \texttt{Int} and creates a process that always returns this value, regardless of its input.
+\begin{lstlisting}[language=Haskell, caption=A function that generates basic processes for the representation of \texttt{Val} expressions., label=lst:arith_val, numbers=left, frame=bt, firstnumber=12]
+val :: Int -> Process () Int
+val = Basic . const . return
 \end{lstlisting}
 
-Arithmetic expressions of the form \texttt{Add}, \texttt{Sub}, \texttt{Mul} and \texttt{Div} can be interpreted in parallel since their sub-expressions are independent from each other. We can exploit \texttt{Parallel} processes to interpret the sub-expressions in parallel. To do so, we need to supply combinator processes for the \texttt{Parallel} processes, so the obtained results from the sub-processes can be combined into a single value. The implementation of the relevant combinator processes can be found in \lstref{lst:arith_combinators}, they all have the same type \texttt{(Int, Int) $\to$ BasicProcess Int}.
+Arithmetic expressions of the form \texttt{Add}, \texttt{Sub}, \texttt{Mul} and \texttt{Div} can be represented as processes by representing their sub-expressions as processes and combining them in a \texttt{Parallel} process using an appropriate combinator.  For each of the arithmetic operations, a combinator process that resembles the semantics of the arithmetic operation used in \texttt{eval} to combine the sub-expression has to be defined. This is done by wrapping the exact same arithmetic operations into basic processes.
 \begin{lstlisting}[language=Haskell, caption=Basic processes for the combination of results from processes that have been executed in parallel., label=lst:arith_combinators,numbers=left, frame=bt, firstnumber=14]
-val :: Int -> Process () Int
-val = Const . return 
-
 add :: Process (Int, Int) Int
-add = Simple (return . uncurry (+))
+add = Basic (return . uncurry (+))
 
 subtract :: Process (Int, Int) Int
-subtract = Simple (return . uncurry (-))
+subtract = Basic (return . uncurry (-))
 
 multiply :: Process (Int, Int) Int
-multiply = Simple (return . uncurry (*))
+multiply = Basic (return . uncurry (*))
 
 divide :: Process (Int, Int) Int
-divide = Simple (return . uncurry div)
+divide = Basic (return . uncurry div)
 \end{lstlisting}
 
-All prerequisites are met now and we can start with the transformations from \texttt{Expr} to \texttt{Process () Int}, which we implement an interpreter for. It can be found in \lstref{lst:arith_transformation}: \texttt{interpret} maps expressions of the form \texttt{Val} to a basic process that simply returns a wrapped value and maps composed expressions to composed processes using the \texttt{Parallel} type constructor. When passing the resulting process to the process interpreter \texttt{runProcess}, it takes care of the parallelisation of the sub-processes of the \texttt{Parallel} nodes.
-\begin{lstlisting}[language=Haskell, caption=Transformation from \texttt{Expr} to processes., label=lst:arith_transformation, numbers=left, frame=bt, firstnumber=43]
+The transformation of expressions to processes is done using an interpreter \cite{Gamma:1995:DPE:186897} that takes an arithmetic expression and returns a process that takes an input of type unit \texttt{()} and outputs an \texttt{Int}. Expressions of kind \texttt{Val} are simply represented by the basic process \texttt{val}. Expressions of other kind, i.e. the ones representing arithmetic operations, are represented as a parallel composition of their transformed sub-expression, combined using the matching basic process for the respective arithmetic operation.
+\begin{lstlisting}[language=Haskell, caption=Transformation from arithmetic expressions to processes., label=lst:arith_transformation, numbers=left, frame=bt, firstnumber=25, basicstyle=\footnotesize\ttfamily]
 transform :: Expr -> Process () Int
 transform (Val i)   = val i
-transform (Add x y) = Parallel add      (interpret x) (interpret y)
-transform (Sub x y) = Parallel subtract (interpret x) (interpret y)
-transform (Mul x y) = Parallel multiply (interpret x) (interpret y)
-transform (Div x y) = Parallel divide   (interpret x) (interpret y)
+transform (Add x y) = Parallel add      (transform x) (transform y)
+transform (Sub x y) = Parallel subtract (transform x) (transform y)
+transform (Mul x y) = Parallel multiply (transform x) (transform y)
+transform (Div x y) = Parallel divide   (transform x) (transform y)
 \end{lstlisting}
 
-In this example we have defined a data structure that can be used to represent arithmetic expressions and implemented a conventional interpreter for this data structure. Then, we have defined a mapping from these arithmetic expressions to processes, and used the process interpreter to parallelise their interpretation. We did not have to explicitly implement parallelisation or thread management of any kind for this, but only have to make appropriate use of the process calculus to represent our computation as a composed process.
+Using \texttt{transform} and the process interpreter \texttt{runProcess}, arithmetic expressions can now be evaluated in parallel. To achieve this, it was necessary to represent arithmetic expressions as processes while preserving their semantics, which has been done by using the exact same arithmetic operators and wrapping them into processes. Most notably, it was not necessary to explicitly implement parallelisation by forking new threads and utilising synchronisation. By modelling processes to be executed in parallel, \texttt{runProcess} automatically takes care of the parallelisation.
