@@ -40,14 +40,11 @@ In contrast to the parallel operator \enquote{$||$}, the interleaving operator \
 
 We have now seen some basic combinators of \textsc{CSP} and how to use them in order to create composed processes based on primitive processes and events. We can construct processes that run in parallel and make their execution dependant on observable events. The formalism of \textsc{CSP} allows reasoning about processes and transformations on them. \textsc{CSP} comes with many more operators and combinators than the ones we have introdcued, but as already mentioned we do not intend to give a complete description.
 
-%Unfortunately in \textsc{CSP} there exists communication between processes that is implicitly represented as events. Since we want to eliminate explicit communication between processes, \textsc{CSP} is unsuitable for our purposes.
 
-\section{Application in programming}
-Current programming languages come with support for parallel and concurrent programming, either by employing a runtime system, a virtual machine or using a library. Syntactically, sequential and parallel composition as well as the choice between processes look differently in different languages, yet the underlying semantics are the same\footnote{Of course only the semantics concerning process composition. Not so the semantics regarding program evaluation.}. %This is why we don't dive into the concrete syntax of a particular programming language, but rather describe how to apply the general principle.
+\section{Programming languages}
+Most programming languages come with support for parallel and concurrent programming, either built into the language or available as some sort of extension. This makes it possible to transform the description of processes made in e.g. \textsc{CCS} or \textsc{CSP} into executable programs. This transformation is fairly straight-forward: sequential composition can be expressed by chaining together a sequence of processes, executing exactly one of them at a time in the order of composition. Parallel execution of processes can be done by executing each of the processes in a separate thread and waiting for all of them to terminate. The choice between processes can usually be expressed using \textit{if-then-else} compositions.
 
-Two processes can be combined sequentially by running one of the processes first, waiting for its termination and then running the other one. Parallel composition can be done by running processes in different threads. A choice between processes can be made using the conventional choice operator (if-then-else) from sequential programming. Descriptions made in, e.g. \textsc{CCS} can be resembled using this approach.
-
-However, in either case it is necessary to explicitly write the desired composition down. There is usually no direct way of composing processes and (re-)using them as first class values. This unfortunately results in lengthy, unmodular code. We would rather wish for a compact method, similar to the syntax of \textsc{CCS} and \textsc{CSP}, of performing process composition.
+Different programming languages take different approaches for expressing parallelism and the ideas from process calculi. E.g. \textsf{occam} shows a very close resemblance of \textsc{CSP} and different \textsf{Haskell} modules present different ways of expressing parallelism.
 
 \subsection{Occam\index{Occam}}
 The programming language \textsf{occam}\footnote{The reference manual for \textsf{occam} can be found at \url{http://www.wotug.org/occam/documentation/oc21refman.pdf}}, which first appeared in 1983, resembles the ideas of CSP closely. It incorporates direct implementations of the operations of choice between processes as well as parallel and sequential combination of processes. Furthermore it introduces named channels and both sending and receiving operations on them.
@@ -88,8 +85,32 @@ ALT
   ...
 \end{lstlisting}
 
-\subsection{Haskell}
+\subsection{Haskell\index{Haskell}}
+In \textsf{Haskell}, there are a number of different modules available for expressing concurrency, parallelism\footnote{Note that there is a difference between concurrency and parallelism: while parallelism aims at performing a computation more quickly by executing computations on different processors, concurrency is a concept to structure programs and express actions that \textbf{conceptually} happen at the same time by executing them in different threads of control. However, it is an implementation detail if these threads actually run at the same time \cite{Marlow}.} and distribution. Typically, these modules introduce a monad that comes with different operations for the expression of computations, such as sequential or parallel execution. Two of these modules are \textsf{Concurrent Haskell}\index{Concurrent Haskell} in \texttt{Control.Concurrent} for concurrency and \textsf{Parallel Haskell}\index{Parallel Haskell} in \texttt{Control.Parallel} for parallelism. A third module for distribution, \textsf{Cloud Haskell}\index{Cloud Haskell} in \texttt{Control.Distributed.Process}, is discussed later in \chpref{chp:cloud_haskell}.
 
-\subsubsection{Eval}
+\subsubsection{Concurrent Haskell\index{Concurrent Haskell}}
+\textsf{Concurrent Haskell} introduces the operation \texttt{forkIO} that creates a new lightweight thread that executes concurrently in the \texttt{IO} monad. Furthermore, a communication mechanism for threads is introduced: mutable variables, or \texttt{MVar}s. An \texttt{MVar} can either be full or empty and can be used by threads to communicate information. \texttt{MVars} can be read when they are full, information can be stored in them when they are empty. When a thread tries to read from an empty \texttt{MVar} or write to a full \texttt{MVar}, it is suspended until the \texttt{MVar} changes its state, caused by other threads executing according operations on them. This means, \texttt{MVar}s can be used for synchronisation.
 
-\subsubsection{Par}
+Assume there are operations \texttt{a}, \texttt{b}, \texttt{c} where \texttt{a} and \texttt{b} take an \texttt{MVar} and can be executed concurrently. \texttt{c} consumes the results produced by \texttt{a} and \texttt{b} and returns a result. Then, using \texttt{Concurrent Haskell}, this can be expressed as shown in \lstref{lst:example_concurrent_haskell}.
+
+\begin{lstlisting}[language=Haskell, numbers=left, frame=bt, label=lst:example_concurrent_haskell, caption={Parallel and sequential composition in \textsf{Concurrent Haskell}.}]
+main :: IO ()
+main = do
+  -- create mvars for communication and synchronisation
+  mvarA <- newEmptyMVar
+  mvarB <- newEmptyMVar
+  
+  -- run a and b in new threads
+  _ <- forkIO (a mvarA)
+  _ <- forkIO (b mvarB)
+  
+  -- wait for a and b to return
+  ra <- takeMVar mvarA
+  rb <- takeMVar mvarB
+  
+  res <- c ra rb
+  ...
+\end{lstlisting}
+
+\subsubsection{Parallel Haskell\index{Parallel Haskell}}
+The \texttt{Eval} monad introduces two operations: \texttt{rpar} and \texttt{rseq}. \texttt{rpar} is used to create a computation that can be run in parallel while \texttt{rseq} is used to create a computation that is executed sequentially.
