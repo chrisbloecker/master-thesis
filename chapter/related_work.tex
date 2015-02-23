@@ -44,7 +44,7 @@ We have now seen some basic combinators of \textsc{CSP} and how to use them in o
 \section{Programming languages}
 Most programming languages come with support for parallel and concurrent programming, either built into the language or available as some sort of extension. This makes it possible to transform the description of processes made in e.g. \textsc{CCS} or \textsc{CSP} into executable programs. This transformation is fairly straight-forward: sequential composition can be expressed by chaining together a sequence of processes, executing exactly one of them at a time in the order of composition. Parallel execution of processes can be done by executing each of the processes in a separate thread and waiting for all of them to terminate. The choice between processes can usually be expressed using \textit{if-then-else} compositions.
 
-Different programming languages take different approaches for expressing parallelism and the ideas from process calculi. E.g. \textsf{occam} shows a very close resemblance of \textsc{CSP} and different \textsf{Haskell} modules present different ways of expressing parallelism.
+%Different programming languages take different approaches for expressing parallelism and the ideas from process calculi. E.g. \textsf{occam} shows a very close resemblance of \textsc{CSP} and different \textsf{Haskell} modules present different ways of expressing parallelism.
 
 \subsection{Occam\index{Occam}}
 The programming language \textsf{occam}\footnote{The reference manual for \textsf{occam} can be found at \url{http://www.wotug.org/occam/documentation/oc21refman.pdf}}, which first appeared in 1983, resembles the ideas of CSP closely. It incorporates direct implementations of the operations of choice between processes as well as parallel and sequential combination of processes. Furthermore it introduces named channels and both sending and receiving operations on them.
@@ -91,7 +91,7 @@ In \textsf{Haskell}, there are a number of different modules available for expre
 \subsubsection{Concurrent Haskell\index{Concurrent Haskell}}
 \textsf{Concurrent Haskell} introduces the operation \texttt{forkIO} that creates a new lightweight thread that executes concurrently in the \texttt{IO} monad. Furthermore, a communication mechanism for threads is introduced: mutable variables, or \texttt{MVar}s. An \texttt{MVar} can either be full or empty and can be used by threads to communicate information. \texttt{MVars} can be read when they are full, information can be stored in them when they are empty. When a thread tries to read from an empty \texttt{MVar} or write to a full \texttt{MVar}, it is suspended until the \texttt{MVar} changes its state, caused by other threads executing according operations on them. This means, \texttt{MVar}s can be used for synchronisation.
 
-Assume there are operations \texttt{a}, \texttt{b}, \texttt{c} where \texttt{a} and \texttt{b} take an \texttt{MVar} and can be executed concurrently. \texttt{c} consumes the results produced by \texttt{a} and \texttt{b} and returns a result. Then, using \texttt{Concurrent Haskell}, this can be expressed as shown in \lstref{lst:example_concurrent_haskell}.
+Assume there are operations \texttt{a}, \texttt{b}, \texttt{c} where \texttt{a} and \texttt{b} take an \texttt{MVar} and can be executed concurrently. \texttt{c} consumes the results produced by \texttt{a} and \texttt{b} and returns a result. Using \texttt{Concurrent Haskell}, this can be expressed as shown in \lstref{lst:example_concurrent_haskell}.
 
 \begin{lstlisting}[language=Haskell, numbers=left, frame=bt, label=lst:example_concurrent_haskell, caption={Parallel and sequential composition in \textsf{Concurrent Haskell}.}]
 main :: IO ()
@@ -112,5 +112,16 @@ main = do
   ...
 \end{lstlisting}
 
+\vspace*{-1em}
 \subsubsection{Parallel Haskell\index{Parallel Haskell}}
-The \texttt{Eval} monad introduces two operations: \texttt{rpar} and \texttt{rseq}. \texttt{rpar} is used to create a computation that can be run in parallel while \texttt{rseq} is used to create a computation that is executed sequentially.
+\textsf{Parallel Haskell} introduces the \texttt{Eval} monad along with the operations \texttt{rpar}, \texttt{rseq} and \texttt{runEval}. \texttt{rpar} is used to create a parallel computation while \texttt{rseq} is used to create a computation that is executed sequentially. \texttt{runEval} is used to execute computations created with \texttt{rpar} and \texttt{rseq}. In contrast to \textsf{Concurrent Haskell}, \texttt{Parallel Haskell} doesn't need the \texttt{IO} monad, the computations in the \texttt{Eval} monad are pure.
+
+Analogously to before, assume there are function \texttt{a}, \texttt{b} and \texttt{c}. \texttt{a} and \texttt{b} can execute in parallel and \texttt{c} consumes the results produced by \texttt{a} and \texttt{b} but cannot start before both these values are available. Using \textsf{Parallel Haskell}, this can be expressed as shown in \lstref{lst:example_parallel_haskell}
+\begin{lstlisting}[language=Haskell, numbers=left, frame=bt, label=lst:example_parallel_haskell, caption={Parallel and sequential composition in \textsf{Parallel Haskell}.}]
+runEval $ do
+  ra <- rpar a
+  rb <- rpar b
+  rseq ra
+  rseq rb
+  return (c ra rb)
+\end{lstlisting}
