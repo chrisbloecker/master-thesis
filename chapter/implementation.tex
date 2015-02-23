@@ -301,7 +301,7 @@ Assume the master node is running already with a set of worker nodes connected. 
   \item The master responds to the client with the calculated solution.
 \end{enumerate}
 
-\section{Example: arithmetic expressions - hello world for interpreters\index{Example}}
+\section{Example: a parallel interpreter for arithmetic expressions\index{Example}}
 \label{chp:example}
 After discussing the process model and the interpreter that takes care of processes interpretation, we give an example of how to apply the process calculus. To do so, we develop the typical hello world program for interpreters, i.e. an interpreter\index{Interpreter} for arithmetic expressions\index{Arithmetic expression} with parallel evaluation of sub-expressions. Except for some imports of standard \textsf{Haskell} libraries, this example is self-contained. It is intentionally kept very simple and the necessity of a parallelised interpreter for arithmetic expressions is certainly not given. However, an interpreter for arithmetic expressions is fairly simple and thus well suited to illustrate how to apply the process calculus to it.
 
@@ -332,7 +332,7 @@ val :: Int -> Process () Int
 val = Basic . const . return
 \end{lstlisting}
 
-Arithmetic expressions of the form \texttt{Add}, \texttt{Sub}, \texttt{Mul} and \texttt{Div} can be represented as processes by representing their sub-expressions as processes and combining them in a \texttt{Parallel} process using an appropriate combinator.  For each of the arithmetic operations, a combinator process that resembles the semantics of the arithmetic operation used in \texttt{eval} to combine the sub-expression has to be defined. This is done by wrapping the exact same arithmetic operations into basic processes.
+Arithmetic expressions of the form \texttt{Add}, \texttt{Sub}, \texttt{Mul} and \texttt{Div} can be represented as processes by representing their sub-expressions as processes and combining them in a \texttt{Parallel} process using an appropriate combinator.  For each of the arithmetic operations, a combinator process that resembles the semantics of the arithmetic operation used in \texttt{eval} to combine the sub-expression has to be defined. This is done by uncurrying the exact same arithmetic operations and wrapping them into basic processes.
 \begin{lstlisting}[language=Haskell, caption=Basic processes for the combination of results from processes that have been executed in parallel., label=lst:arith_combinators,numbers=left, frame=bt, firstnumber=14]
 add :: Process (Int, Int) Int
 add = Basic (return . uncurry (+))
