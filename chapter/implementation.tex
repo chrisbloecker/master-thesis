@@ -197,7 +197,7 @@ type BasicProcess a b = a -> CH.Closure (CH.Process b)
 \end{lstlisting}
 
 The data type for the representation of processes remains unchanged.
-\begin{lstlisting}[language=Haskell,caption=Data type for the representation of processes.,label=fig:distributed_datatypes,numbers=left,frame=bt,firstnumber=4]
+\begin{lstlisting}[language=Haskell,caption=Data type for the representation of processes.,label=lst:distributed_datatypes,numbers=left,frame=bt,firstnumber=4]
 data Process a b where
 \end{lstlisting}
 
@@ -270,37 +270,47 @@ runProcess _ (Local p) x = do
   return res
 \end{lstlisting}
 
-The adaptations that have to be made for the remaining process types, i.e. \texttt{Choice}, \texttt{Parallel}, \texttt{Sequence}, \texttt{Repetition} and \texttt{Multilel} are minimal. They involve adding the necessary \texttt{master} parameter and adaptations specific to the \textsf{Cloud Haskell} \texttt{Process} monad, i.e. using \texttt{spawnLocal} instead of \texttt{forkIO} and lifting actions on mvars into the \texttt{Process} monad using \texttt{liftIO}. The implementation can be found in \appref{app:distributed_split_slice}.
+A problem arises in the interpretation of \texttt{Multilel} processes. Where it was possible to create auxiliary processes for the expression of \texttt{Multilel} in terms of \texttt{Parallel} and \texttt{Sequence} in the implementation based on \textsf{Concurrent Haskell}, this is not possible in \textsf{Cloud Haskell} at the moment. Processes of type \texttt{Basic} require a \textbf{specific} \texttt{SerializableDict} for the type of their output, which must be known at compile time. This prevents the use of polymorphic processes and leads to a direct implementation of the parallelisation, analogous to the implementation of \texttt{Parallel} processes. For each of the processes that should be executed in parallel, \texttt{runProcessHelper} is spawned in a new thread, receiving an mvar to take up the output of the respective process. When all processes have terminated and their outputs have been obtained from the mvars, \texttt{fold} is used to combine the results together into a single value.
+\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Multilel} processes.,label=lst:runprocess_multilel,numbers=left,frame=bt,firstnumber=13]
+runProcess master (Multilel ps fold) x = do
+  mvars <- forM ps $ \_ -> liftIO newEmptyMVar
+  mapM_ (\(proc, mvar) -> spawnLocal $ runProcessHelper master proc x mvar) (ps `zip` mvars)
+  ress  <- forM mvars $ \mvar -> liftIO . takeMVar $ mvar
+  runProcess master fold (x, ress)
+\end{lstlisting}
+
+The adaptations that have to be made for the remaining process types, i.e. \texttt{Choice}, \texttt{Parallel}, \texttt{Sequence} and \texttt{Repetition} are minimal. They involve adding the necessary \texttt{master} parameter and adaptations specific to the \textsf{Cloud Haskell} \texttt{Process} monad, i.e. using \texttt{spawnLocal} instead of \texttt{forkIO} and lifting actions on mvars into the \texttt{Process} monad using \texttt{liftIO}. The implementation can be found in \appref{app:distributed_split_slice}.
 
 
-\subsection{Handling a request}
-Now that we have taken a look at how our system is structured and how the process interpreter works, we want to take a look at what happens in the system when a client submits a request.
+%\subsection{Handling a request}
+%Now that we have taken a look at how our system is structured and how the process interpreter works, we want to take a look at what happens in the system when a client submits a request.
 
-Assume the master node is running already with a set of worker nodes connected. The client has knowledge about the master's address and the ability to directly send requests to it. \Figref{fig:request_handling} shows the behaviour of the system in the event a request is submitted by a client. Note that not all involved worker nodes are shown explicitly, but symbolically combined as \enquote{Worker}.
+%Assume the master node is running already with a set of worker nodes connected. The client has knowledge about the master's address and the ability to directly send requests to it. \Figref{fig:request_handling} shows the behaviour of the system in the event a request is submitted by a client. Note that not all involved worker nodes are shown explicitly, but symbolically combined as \enquote{Worker}.
 
-\begin{figure}[h!]
-  \centering
-  \input{img/request_handling.tex}
-  \caption{Behaviour of the system when a request is submitted by a client.}
-  \label{fig:request_handling}
-\end{figure}
+%\begin{figure}[h!]
+%  \centering
+%  \input{img/request_handling.tex}
+%  \caption{Behaviour of the system when a request is submitted by a client.}
+%  \label{fig:request_handling}
+%\end{figure}
 
-\begin{enumerate}
-  \item The client submits a request to the master.
-  \item The master replies with the assigned ticket to the client.
-  \item The master spawns a process interpreter on its local node and passes the request to it.
-  \item The interpreter asks the master for workers for the purpose of spawning processes on them.
-  \item The master replies with available workers to the interpreter. If there are no workers available, the master waits with its reply until workers are available.
-  \item The interpreter spawns processes on the workers .
-  \item Once a process on a worker has calculated its result, it sends it back to the interpreter and terminates.
-  \item The client supplies the previously received ticket number to the master, hoping the request has been processes completely.
-  \item The master tells the client that there is no response available yet.
-  \item After execution of processes on the workers, the interpreter returns them to the master for further allocation to other interpreters. Note that steps 4 to 10 can, and most likely will, happen multiple times while processing a request.
-  \item Once the interpreter has finished processing the client's request, it submits the solution to the problem to the master.
-  \item The client supplies the ticket to the master again.
-  \item The master responds to the client with the calculated solution.
-\end{enumerate}
+%\begin{enumerate}
+%  \item The client submits a request to the master.
+%  \item The master replies with the assigned ticket to the client.
+%  \item The master spawns a process interpreter on its local node and passes the request to it.
+%  \item The interpreter asks the master for workers for the purpose of spawning processes on them.
+%  \item The master replies with available workers to the interpreter. If there are no workers available, the master waits with its reply until workers are available.
+%  \item The interpreter spawns processes on the workers .
+%  \item Once a process on a worker has calculated its result, it sends it back to the interpreter and terminates.
+%  \item The client supplies the previously received ticket number to the master, hoping the request has been processes completely.
+%  \item The master tells the client that there is no response available yet.
+%  \item After execution of processes on the workers, the interpreter returns them to the master for further allocation to other interpreters. Note that steps 4 to 10 can, and most likely will, happen multiple times while processing a request.
+%  \item Once the interpreter has finished processing the client's request, it submits the solution to the problem to the master.
+%  \item The client supplies the ticket to the master again.
+%  \item The master responds to the client with the calculated solution.
+%\end{enumerate}
 
+\clearpage
 \section{Example: a parallel interpreter for arithmetic expressions\index{Example}}
 \label{chp:example}
 After discussing the process model and the interpreter that takes care of processes interpretation, we give an example of how to apply the process calculus. To do so, we develop the typical hello world program for interpreters, i.e. an interpreter\index{Interpreter} for arithmetic expressions\index{Arithmetic expression} with parallel evaluation of sub-expressions. Except for some imports of standard \textsf{Haskell} libraries, this example is self-contained. It is intentionally kept very simple and the necessity of a parallelised interpreter for arithmetic expressions is certainly not given. However, an interpreter for arithmetic expressions is fairly simple and thus well suited to illustrate how to apply the process calculus to it.
