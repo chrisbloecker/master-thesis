@@ -17,9 +17,9 @@ A round trip\index{Round trip} is a permutation\index{Permutation} of the nodes 
   \label{eqn:length_roundtrip}
   \phi \left( r_i \right) = \delta \left( \left( v_{i_n}, v_{i_1} \right) \right) + \sum_{j=1}^{n-1} \delta \left( \left( v_{i_j}, v_{i_{j+1}} \right) \right).
 \end{equation}
-Note that in order to resemble the cyclic nature of a permutation, we have to also add the length of the edge from the last node back to the first node. This is also necessary to make the path induced by the permutation a round trip.
+Note that in order to resemble the cyclic nature of a permutation, the length of the edge from the last node back to the first node must not be forgotten. This is also necessary to make the path induced by the permutation a round trip.
 
-The \textsc{TSP} is considered to be a computationally hard optimisation\index{Optimisation problem} problem and belongs to the class of $\mathcal{NP}$-hard problems \cite{Garey:1979:CIG:578533}. This means that there is no known efficient algorithm\index{Algorithm} that finds the solution to an arbitrary instance of the \textsc{TSP}. Furthermore, it is widely believed that no such algorithm can exist at all. Except for some special cases where there are constraints put on the structure of the graph, the only way to find the optimal solution is to check \textbf{all} possible solutions for optimality \cite{}. Since for an arbitrary graph the number of possible solutions is exponential in its number of nodes, the approach of exploring \textbf{every} possible solution is impractical even for graphs with reasonably few nodes.
+The \textsc{TSP} is considered to be a computationally hard optimisation\index{Optimisation problem} problem and belongs to the class of $\mathcal{NP}$-hard problems \cite{Garey:1979:CIG:578533}. This means that there is no known efficient algorithm\index{Algorithm} that finds the solution to an arbitrary instance of the \textsc{TSP}. Furthermore, it is widely believed that no such algorithm can exist at all. Except for some special cases where there are constraints put on the structure of the graph, the only way to find the optimal solution is to check \textbf{all} possible solutions for optimality. Since for an arbitrary graph the number of possible solutions is exponential in its number of nodes, the approach of exploring \textbf{every} possible solution is impractical even for graphs with reasonably few nodes. For an extended discussion of the \textsc{TSP}, see \cite{shmoys1985traveling}.
 
 A real world application of the \textsc{TSP} is just as the name suggests a scenario where there is a travelling salesman who has to visit a number of houses each exactly once to sell his goods and then return home. It is naturally in his interest to choose the shortest way in order to minimise travelling costs and/or time. Another application is e.g. the problem of determining the drilling order for holes in mining operations in order to minimise the moving time for the drill.
 
@@ -27,160 +27,175 @@ A real world application of the \textsc{TSP} is just as the name suggests a scen
 \label{chp:meta_heuristics}
 Meta-heuristics\footnote{Heuristic, from Greek $E\nu\rho\iota\sigma\kappa\omega$: \enquote{find} or \enquote{discover}.} are an approach to tackle the problem that arises with huge sets of possible solutions like in the case of the \textsc{TSP}. The idea of meta-heuristics is to explore the set of possible solutions in a more intelligent way than checking \textbf{every} possible solution for optimality. Meta-heuristics try to make an \enquote{intelligent guess} about which solution might be close to optimal and can be based on different, problem-specific criteria. As a direct consequence of \enquote{intelligent guessing}, it is very well possible to miss the optimal solution.
 
-One thing different meta-heuristics have in common is a solution finding principle called \textbf{local search}\index{Local search}. In \textbf{local search}, first an initial solution candidate\index{Candidate} is generated using a suitable construction algorithm\index{Algorithm}. The meta-heuristic aims to improve this candidate iteratively: based on defined criteria, modifications are made to the solution candidate in the hope of finding a closer to optimal solution. The modifications yield a set of solutions similar to the solution candidate, called its \textbf{local neighbourhood}\index{Neighbourhood}. From the local neighbourhood, the closest to optimal solution is chosen to replace the previous solution candidate.
+One thing different meta-heuristics have in common is a solution finding principle called \textbf{local search}\index{Local search}. In \textbf{local search}, first an initial solution candidate\index{Candidate} is generated using a suitable construction algorithm\index{Algorithm}. The meta-heuristic aims to improve this candidate iteratively: based on defined criteria, modifications are made to the solution candidate in the hope of finding a closer to optimal solution. The modifications yield a set of solutions similar to the solution candidate, called its \textbf{local neighbourhood}\index{Neighbourhood}. From the local neighbourhood, the closest to optimal solution is chosen to replace the previous solution candidate \cite{Dorigo:2004:ACO:975277}.
 
-When applying this approach, it might happen that in the local neighbourhood of a solution candidate, there is no closer to optimal solution than the candidate itself. In this case, the candidate is considered to be a so called \textbf{local optimum}. A local optimum\index{Optimum!local} might be the global optimum\index{Optimum!global}, however in general this is highly unlikely. Therefore, if the meta-heuristic runs into such a situation, it must allow to escape local optima and execute steps towards farther from optimal solutions. As a direct consequence, the meta-heuristic must have a way to prevent from directly running back into local optima as this may very well happen in the step after proceeding towards a farther from optimal solution \cite{}. A common approach to achieve this is the use of a so called \textbf{tabu list}\index{Tabu list} a tabu list keeps track of the most recently visited solutions candidates \cite{}. As long as a candidate is in the tabu list, it must not be chosen again. Unfortunately this does not entirely eliminate the possibility of running into the same solution again. The solution space might have cycles of higher length than the length of the tabu list, allowing to go back to an undesirable solution.
+When applying this approach, it might happen that in the local neighbourhood of a solution candidate, there is no closer to optimal solution than the candidate itself. In this case, the candidate is considered to be a so called \textbf{local optimum}. A local optimum\index{Optimum!local} might be the global optimum\index{Optimum!global}, however in general this is highly unlikely. Therefore, if the meta-heuristic runs into such a situation, it must allow to escape local optima and execute steps towards farther from optimal solutions. As a direct consequence, the meta-heuristic must have a way to prevent from directly running back into local optima as this may very well happen in the step after proceeding towards a farther from optimal solution. A common approach to achieve this is the use of a so called \textbf{tabu list}\index{Tabu list} a tabu list keeps track of the most recently visited solutions candidates \cite{Dorigo:2004:ACO:975277}. As long as a candidate is in the tabu list, it must not be chosen again. Unfortunately this does not entirely eliminate the possibility of running into the same solution again. The solution space might have cycles of higher length than the length of the tabu list, allowing to go back to an undesirable solution.
 
 The term meta-heuristic is chosen because it involves heuristics to guess solutions and is applicable to a wide field of problems. We thereby have a recipe of how to build a heuristic algorithm to solve arbitrary problems, as long as we can define the local neighbourhood of a solution.
 
 \section{Artificial ant systems\index{Ant system}}
 \label{chp:ant_system}
-Artificial ant systems are a meta-heuristic\index{Meta-heuristic} approach that can be applied to a big variety of computationally hard optimisation problems that can be represented as a graph\index{Graph}, like the \textsc{TSP}. An overview about different types of ant systems and example applications can be found in \cite{Dorigo:2004:ACO:975277}. Here, we only briefly discuss one form of ant systems and use the \textsc{Hive} process algebra to implement a prototype\index{Prototype} of an ant system that finds approximate solutions for instances of the \textsc{TSP}\index{TSP}. Without further mentioning, \cite{Dorigo:2004:ACO:975277} serves us as a reference throughout this chapter.
+Artificial ant systems are a meta-heuristic\index{Meta-heuristic} approach that can be applied to a big variety of computationally hard optimisation problems that can be represented as a graph\index{Graph}, like the \textsc{TSP}. An overview about different types of ant systems and example applications can be found in \cite{Dorigo:2004:ACO:975277}. Here, we only briefly discuss one form of ant systems and use the developed process calculus to implement a prototype\index{Prototype} of an ant system that finds approximate solutions for instances of the \textsc{TSP}\index{TSP}. Without further mentioning, \cite{Dorigo:2004:ACO:975277} serves us as a reference throughout this chapter.
 
 Artificial ant systems are inspired by the swarm behaviour of ants from ant colonies in nature. When in search for new food sources, natural ants explore their environment by performing random walks. Once they discover a new food source, they return to their colony and mark the way to the food source with so called \textit{pheromones}\index{Pheromone}. These pheromones can be sensed by other ants to guide their way to the food source. When an ant encounters a pheromone trail, it makes a decision between following it or continuing exploring its environment randomly. The probability of following a trail gets higher as it gets covered more densely with pheromones. If the ant decides to follow the pheromone trail, it continues up to the food source, picks up some food and carries it back to its colony. On the way back, it reinforces the pheromone trail by depositing additional pheromones. Over time, more and more ants follow the pheromone trail and an ant trail emerges. A natural phenomenon, called \textit{evaporation}\index{Evaporation}, counters the built-up of trails: a small fraction of pheromones disappears continuously, so the trail vanishes eventually if there are no ants left reinforcing it.
 
-Artificial ant systems resemble the described situation from nature and employ a graph\index{Graph} to do so. Depending on the problem at hand, one node of the graph is selected to represent the ant colony. At this special node, ants are generated to perform an exploration of the graph and construct a solution to the problem represented by the graph. In the case of the \textsc{TSP}\index{TSP}, a valid solution is one that represents a permutation of the graph's nodes and it does not matter which node is selected to represent the colony since every node has to appear in the solution exactly once. An ant starts its round trip through the graph at the colony and then selects one of the unvisited nodes and proceeds to it. It continues doing so until it has visited all of the nodes, then it returns back to the colony.
+Artificial ant systems resemble the described situation from nature and employ a graph\index{Graph} to do so. Depending on the problem at hand, one node of the graph is selected to represent the ant colony. At this special node, ants are generated to perform an exploration of the graph and construct a solution to the problem represented by the graph. In case of the \textsc{TSP}\index{TSP}, a valid solution is one that represents a permutation of the graph's nodes and it does not matter which node is selected to represent the colony since every node has to appear in the solution exactly once. An ant starts its round trip through the graph at the colony and then selects one of the unvisited nodes and proceeds to it. It continues doing so until it has visited all of the nodes, then it returns back to the colony.
 
 When construction a round trip for a graph $G = \left( V, E, \delta \right)$, ants are guided by two different values. On the one hand, they use a heuristic value, based on the value of an edge to estimate its desirability: for an edge $e \in E$, its heuristic value is given by
 \begin{equation}
   \label{eqn:eta}
   \eta \left( e \right) = \frac{1}{\delta \left( e \right)}.
 \end{equation}
-An edge with a higher value, i.e. a longer edge, will have a lower heuristic value than an edge with a low value, i.e. a short edge. For ants, higher heuristic values are desirable. On the other hand, pheromone trails are used. In the beginning, an initial pheromone concentration $\tau_0$ is deposited on every edge of the graph. As the ant system preforms its work, the pheromone values will be updated and changed over time.
+An edge with a higher value, i.e. a longer edge, has a lower heuristic value than an edge with a low value, i.e. a short edge. For ants, higher heuristic values are desirable. On the other hand, pheromone trails are used. In the beginning, an initial pheromone concentration $\tau_0$ is deposited on every edge of the graph. As the ant system preforms its work, the pheromone values are updated and changed over time.
 
 In each step, an ant picks the next node to visit non-deterministically based on a visiting probability obtained from a combination of heuristic and pheromone values. Let $N \left( i \right)$ be the set of unvisited neighbour nodes for an ant that is currently at node $i$. The probability of visiting node $j$ next is then
 \begin{equation}
   \label{eqn:probability}
   p_j = \frac{\tau_{i,j}^\alpha \eta_{i,j}^\beta}{\sum_{j \in N} \tau_{i,j}^\alpha \eta_{i,j}^\beta}.
 \end{equation}
-where $\alpha$ and $\beta$ are values to weigh the influence of $\tau$ and $\eta$. $\tau_{i,j}$ and $\eta_{i,j}$ are just a short hand notation for the pheromone concentration on the edge between nodes $i$ and $j$, and the heuristic value of that edge respectively. A random value $r \in \left[0, 1 \right]$ is then generated to choose a node. However, to save runtime, we apply the approach from \cite{Bloecker} and only calculate the nominators. Then we sum them up and generate a random value $r' \in \left[0, \sum_{j \in N} p_j \right]$. This leaves the result unchanged.
+where $\alpha$ and $\beta$ are values to weigh the influence of $\tau$ and $\eta$. $\tau_{i,j}$ and $\eta_{i,j}$ are just a short hand notation for the pheromone concentration on the edge between nodes $i$ and $j$, and the heuristic value of that edge, respectively. A random value $r \in \left[0, 1 \right]$ is generated to choose a node. However, to save runtime, the approach from \cite{Bloecker} is applied and only the nominators from \eqnref{eqn:probability} are calculated. Then, instead of generating a random value $r \in \left[0, 1 \right]$, a value $r' \in \left[0, \sum_{j \in N} p_j \right]$ is generated for the selection of the next node. The result is left unchanged by this modification.
 
 As a direct consequence of how ants construct their way through the graph, they need a complete graph to operate on, otherwise they might run into situations where they get stuck in one node because there are no more reachable, unvisited nodes left from where they are. Fortunately, every graph can be extended to be a complete graph without altering the optimal solution to the \textsc{TSP}: Let $G = \left( V, E, \delta \right)$ be a graph. For every edge $\overline{e}$ that does not exist in the graph, i.e. $\overline{e} \in \left( V \times V \right) \setminus E$, we introduce a new edge and assign a suitably large value $\delta \left( \overline{e} \right)$ to it, e.g. $\delta \left( \overline{e} \right) = 1 + \sum_{e \in E} \delta \left( e \right)$. We make sure that none of the added edges can possibly be part of an optimal solution by assigning a value to them that is guaranteed to be higher than the value of the optimal solution. For other problems, the process of adapting the graph to a suitable form may look differently.
 
 When all ants have finished the construction of a round trip, each of them deposits new pheromones on all the edges it has used for the construction of its solution. The longer the round trip is, the less desirable it is and hence, the less pheromones should be added by that ant. Let $s_i$ be the solution candidate, i.e. the round trip, that has been constructed by ant $i$ and let $c_s$ be its costs, induced by $\delta$ and summation over the used edges in $s_i$. Then ant $i$ is allowed to deposit additional pheromones of $\tau_i^+ = \frac{1}{c}$ on every used edge and $\tau_i^+ = 0$ on unused edges. Note that there are various other ways to handle pheromone updates, many of which can be found in \cite{Dorigo:2004:ACO:975277}.
 
-After ants have deposited new pheromones, evaporation takes place on all edges. An evaporation factor, $\rho$, specifies which fraction of the pheromones survives evaporation:
+After ants have deposited new pheromones, evaporation takes place on all edges. An evaporation factor $\rho$ specifies which fraction of the pheromones survives evaporation:
 \begin{equation}
   \label{eqn:evaporation}
   \tau_{i,j} \leftarrow \left( 1 - \tau \right) \tau_{i,j}.
 \end{equation}
-However, \cite{Bloecker} point out that in some cases evaporation might have stronger effects than deposition of new pheromones. This would be the case if solutions with high values are involved, which is not a rare case in real world scenarios. If the value $c_i$ of a solution $i$ is high, then the value of new pheromones, $\frac{1}{c_i}$ is low and possibly close to $0$, which might practically be effectless. To compensate for that, \cite{Bloecker} suggest to use a value of $\tau_i^+ = \frac{c_{best}}{c_i}$ instead, where $c_{best}$ is the value of the best solution found so far, which has to be kept track of. This way, additional pheromones for solutions that have a value close to the best known solution, will have a value close to 1.
+However, \cite{Bloecker} point out that in some cases evaporation might have stronger effects than deposition of new pheromones. This is the case if solutions with high values are involved, which is not a rare case in real world scenarios. If the value $c_i$ of a solution $i$ is high, then the value of new pheromones, $\frac{1}{c_i}$ is low and possibly close to $0$, which might practically be effectless. To compensate for that, \cite{Bloecker} suggest to use a value of $\tau_i^+ = \frac{c_{best}}{c_i}$ instead, where $c_{best}$ is the value of the best solution found so far, which has to be kept track of. This way, additional pheromones for solutions that have a value close to the best known solution have a value close to 1.
 
 Ant systems perform their work in three phases:
 \begin{enumerate}
   \item initialisation \\
-    initial pheromones are deposited on all edges of the graph
+    initial pheromones of concentration $\tau_0$ are deposited on all edges of the graph
+  \vspace*{-0.5em}
   \item construction \\
-    a predefined number of ants is created, each of which constructs a solution candidate
+    a predefined number of ants is created, each of which constructs a solution candidate \hspace*{-1em}
+  \vspace*{-0.5em}
   \item update \\
     ants deposit new pheromones, evaporation takes place
 \end{enumerate}
-Phase (1) takes place exactly once. Phases (2) and (3) take place in turn until either a predefined maximum execution time is reached or a solution of sufficient quality has been found. Other criteria to abort the computation can be applied as well.
+Phase (1) takes place exactly once. Phases (2) and (3) take place in turn until either a predefined maximum execution time is reached or a solution of sufficient quality has been found. Other criteria to terminate the computation can be applied as well.
 
 \section{A prototype of a distributed ant system}
 \label{chp:ant_system_implementation}
 Having introduced the principles of ant systems, we use the our process calculus to implement a distributed ant system. Most notably, we do so without specifying any explicit communication between processes, illustrating that the process calculus fulfils its purpose.
 
-We begin by modelling the configuration for the ant system, including the previously mentioned necessary parameters, the data model for a configuration can be found in \lstref{lst:ant_conf}. The actual problem input is given by \texttt{graph}, \texttt{ants} specifies how many ants should be concurrently used to explore solutions, \texttt{alpha} and \texttt{beta} are used by the ants when exploring solutions and \texttt{rho} is the evaporation factor (cf. \chpref{chp:ant_system}). The configuration also includes the current pheromones as well as the best solution to the problem that has been found so far, both kept up to date by the ant system. Furthermore, it must be possible to send the configuration over the network to ants running on other nodes in a distributed system. Therefore we need to add instances for the type classes \texttt{Generic}, \texttt{Typeable} and \texttt{Binary}.
+The model for the configuration of the ant system, including the previously mentioned necessary parameters can be found in \lstref{lst:ant_conf}. The actual problem input is given by \texttt{graph}, \texttt{iter} specifies how many cycles should be performed by the ant system, \texttt{alpha} and \texttt{beta} are used by the ants when exploring solutions and \texttt{rho} is the evaporation factor (cf. \chpref{chp:ant_system}). The configuration also includes the current pheromones as well as the best solution to the problem that has been found so far as well as the solution's value, all three kept up to date by the ant system. Furthermore, it must be possible to send the configuration over the network to ants running on other nodes in a distributed system. Therefore instances for the type classes \texttt{Generic}, \texttt{Typeable} and \texttt{Binary} are included.
 
-\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,label=lst:ant_conf,caption=Configuration for the ant system.]
+\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,label=lst:ant_conf,caption=Imports and configuration for the ant system., basicstyle=\footnotesize\ttfamily]
+import Process
+import Graph
+import Pheromones
+
 type Solution = (Path, Int)
 
-data Conf = Conf { graph      :: !(Graph Int)
-                 , pheromones :: !Pheromones
-                 , solution   :: !Solution
-                 , ants       :: Int
-                 , iter       :: Int
-                 , alpha      :: Double
-                 , beta       :: Double
-                 , rho        :: Double
-                 }
+data Configuration = Configuration { graph      :: !(Graph Int)
+                                   , pheromones :: !Pheromones
+                                   , solution   :: !Solution
+                                   , iter       :: Int
+                                   , alpha      :: Double
+                                   , beta       :: Double
+                                   , rho        :: Double
+                                   }
   deriving (Generic, Typeable)
 
-instance Binary Conf where
+instance Binary Configuration where
 \end{lstlisting}
 
-Next we define the basic processes which we wrap into processes later. The basic processes can be found in \lstref{lst:ant_basic}, but note that we don't show the implementation details of these processes here, they can be found in \appref{app:ant_system_processes}. For now, only the existence and how we work with them is important.
+Next, the basic processes, which are wrapped into processes later, are defined. The basic processes can be found in \lstref{lst:ant_basic}, their implementation details are not shown here, but can be found in \appref{app:ant_system_processes}. For now, only the existence of these processes and what they do is important.
 
-\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,firstnumber=12,label=lst:ant_basic,caption=Basic processes.]
-ant :: Conf -> BasicProcess Solution
-ant conf = ...
-
-combinePaths :: (Conf, [AntSolution]) -> BasicProcess Conf
-combinePaths (conf, ps) = ...
-
-evaporations :: Configuration -> BasicProcess Configuration
-evaporations (conf@Configuration {..}) = ...
-
-extractSolution :: Conf -> BasicProcess Solution
-extractSolution = return . solution
+\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,label=lst:ant_basic,caption=Signatures of basic processes.,firstnumber=18]
+ant             :: Configuration -> CH.Process AntSolution
+combinePaths    :: (Configuration, [AntSolution])
+                -> CH.Process Configuration
+evaporations    :: Configuration -> CH.Process Configuration
+iter            :: Configuration -> CH.Process Configuration
+continueIter    :: Configuration -> CH.Process Bool
+extractSolution :: Configuration -> CH.Process AntSolution
 \end{lstlisting}
 
-The basic process \texttt{ant} resembles the work of an ant that is supplied with a configuration and returns exactly one solution candidate for the presented problem.
+\texttt{ant} resembles the work of an ant that is supplied with a configuration and returns exactly one solution candidate for the presented problem.
 
-The basic process \texttt{combinePaths} receives a configuration and a list of candidate solutions and returns a new configuration. To do so, it takes list of solution candidates and updates the pheromone concentrations for the graph stored in the configuration and the best known solution so far.
+\texttt{combinePaths} receives a configuration and a list of candidate solutions and returns a new configuration. To do so, it takes list of solution candidates and updates the pheromone concentrations for the graph stored in the configuration and the best known solution so far.
 
-The basic process \texttt{evaporations} takes the configuration and updates the pheromone values by reducing the pheromone concentration on every edge according to the evaporation parameter \texttt{rho}.
+\texttt{evaporations} takes the configuration and updates the pheromone values by reducing the pheromone concentration on every edge according to the evaporation parameter \texttt{rho}.
 
-The basic process \texttt{extractSolution} is fairly simple and doesn't do anything else than extracting the best known solution from the configuration it is supplied with.
+\texttt{iter} decreses the value of \texttt{iter} in the configuration by $1$, signalling that one less cycle should be performed by the ant system.
 
-As discussed in \chpref{chp:cloud_haskell}, we need to provide a \texttt{SerializableDict} for every data type that we want to be able to send over the network to another process. In this case, we need to do this for \texttt{Solution} and \texttt{Conf} since values of these types are returned by remotely run processes. As a brief reminder: a \texttt{SerializableDict} is basically just an explicit type tag and doesn't involve anything more than using a type constructor, as can be seen in \lstref{lst:ant_dicts}.
+\texttt{continueIter} receives a configuration and determines if the ant system should perform another cycle, depending on the value of \texttt{iter} in the configuration. If another cycle should be performed, it \texttt{continueIter} returns \texttt{True} and \texttt{False} otherwise.
 
-\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,firstnumber=20,label=lst:ant_dicts,caption=Dictionaries for serialisation.]
-solutionDict :: SerializableDict Solution
-solutionDict = SerializableDict
+\texttt{extractSolution} is fairly simple and doesn't do anything else than extracting the best known solution and its associated length from the configuration it is supplied with.
 
-confDict :: SerializableDict Conf
-confDict = SerializableDict
+As discussed in \chpref{chp:cloud_haskell}, a \texttt{SerializableDict} for every data type that should be send over the network to another process has to be provided. This is the case for \texttt{AntSolution}, \texttt{Configuration} and \texttt{Bool} since values of these types are returned by the basic processes. As a brief reminder: a \texttt{SerializableDict} is basically just an explicit type tag and doesn't involve anything more than using a type constructor, as can be seen in \lstref{lst:ant_dicts}.
+
+\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,label=lst:ant_dicts,caption=Dictionaries for data serialisation.,firstnumber=25]
+boolDict :: SerializableDict Bool
+boolDict = SerializableDict
+
+antSolutionDict :: SerializableDict AntSolution
+antSolutionDict = SerializableDict
+
+configurationDict :: SerializableDict Configuration
+configurationDict = SerializableDict
 \end{lstlisting}
 
-In order to make the basic \textsf{Cloud Haskell} processes and the dictionaries remotely usable, we have to pass their names to \texttt{remotable}, as shown in \lstref{lst:ant_remotable}. \texttt{remotable} creates the closures for the given functions, their decoders and meta information and adds the information to a table of functions that can be used remotely. More specifically this is a table of static code pointers to functions that are known at compile time, which explains the need for top level names.
+In order to make the basic \textsf{Cloud Haskell} processes and the dictionaries remotely usable, their names have to be passed to \texttt{remotable}, as shown in \lstref{lst:ant_remotable}. \texttt{remotable} creates the closures for the given functions, their decoders and meta information and adds the information to a table of functions that can be used remotely. More specifically this is a table of static code pointers to functions that are known at compile time, which explains the need for top level names.
 
-\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,firstnumber=25,label=lst:ant_remotable,caption=Making processes and dictionaries remotable.]
+\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,firstnumber=33,label=lst:ant_remotable,caption=Making processes and dictionaries remotable.]
 remotable [ 'ant
           , 'combinePaths
           , 'evaporations
+          , 'iter
+          , 'continueIter
           , 'extractSolution
-          , 'solutionDict
-          , 'confDict
+          , 'boolDict
+          , 'antSolutionDict
+          , 'configurationDict
           ]
 \end{lstlisting}
 
-We can now take the basic processes and wrap them into processes using the wrappers for basic processes \texttt{Const} and \texttt{Simple}. However we have no need to use \texttt{Const} here. The resulting processes processes can be found in \lstref{lst:ant_hive}.
+Now the basic processes can be wrapped into processes using the \texttt{Basic} constructor. For that, \textsf{Template Haskell} is used to generate the necessary static values of the \texttt{SerializableDict}s and the function closures. As modelled in \chpref{chp:distributed_model}, the input and output type of the respective basic process determine the signature of the resulting process and the type of the necessary \texttt{SerliazableDict}. The resulting processes are shown in \lstref{lst:ant_hive}.
 
-\texttt{antP} defines a process that takes a configuration and returns a \texttt{Solution}, which is immediately obvious from its signature. To create this process, we take use \textsf{Template Haskell} to generate a closure from the \texttt{ant} process and a static value of the according dictionary and wrap them using the \texttt{Simple} constructor. To create the \texttt{combinePathsP} and \texttt{extractSolutionP} processes, we proceed analogously: we use \textsf{Template Haskell} to generate the closures and matching dictionaries and wrap them using the \texttt{Simple} constructor from our process calculus. Note that we explicitly model the type of the input and output values of processes in the function signatures.
+\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,firstnumber=43,label=lst:ant_hive,caption={Processes, built up from previously defined basic processes.}, basicstyle=\footnotesize\ttfamily]
+antP :: Process Configuration AntSolution
+antP = Basic $(mkStatic  'antSolutionDict) 
+             $(mkClosure 'ant)
 
-\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,firstnumber=31,label=lst:ant_hive,caption={Processes, built up from previously defined basic processes.}]
-antP :: Process Conf Solution
-antP = Simple $(mkStatic 'pathDict)
-              $(mkClosure 'ant)
+combinePathsP :: Process (Configuration, [AntSolution]) Configuration
+combinePathsP = Basic $(mkStatic  'configurationDict)
+                      $(mkClosure 'combinePaths)
 
-combinePathsP :: Process (Conf, [Solution]) Conf
-combinePathsP = Simple $(mkStatic 'confDict)
-                       $(mkClosure 'combinePaths)
+evaporationP :: Process Configuration Configuration
+evaporationP = Basic $(mkStatic  'configurationDict)
+                     $(mkClosure 'evaporations)
 
-evaporationP :: Process Conf Conf
-evaporationP = Simple $(mkStatic 'confDict)
-                      $(mkClosure 'evaporations)
+iterP :: Process Configuration Configuration
+iterP = Basic $(mkStatic  'configurationDict)
+              $(mkClosure 'iter)
 
-extractSolutionP :: Process Conf Solution
-extractSolutionP = Simple $(mkStatic 'pathDict)
-                          $(mkClosure 'extractSolution)
+continueIterP :: Predicate Configuration
+continueIterP = Basic $(mkStatic  'boolDict)
+                      $(mkClosure 'continueIter)
+
+extractSolutionP :: Process Configuration AntSolution
+extractSolutionP = Basic $(mkStatic  'antSolutionDict)
+                         $(mkClosure 'extractSolution)
 \end{lstlisting}
 
-Now we have all the pieces prepared we need to put together an ant system: the processes (\lstref{lst:ant_hive}), the data model (\lstref{lst:ant_conf}) and the process combinators. We implement a function \texttt{interpret} that takes a configuration for an ant system and generates a process structure from it that performs the work of the ant system when executed. The implementation of \texttt{interpret} can be found in \lstref{lst:ant_system_complete}.
+Now all the necessary pieces to put together an ant system are prepared: the processes (\lstref{lst:ant_hive}), the data model (\lstref{lst:ant_conf}) and the process combinators from the developed process calculus. The function \texttt{interpret} takes an integer that defines how many ants should be used in the ant system and returns a processes that, when executed using the process interpreter \texttt{runProcess}, behaves like an ant system.
 
-\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,firstnumber=42,label=lst:ant_system_complete,caption=Transformation of a configuration for an ant system into a process hierarchy.]
-interpret :: Conf -> Process Conf Path
-interpret conf@Conf{..} = do
-  let antRuns   = Multilel (replicate ants antP) conf (Local combinePathsP)
-      innerProc = Sequence antRuns (Local evaporationP)
-      loop      = Loop conf 0 (<iter) id (\_ i -> i+1) innerProc
-  Sequence loop (Local extractSolutionP)
+\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,firstnumber=66,label=lst:ant_system_complete,caption=Transformation of a configuration for an ant system into a process hierarchy., basicstyle=\footnotesize\ttfamily]
+interpret :: Int -> Process Configuration AntSolution
+interpret ants =
+  let antRuns = Multilel (replicate ants antP) (Local combinePathsP)
+      innerP  = antRuns `Sequence` Local (evaporationP `Sequence` iterP)
+      cycles  = Repetition continueIterP innerP
+  in cycles `Sequence` Local extractSolutionP
 \end{lstlisting}
 
-Conceptually, the ant system we build into a process does its work by running multiple ants in a loop and keeping track of the best solution they find. After a predefined maximum number of iterations, the loop terminates and the found solution is returned. Exactly this structure can be seen in the composition of \texttt{loop} and \texttt{extractSolutionP} using the \texttt{Sequence} combinator in last line of \lstref{lst:ant_system_complete}.  As \lstref{lst:ant_system_complete} shows, \texttt{loop} is a loop process, created using \texttt{Loop}, that contains an inner process, i.e. \texttt{innerProc}, which in turn is a composition using the \texttt{Multilel} combinator of basic ant processes \texttt{antP}.
+The ant system constructed by \texttt{interpret}: it consists of a sequential composition of all the cycles that have to be executed, namely \texttt{cycles}, and a process that extracts the solution in the end, namely \texttt{extractSolutionP}. \texttt{cycles} is created using the \texttt{Repetition} constructor and is guarded by the \texttt{continueIterP} predicate. As long as there are cycles left that should be executed, the process \texttt{innerP} is executed. \texttt{innerP} is the sequential composition of a set of \texttt{antP} processes than all run in parallel, the evaporation process \texttt{evaporationP} and the process \texttt{iterP} that decreases the number of cycles that are left to be executed by 1. Parallel execution of the ant processes is achieved by composing them using the \texttt{Multilel} constructor and combining their results using the \texttt{combinePathsP} process. \texttt{interpret} takes one parameter, \texttt{ants}, that specifies how many ants should be used in the ant system. All other information, including the number of cycles to be executed, the input graph and the pheromones are provided later in form of a configuration when the ant system is executed using the process interpreter \texttt{runProcess}.
 
-To create a set of concurrently running ant processes for the inside of the loop, we simply create a list containing the desired number of processes that should run in parallel. Then we wrap them into a \texttt{Multilel} process together with an initial fold value, i.e. \texttt{conf}, and a process to combine the solutions that from the ants. Since the overhead for combining the solutions on a remote node would most likely be very high, we wrap the combinator process \texttt{combinePathsP} into a \texttt{Local} process so the process interpreter will carry out this computation locally. Note that instead of \texttt{Multilel}, we could also have used a hierarchy of \texttt{Parallel} processes to achieve the same semantics. The runtime however would be significantly worse due to the way the interpretation of \texttt{Parallel} processes is implemented. In a hierarchy of \texttt{Parallel} processes, we would have to wait for the processes furthest down in the hierarchy to terminate and run the combinator process multiple times on the way back up to the root, once for every \texttt{Parallel} node.
-
-The loop is created by wrapping the process that describes the parallel execution of the ant processes using the \texttt{Loop} decorator and adding control information about when to terminate the loop. In this case, we want to terminate the loop after a predefined maximum number of iterations: we initialise a counter with value \texttt{0} and provide a function that increases this value after each iteration by $1$, i.e. \texttt{\textbackslash\_ i -> i+1}. Furthermore we need to provide a value that defines the result of the loop in case it is executed $0$ times, i.e. \texttt{conf}, and a function that transforms the result of the process inside the loop back into a form that can be used as the input value for the next iteration, i.e. \texttt{id}.
+As we can see, it is possible to describe an ant system without programming parallelisation and communication between processes explicitly. The developed process calculus is employed to model the structure and interplay of processes and parallelisation as well as communication between processes is added automatically by the process interpreter \texttt{runProcess}.
