@@ -11,7 +11,7 @@ In \textsc{CCS}, processes are composed of actions $\mathcal{A}$ and processes $
 
 Processes in \textsc{CCS} are defined inductively. The empty process $\emptyset$ is the process that does nothing. Processes can be prefixed with an action to obtain a new process. $a.P$ describes a process that can execute action $a$ before it continues as process $P$. We can use the empty process $\emptyset$ together with the prefixing of actions \enquote{.} to build a process that consists of an arbitrary long but finite sequence of actions.
 
-The composition of two processes can be made with the choice operator \enquote{+} and the parallel operator \enquote{|}. $P + Q$ describes a process that proceeds as either $P$ or $Q$. With $P \,|\, Q$ we can describe that processes $P$ and $Q$ exist and the same time and execute concurrently. Both for \enquote{+} and \enquote{|} the laws of associativity and commutativity hold as shown in the following equations:
+The composition of two processes can be made with the choice operator \enquote{+} and the parallel operator \enquote{|}. $P + Q$ describes a process that proceeds as either $P$ or $Q$. With $P \,|\, Q$ we can describe that processes $P$ and $Q$ exist at the same time and execute concurrently. Both for \enquote{+} and \enquote{|} the laws of associativity and commutativity hold as shown in the following equations:
 \begin{eqnarray*}
   P + \left( Q + R \right) & = & \left( P + Q \right) + R \\
   P \,|\, \left( Q \,|\, R \right) & = & \left( P \,|\, Q \right) \,|\, R \\
@@ -32,19 +32,19 @@ In \textsc{CSP}, processes are composed of two types of primitives: sequential p
 
 The prefix combinator \enquote{$\to$} takes an event $a$ and a process $P$. $\left( a \to P \right)$ creates a new process that waits until it observes $a$ and then behaves like $P$. A process that repeatedly waits to observe $a$ and then behaves like $P$ can be described using recursion: $P = \left( a \to P \right)$.
 
-With the choice operator \enquote{$|$} we can construct a process that allows two flows of control. The process $\left( a \to P \,|\, b \to Q \right)$ waits until it either observes $a$ and then behaves like $P$ or it waits until it observes $b$ and then behaves like $Q$. Note that the prefix operator binds stronger than the choice operator and that the choice operator has commutative property.
+With the choice operator \enquote{$|$} we can construct a process that allows two flows of control. The process $\left( a \to P \,|\, b \to Q \right)$ waits until it either observes $a$ and then behaves like $P$ or observes $b$ and then behaves like $Q$. Note that the prefix operator binds stronger than the choice operator and that the choice operator has commutative property.
 
-The parallel operator \enquote{$||$} allows us to put processes together such that they run parallel. The process obtained by $\left( P \,||\, Q \right)$ waits for an event that both $P$ and $Q$ can observe and then behaves like $P$ and $Q$ concurrently\footnote{Note there is a difference between concurrency and nondeterminism.}. Let $P = \left( a \to P \,|\, b \to a \to P \right)$ and $Q = a \to Q$ then $\left( P \,||\, Q \right) = \left( a \to P \,||\, a \to Q \right)$, since $Q$ cannot observe $b$ and thus the second choice from $P$ has to be omitted.
+The parallel operator \enquote{$||$} allows us to put processes together such that they run in parallel. The process obtained by $\left( P \,||\, Q \right)$ waits for an event that both $P$ and $Q$ can observe and then behaves like $P$ and $Q$ concurrently\footnote{Note there is a difference between concurrency and nondeterminism.}. Let $P = \left( a \to P \,|\, b \to a \to P \right)$ and $Q = \left( a \to Q \right)$ then $\left( P \,||\, Q \right) = \left( a \to P \,||\, a \to Q \right)$, since $Q$ cannot observe $b$ and thus the second choice from $P$ has to be omitted.
 
 In contrast to the parallel operator \enquote{$||$}, the interleaving operator \enquote{$|||$} can be used to put processes together to execute concurrently, independently from which events they are able to observe. The process $\left( P \,|||\, Q \right)$ behaves like $P$ and $Q$ at the same time. If an event occurs that either of the processes can observe, the according process does so. If an event occurs that both processes, $P$ and $Q$, are able to observe, then the choice for which of them observes it is made nondeterministically.
+
+Communication between processes is done by using channels: a channel exist between exactly two processes and is uni-directional. Let $c$ be a channel, $P$ be the process at the sending end of the channel and $Q$ be the process at the receiving end of the channel. Then $P$ can send a message $m$ over the channel using the sending operator \enquote{$!$}: $c!m$. $Q$ can receive this message using the receiving operator \enquote{$?$}: $c?m$. Sending and receiving messages are ordinary events, created and observed by processes. A process that reads messages from channel $c_{in}$ and forwards them to channel $c_{out}$ may look like this: $R = \left( c_{in}?m \to c_{out}!m \to R \right)$.
 
 We have now seen some basic combinators of \textsc{CSP} and how to use them in order to create composed processes based on primitive processes and events. We can construct processes that run in parallel and make their execution dependant on observable events. The formalism of \textsc{CSP} allows reasoning about processes and transformations on them. \textsc{CSP} comes with many more operators and combinators than the ones we have introdcued, but as already mentioned we do not intend to give a complete description.
 
 
 \section{Programming languages}
 Most programming languages come with support for parallel and concurrent programming, either built into the language or available as some sort of extension. This makes it possible to transform the description of processes made in e.g. \textsc{CCS} or \textsc{CSP} into executable programs. This transformation is fairly straight-forward: sequential composition can be expressed by chaining together a sequence of processes, executing exactly one of them at a time in the order of composition. Parallel execution of processes can be done by executing each of the processes in a separate thread and waiting for all of them to terminate. The choice between processes can usually be expressed using \textit{if-then-else} compositions.
-
-%Different programming languages take different approaches for expressing parallelism and the ideas from process calculi. E.g. \textsf{occam} shows a very close resemblance of \textsc{CSP} and different \textsf{Haskell} modules present different ways of expressing parallelism.
 
 \subsection{Occam\index{Occam}}
 The programming language \textsf{occam}\footnote{The reference manual for \textsf{occam} can be found at \url{http://www.wotug.org/occam/documentation/oc21refman.pdf}}, which first appeared in 1983, resembles the ideas of CSP closely. It incorporates direct implementations of the operations of choice between processes as well as parallel and sequential combination of processes. Furthermore it introduces named channels and both sending and receiving operations on them.
@@ -85,11 +85,11 @@ ALT
   ...
 \end{lstlisting}
 
+\clearpage
 \subsection{Haskell\index{Haskell}}
 In \textsf{Haskell}, there are a number of different modules available for expressing concurrency, parallelism\footnote{Note that there is a difference between concurrency and parallelism: while parallelism aims at performing a computation more quickly by executing computations on different processors, concurrency is a concept to structure programs and express actions that \textbf{conceptually} happen at the same time by executing them in different threads of control. However, it is an implementation detail if these threads actually run at the same time \cite{Marlow}.} and distribution. Typically, these modules introduce a monad that comes with different operations for the expression of computations, such as sequential or parallel execution. Two of these modules are \textsf{Concurrent Haskell}\index{Concurrent Haskell} in \texttt{Control.Concurrent} for concurrency and \textsf{Parallel Haskell}\index{Parallel Haskell} in \texttt{Control.Parallel} for parallelism. A third module for distribution, \textsf{Cloud Haskell}\index{Cloud Haskell} in \texttt{Control.Distributed.Process}, is discussed later in \chpref{chp:cloud_haskell}.
 
 \subsubsection{Concurrent Haskell\index{Concurrent Haskell}}
-\vspace*{-0.5em}
 \textsf{Concurrent Haskell} introduces the operation \texttt{forkIO} that creates a new lightweight thread that executes concurrently in the \texttt{IO} monad. Furthermore, a communication mechanism for threads is introduced: mutable variables, or \texttt{MVar}s. An \texttt{MVar} can either be full or empty and can be used by threads to communicate information. \texttt{MVars} can be read when they are full, information can be stored in them when they are empty. When a thread tries to read from an empty \texttt{MVar} or write to a full \texttt{MVar}, it is suspended until the \texttt{MVar} changes its state, caused by other threads executing according operations on them. This means, \texttt{MVar}s can be used for synchronisation.
 
 Assume there are operations \texttt{a}, \texttt{b}, \texttt{c} where \texttt{a} and \texttt{b} take an \texttt{MVar} and can be executed concurrently. \texttt{c} consumes the results produced by \texttt{a} and \texttt{b} and returns a result. Using \texttt{Concurrent Haskell}, this can be expressed as shown in \lstref{lst:example_concurrent_haskell}.
@@ -100,9 +100,11 @@ main = do
   -- create mvars for communication and synchronisation
   mvarA <- newEmptyMVar
   mvarB <- newEmptyMVar  
+  
   -- run a and b in new threads
   _ <- forkIO (a mvarA)
   _ <- forkIO (b mvarB)  
+  
   -- wait for a and b to return
   ra <- takeMVar mvarA
   rb <- takeMVar mvarB
@@ -111,9 +113,7 @@ main = do
   ...
 \end{lstlisting}
 
-\vspace*{-1em}
 \subsubsection{Parallel Haskell\index{Parallel Haskell}}
-\vspace*{-0.5em}
 \textsf{Parallel Haskell} introduces the \texttt{Eval} monad along with the operations \texttt{rpar}, \texttt{rseq} and \texttt{runEval}. \texttt{rpar} is used to create a parallel computation while \texttt{rseq} is used to create a computation that is executed sequentially. \texttt{runEval} is used to execute computations created with \texttt{rpar} and \texttt{rseq}. In contrast to \textsf{Concurrent Haskell}, \texttt{Parallel Haskell} doesn't need the \texttt{IO} monad, the computations in the \texttt{Eval} monad are pure.
 
 Analogously to before, assume there are function \texttt{a}, \texttt{b} and \texttt{c}. \texttt{a} and \texttt{b} can execute in parallel and \texttt{c} consumes the results produced by \texttt{a} and \texttt{b} but cannot start before both these values are available. Using \textsf{Parallel Haskell}, this can be expressed as shown in \lstref{lst:example_parallel_haskell}
@@ -122,9 +122,11 @@ runEval $ do
   -- execute a and b in parallel
   ra <- rpar a
   rb <- rpar b
+  
   -- wait for both a and b to return
   rseq ra
   rseq rb
   
-  return (c ra rb)
+  res <- c ra rb
+  ...
 \end{lstlisting}
