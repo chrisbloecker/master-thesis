@@ -240,7 +240,7 @@ Let $Err \in \mathcal{P}$ be the error process, i.e. the process that always out
 % ------------------------------------------------------------------------------
 % composed processes
 % ------------------------------------------------------------------------------
-The semantics of composed\index{Process!composed} processes is determined by their structure and the involved sub-processes. The statement made in \defref{def:sem_strictness} remains true for composed processes: when the undefined value $\bot$ is presented as input, every process must output the undefined value. By convention, this does not need to be modelled explicitly for every process.
+The semantics of composed\index{Process!composed} processes is determined by their structure, i.e. the used process combinator, and the semantics of the involved sub-processes. The semantics of processes created by choice composition, parallel composition and sequence composition is defined inductively. The semantics of processes created by repetition composition is given by a recursive equation.
 
 \begin{definition}[Sub-process\index{Sub-process}]
 Let $P \in \mathcal{P}$ be a composed process. Then the processes $P$ is composed of are called the sub-processes of $P$.
@@ -279,7 +279,7 @@ Consider the definitions of $S$ and $D$ from \expref{exp:sem_atomic}. Furthermor
   \begin{equation*}
     \sem{\choice{Even}{S}{D}} = x \mapsto \left\{\begin{array}{ll}
       \sem{S}\left(x\right) & \text{if } x \text{ is even} \\
-      \sem{D}\left(x\right() & \text{if } x \text{ is odd} \\
+      \sem{D}\left(x\right) & \text{if } x \text{ is odd} \\
       \bot & \text{otherwise}
     \end{array}\right.
   \end{equation*}
