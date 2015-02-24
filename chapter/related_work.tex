@@ -36,6 +36,7 @@ We have now seen some basic combinators of \textsc{CSP} and how to use them in o
 \section{Programming languages}
 Most programming languages come with support for parallel and concurrent programming, either built into the language or available as some sort of extension. This makes it possible to transform the description of processes made in e.g. \textsc{CCS} or \textsc{CSP} into executable programs. This transformation is fairly straight-forward: sequential composition can be expressed by chaining together a sequence of processes, executing exactly one of them at a time in the order of composition. Parallel execution of processes can be done by executing each of the processes in a separate thread and waiting for all of them to terminate. The choice between processes can usually be expressed using \textit{if-then-else} compositions.
 
+\clearpage
 \subsection{Occam\index{Occam}}
 The programming language \textsf{occam}\footnote{The reference manual for \textsf{occam} can be found at \url{http://www.wotug.org/occam/documentation/oc21refman.pdf}}, which first appeared in 1983, resembles the ideas of CSP closely. It incorporates direct implementations of the operations of choice between processes as well as parallel and sequential combination of processes. Furthermore it introduces named channels and both sending and receiving operations on them.
 
