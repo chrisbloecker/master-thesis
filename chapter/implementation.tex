@@ -1,4 +1,5 @@
 \chapter{Implementation\index{Implementation}}
+\label{chp:implementation}
 In this chapter we describe two implementations\index{Implementation} of the algebraic model from \chpref{chp:algebraic_model} in \textsf{Haskell}\index{Haskell}. We closely resemble the structure and semantics of the algebraic model in our data model in \textsf{Haskell}, so it is straightforward to transform process structures formulated in \textsf{Haskell} into a representation in our model and reason about them. As a useful consequence, the laws stated in \chpref{chp:laws} transform from the model to processes in our implementation and remain valid.
 
 For one of the implementations, we use \textsf{Concurrent Haskell} and fork local threads in the \texttt{IO} monad for parallelisation on one computer. For the other one, we use \textsf{Cloud Haskell} to distribute processes into a distributed system and run them in \textsf{Cloud Haskell}'s \texttt{Process} monad. Other implementation based on e.g. \textsf{Parallel Haskell} are imaginable.
