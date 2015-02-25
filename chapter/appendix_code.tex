@@ -2,42 +2,50 @@
 
 \clearpage
 
-\section{Implementation of the process interpreter in the Cloud Haskell Process monad}
+\section{Implementation of the process interpreter using Cloud Haskell}
 \label{app:distributed_split_slice}
-\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,caption=Implementation of \texttt{runProcess} in the \textsf{Cloud Haskell} \texttt{Process} monad.]
-runProcess master (Choice c acd p p1 p2) x =
-  runProcess master (if p (acd x c) then p1 else p2) x
+\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,caption=Implementation of \texttt{runProcess} using \textsf{Cloud Haskell}.]
+runProcess :: Master -> Process a b -> a -> CH.Process b
+runProcess _ Id x =
+  return x
+
+runProcess _ Err _ =
+  return undefined
+
+runProcess master (Basic sDict closureGen) x = do
+  node <- getNode master =<< getSelfPid
+  res  <- call sDict node (closureGen x)
+  returnNode master node
+  return res
+
+runProcess _ (Local p) x = do
+  fakeMaster <- getFakeMaster =<< getSelfPid
+  res <- runProcess fakeMaster p x
+  terminateMaster fakeMaster
+  return res
+
+runProcess master (Choice pr p1 p2) x = do
+  b <- runProcess master pr x
+  runProcess master (if b then p1 else p2) x
 
 runProcess master (Sequence p1 p2) x =
   runProcess master p1 x >>= runProcess master p2
 
-runProcess master (Parallel p1 p2 combinator) x = do
-  runProcess master (Split (id &&& id) p1 p2 combinator) x
-
-runProcess master (Multilel ps ib fold) x = do
-  runProcess master (Slice repeat ps ib fold) x
-
-runProcess master (Split split p1 p2 combinator) x = do
-  let (xl, xr) = split x
+runProcess master (Parallel combinator p1 p2) x = do
   mvar <- liftIO newEmptyMVar
-  _ <- spawnLocal $ runProcessHelper master p1 xl mvar
-  r2 <- runProcess master p2 xr
+  _ <- spawnLocal $ runProcessHelper master p1 x mvar
+  r2 <- runProcess master p2 x
   r1 <- liftIO $ takeMVar mvar
   runProcess master combinator (r1, r2)
 
-runProcess master (Slice slice ps ib fold) x = do
-  let pairs = ps `zip` slice x
-  mvars <- forM pairs $ \_ -> liftIO newEmptyMVar
-  mapM_ (\((proc, x'), mvar) -> spawnLocal $ runProcessHelper master proc x' mvar) (pairs `zip` mvars)
+runProcess master (Multilel ps fold) x = do
+  mvars <- forM ps $ \_ -> liftIO newEmptyMVar
+  mapM_ (\(proc, mvar) -> spawnLocal $ runProcessHelper master proc x mvar) (ps `zip` mvars)
   ress  <- forM mvars $ \mvar -> liftIO . takeMVar $ mvar
-  runProcess master fold (ib, ress)
+  runProcess master fold (x, ress)
 
-runProcess master (Loop ib ic pred ba acc p) x =
-  if pred (acc x ic) then do
-    x' <- runProcess master p x
-    runProcess master (Loop x' (acc x ic) pred ba acc p) (ba x')
-  else
-    return ib
+runProcess master rep@(Repetition pr p) x =
+  runProcess master (Choice pr (Sequence p rep) Id) x
 
 runProcessHelper :: Master -> Process a b -> a -> MVar b -> CH.Process ()
 runProcessHelper master p x mvar = do
@@ -49,17 +57,13 @@ runProcessHelper master p x mvar = do
 \section{Ant system processes}
 \label{app:ant_system_processes}
 
-\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,caption=Type aliases and the implementation of basic processes for the ant system.]
-type Visited   = [Node]
-type Unvisited = [Node]
-type Solution  = (Path, Int)
-
-ant :: Configuration -> BasicProcess Solution
+\begin{lstlisting}[language=Haskell,frame=tb,numbers=left,caption=Implementation of basic processes for the ant system., basicstyle=\footnotesize\ttfamily]
+ant :: Configuration -> CH.Process AntSolution
 ant Configuration {..} = do
   path <- runAnt graph pheromones [1] (nodes graph \\ [1])
   return (path, pathLength' graph path)
     where
-      runAnt :: Graph Int -> Pheromones -> Visited -> Unvisited -> BasicProcess Path
+      runAnt :: Graph Int -> Pheromones -> [Node] -> [Node] -> CH.Process Path
       runAnt _ _ visited        [] = return visited
       runAnt g p visited unvisited = do
         let tau   = distance' p (last visited)
@@ -69,14 +73,23 @@ ant Configuration {..} = do
         let next  = fst . head . dropWhile ((< rand) . snd) $ zip unvisited (scanl1 (+) probs)
         runAnt g p (visited ++ [next]) (unvisited \\ [next])
 
-combinePaths :: (Configuration, [Solution]) -> BasicProcess Configuration
+combinePaths :: (Configuration, [AntSolution]) -> CH.Process Configuration
 combinePaths (conf@(Configuration {..}), ass) = return conf { pheromones = pheromones', path = path', pathLen = len' }
   where
     pheromones'   = depositPheromones ass pheromones
     (path', len') = minimumBy (compare `on` snd) ass
 
-evaporations :: Configuration -> BasicProcess Configuration
+evaporations :: Configuration -> CH.Process Configuration
 evaporations (conf@Configuration {..}) = return conf { pheromones = evaporation rho pheromones }
+
+iter :: Configuration -> CH.Process Configuration
+iter conf@Configuration {..} = return conf { iterations = iterations - 1 }
+
+continueIter :: Configuration -> CH.Process Bool
+continueIter Configuration {..} = return (iterations > 0)
+
+extractSolution :: Configuration -> CH.Process AntSolution
+extractSolution (Configuration {..}) = return (path, pathLen)
 \end{lstlisting}
 
 \end{landscape}
