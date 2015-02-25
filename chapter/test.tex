@@ -101,7 +101,7 @@ The results of the test runs for the comparison of $A_{seq}$ and $A_{con}$ are s
 \begin{figure}[h!]
   \centering
   \includegraphics[width=\textwidth]{img/test_distributed.pdf}
-  \caption{The runtimes of $A_{seq}$ and $A_{con}$ based on the data from table \ref{tbl:test2}.}
+  \caption{The runtimes of $A_{seq}$ and $A_{dis}$ based on the data from table \ref{tbl:test2}.}
   \label{fig:test2}
 \end{figure}
 
@@ -111,6 +111,6 @@ The test results show that in general, a speedup can be achieved when using the 
 
 However, when put into relation to the runtime of $A_{seq}$ on the respective hardware, $A_{con}$ and $A_{dis}$ show different properties. Depending on the scenario, $A_{con}$ achieves a speedup between $1.2$ and $1.57$ compared to $A_{seq}$ when 4 cores are used. Contrary to the expectation, $A_{dis}$ is not able to achieve a speedup compared to $A_{seq}$, but takes between ... and ... times as long as $A_{seq}$, depending on the scenario.
 
-The data shows that $A_{con}$ takes between $1.14$ and $1.91$ times as long as $A_{seq}$ to find solutions when only using one core. This may be explained with the introduced overhead for expressing parallelism using our process calculus and interpreting the process structures. Depending on the scenario, $A_{con}$ needs 2 or 3 cores to be able to achieve a speedup compared to $A_{seq}$. We expect that $A_{con}$ could perform even faster with more than 4 cores, however one should not forget that the sequential part of the program gives an upper bound to the maximum achievable speedup as stated by \textsc{Amdahl}'s law \cite{}.
+The data shows that $A_{con}$ takes between $1.14$ and $1.91$ times as long as $A_{seq}$ to find solutions when only using one core. This may be explained with the introduced overhead for expressing parallelism using our process calculus and interpreting the process structures. Depending on the scenario, $A_{con}$ needs 2 or 3 cores to be able to achieve a speedup compared to $A_{seq}$. We expect that $A_{con}$ could perform even faster with more than 4 cores, however one should not forget that the sequential part of the program gives an upper bound to the maximum achievable speedup as stated by \textsc{Amdahl}'s law.
 
 In our tests, $A_{dis}$ was not able to outperform $A_{seq}$, no matter how many workers are connected. In order to explain this, different things may have to be taken into account. On the one hand, the process interpreter has to request a worker node for every process from the master node and wait for the reply. Since network communication takes remarkably longer than forking a local thread, a much higher overhead is introduced in $A_{dis}$ than in $A_{con}$. On the other hand, for every process that is spawned remotely, a function closure has to be serialised, sent to a remote node and deserialised there. Before termination, the remote process has to serialise its result and send it back to the caller. This way of making data available to the processes takes remarkably longer than shared access to the memory as is the case in $A_{con}$. It is left open for future work to tackle these problems.
