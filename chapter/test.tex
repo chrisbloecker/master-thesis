@@ -1,29 +1,25 @@
 \chapter{Test\index{Test}}
 \label{chp:test}
-In the introduction in \chpref{chp:goal} we discussed our goals and mentioned we want to assess the usability of our process calculus for application in practice. In particular, we are interested in whether it's possible to achieve a speedup\index{Speedup} by using the developed process calculus for program parallelisation.
+\vspace*{-0.5em}
+In this chapter, we conduct some tests in order to assess if using our process calculus for program parallelisation can help to yield a speedup. Furthermore, we are interested in whether there is a difference between the two implementations based on \textsf{Concurrent Haskell} and \textsf{Cloud Haskell}.
 
 \section{Setup}
-For the tests the ant system implementation from \chpref{chp:ant_system_implementation} is modified to give three different variants:
-\begin{itemize}
-  \item[$A_{seq}\colon$] An unparallelised version running everything sequentially
-  \item[$A_{con}\colon$] A slightly changed, parallelised version using the process interpreter based on \textsf{Concurrent Haskell}
-  \item[$A_{dis}\colon$] The unchanged, parallelised version using the process interpreter based on {Cloud Haskell}
-\end{itemize}
+\vspace*{-0.5em}
+For the tests, we use three variants of an artificial ant system that differ in their way of parallelisation but implement the same algorithm otherwise. One of the variants is the distributed ant system developed in \chpref{chp:ant_system_implementation}, we call it $A_{dis}$. $A_{con}$ is a slightly modified variant of $A_{dis}$ and uses the implementation of the developed process calculus that is based on \textsf{Concurrent Haskell} instead of \textsf{Cloud Haskell}. The third variant, $A_{seq}$, performs all computations sequentially and does not involve any parallelisation. The source code of all three variants can be found in \appref{app:dvd}.
 
-As input for the ant systems, we use a set of 10 instances from the TSPLIB\footnote{\url{http://www.iwr.uni-heidelberg.de/groups/comopt/software/TSPLIB95/tsp/}}, a collection of instances of the travelling salesman problem\index{Travelling Salesman Problem} that have to be solved to optimality. The instances we're using are: \texttt{bays29}, \texttt{berlin52}, \texttt{st70}, \texttt{pr76}, \texttt{gr96}, \texttt{eil101}, \texttt{pr107}, \texttt{pr124}, \texttt{bier127} and \texttt{ch130}. The number included in the instance names give information about their size, i.e. the number of nodes in the graph described by the instance.
+As input for the ant systems, we use a set of 10 instances from the TSPLIB\footnote{The TSPLIB is a collection of instances of the \textsc{TSP} that have been solved to optimality and can be found at \url{http://www.iwr.uni-heidelberg.de/groups/comopt/software/TSPLIB95/tsp/}.}: \texttt{bays29}, \texttt{berlin52}, \texttt{st70}, \texttt{pr76}, \texttt{gr96}, \texttt{eil101}, \texttt{pr107}, \texttt{pr124}, \texttt{bier127} and \texttt{ch130}. The number included in the instance names give information about their size, i.e. the number of nodes in the graph described by the instance.
 
-We configure the ant systems using parameters based on suggestions given in \cite{Dorigo:2004:ACO:975277}: we use $n$ ants for a graph of size $n$, $100$ iterations, $\tau_0 = 2$, $\alpha = 2$, $\beta = 5$ and $\rho = 0.1$.
+We configure the ant systems using parameters based on suggestions given in \cite{Dorigo:2004:ACO:975277}: $n$ ants for a graph of size $n$, $100$ iterations, initial pheromone concentration $\tau_0 = 2$, evaporation factor $\rho = 0.1$ and $\alpha = 2, \beta = 5$.
 
-Since $A_{seq}$, $A_{con}$ and $A_{dis}$ are implementations of the same meta-heuristic and only differ in the way they are parallelised, we expect to obtain approximate solutions of similar quality for the selected instances from all three variants. In fact, we're not interested in the proposed solutions but in the necessary time to obtain them. We use the runtime of $A_{seq}$ as a reference an compare the runtimes of $A_{con}$ and $A_{dis}$ against it.
+Since $A_{seq}$, $A_{con}$ and $A_{dis}$ are implementation of the same meta-heuristic and only differ in their parallelisation, we expect them to produce similar solutions in all cases. However, we're not interested in the proposed solutions but rather in the necessary time to obtain them. We use the runtime of $A_{seq}$ as a reference and compare the runtimes of $A_{con}$ and $A_{dis}$ against that.
 
-The test runs to assess what speedup we can reach using $A_{con}$ and local parallelisation, compared to $A_{seq}$, are carried out on an $\text{Intel}^{\textregistered}$ $\text{Core}^{\texttrademark}$ i7-3770 CPU @ 3.4GHz with 16GB RAM. We use \textsf{ghc} to compile the programs and the compiler flags \texttt{-O2} for $A_{seq}$ and \texttt{-threaded -O2} for $A_{con}$. We run $A_{con}$ with 1, 2, 3 and 4 cores active, respectively, using the \texttt{+RTS -N} option.
+The tests for comparing $A_{con}$ to $A_{seq}$ are carried out on an $\text{Intel}^{\textregistered}$ $\text{Core}^{\texttrademark}$ i7-3770 CPU @ 3.4GHz with 16GB RAM. We use \textsf{ghc} to compile the programs and the compiler flags \texttt{-O2} for $A_{seq}$ and \texttt{-threaded -O2} for $A_{con}$. We run $A_{con}$ with 1, 2, 3 and 4 cores active, using the \texttt{+RTS -N} option.
 
-The tests to assess what speedup we can reach using $A_{dis}$ and parallelisation in a distributed system, compared to $A_{seq}$, are carried out using a set of $\text{Intel}^{\textregistered}$ $\text{Core}^{\texttrademark}$ i5-2400 CPUs @ 3.1GHz with 4GM RAM. We use \textsf{ghc} to compile the programs and the compiler flags \texttt{-O2} for $A_{seq}$ and \texttt{-threaded -O2} for $A_{dis}$. We run $A_{dis}$ with the dedicated master node on one computer and with 4, 8, 16 and 32 worker nodes connected, respectively. Note that, as the used CPUs have 4 physical cores, each of them can be used to run 4 worker nodes.
+The tests for comparing $A_{dis}$ and $A_{seq}$ are carried out using a network of computers with $\text{Intel}^{\textregistered}$ $\text{Core}^{\texttrademark}$ i5-2400 CPUs @ 3.1GHz and 4GM RAM. We use \textsf{ghc} to compile the programs and the compiler flags \texttt{-O2} for $A_{seq}$ and \texttt{-threaded -O2} for $A_{dis}$. We run $A_{dis}$ with the dedicated master node on one computer and with 4, 8, 16 and 32 worker nodes connected. Note that, as the used CPUs have 4 physical cores, each of them can be used to run 4 worker nodes.
 
-\section{Results and interpretation}
-The runtime of $A_{con}$ varies with the number of used physical cores. When only one core is used, it shows a higher runtime than $A_{seq}$. This is not particularly surprising since in this case both $A_{seq}$ and $A_{con}$ only have one core available, but $A_{con}$ introduces a management overhead that comes with the parallel formulation of the ant system. This overhead gets bigger for problem instances with higher number of nodes in the graph since for a graph of size $n$, we have decided to use $n$ ants that all run in parallel.
-
-However, as the number of physical cores is increased, $A_{con}$ can achieve a speedup compared to $A_{seq}$. When 4 physical cores are used, the speedup factor ranges between $1.2$ and $1.56$, depending on the size of the problem instance. Note that according to \textsc{Amdahl}'s law, the maximum achievable speedup factor is bound by the sequential fraction of the ant system that cannot be parallelised. This includes e.g. processes composed using \texttt{Sequence} or synchronisation operations that are hidden in the implementation of the process interpreter \texttt{runProcess}. Even an infinite number of physical cores would not yield any further speedup.
+\vspace*{-1em}
+\section{Results}
+The results of the test runs for the comparison of $A_{seq}$ and $A_{con}$ are shown in table \ref{tbl:test1} and visualised in \figref{fig:test1}. Analogously, the results for the comparison of $A_{seq}$ and $A_{dis}$ are shown in table \ref{tbl:test2} and visualised in \figref{fig:test2}.
 
 \begin{table}[h!]
   \centering
@@ -55,61 +51,66 @@ However, as the number of physical cores is increased, $A_{con}$ can achieve a s
     \multicolumn{1}{|r||}{\texttt{ch130}} & 32.039s & 61.328s & 37.042s & 27.866s & 22.909s \\
     \hline
   \end{tabular}
-  \caption{Runtimes of $A_{seq}$ and $A_{con}$ for the selected instances and configuration.}
+  \caption{Runtimes of $A_{seq}$ and $A_{con}$ on an $\text{Intel}^{\textregistered}$ $\text{Core}^{\texttrademark}$ i7-3770 CPU @ 3.4GHz with 16GB RAM.}
+  \vspace*{-0.75em}
   \label{tbl:test1}
 \end{table}
-The runtimes measured in the test setup to asses the speedup of $A_{con}$ compared to $A_{seq}$ can be found in table \ref{tbl:test1}. Figure \ref{fig:test_local} shows a plot of the runtimes.
 
 \begin{figure}[h!]
   \centering
   \includegraphics[width=\textwidth]{img/test_local.pdf}
-  \caption{Plot of the runtimes of $A_{seq}$ and $A_{con}$.}
-  \label{fig:test_local}
+  \caption{The runtimes of $A_{seq}$ and $A_{con}$ based on the data from table \ref{tbl:test1}.}
+  \label{fig:test1}
 \end{figure}
-
-The runtimes obtained in the test setup to asses the achievable speedup of $A_{dis}$ compared to $A_{seq}$ are shown in table \ref{tbl:test2} and are plotted in \figref{fig:test_distributed}. They show that $A_{dis}$ is unable to achieve a speedup. In fact, depending on the problem instance, $A_{dis}$ takes between ... and ... times as much time as $A_{seq}$ even with 32 worker nodes connected.
-
-Several things may have to be taken into account to explain this. $A_{dis}$ involves a number of ant process that are executed in parallel, depending on the size of the problem instance. For each of the ant processes, the process interpreter \texttt{runProcess} has to contact the master node in order to obtain a worker node where the ant process can be spawned. The fact that \textsf{Cloud Haskell} used TCP communication for reliable delivery of messages, adds some overhead on top of the network communication that might be potentially slow anyway.
 
 \begin{table}[h!]
   \centering
-  \begin{tabular}{r|c||c|c|c|c|}
-    \cline{2-6}
-    & \multicolumn{1}{c||}{$A_{seq}$} & \multicolumn{4}{c|}{$A_{dis}$} \\
+  \begin{tabular}{r|c||c|c|c|c|c|}
+    \cline{2-7}
+    & \multicolumn{1}{c||}{$A_{seq}$} & \multicolumn{5}{c|}{$A_{dis}$} \\
     \hline
-    \multicolumn{1}{|r||}{scenario} & & 4 worker & 8 worker & 16 worker & 32 worker \\
+    \multicolumn{1}{|r||}{scenario} & & 4 worker & 8 worker & 16 worker & 32 worker & 64 worker \\
     \hline
     \hline
-    \multicolumn{1}{|r||}{\texttt{bays29}} & 0.893s & 59s & 36s & 30s & \\
+    \multicolumn{1}{|r||}{\texttt{bays29}} & 0.893s & 59s & 36s & 30s & & \\
     \hline
-    \multicolumn{1}{|r||}{\texttt{berlin52}} & 4.552s & 191s & 117s & 91s & \\
+    \multicolumn{1}{|r||}{\texttt{berlin52}} & 4.552s & 191s & 117s & 91s & & \\
     \hline
-    \multicolumn{1}{|r||}{\texttt{st70}} & 10.493s & 363s & 255s & 193s & \\
+    \multicolumn{1}{|r||}{\texttt{st70}} & 10.493s & 363s & 255s & 193s & & \\
     \hline
-    \multicolumn{1}{|r||}{\texttt{pr76}} & 19.3s & 484s & 308s & 236s & \\
+    \multicolumn{1}{|r||}{\texttt{pr76}} & 19.3s & 484s & 308s & 236s & & \\
     \hline
-    \multicolumn{1}{|r||}{\texttt{gr96}} & 25.595s & & 573 & & \\
+    \multicolumn{1}{|r||}{\texttt{gr96}} & 25.595s & & 573 & & & \\
     \hline
-    \multicolumn{1}{|r||}{\texttt{eil101}} & & & & & \\
+    \multicolumn{1}{|r||}{\texttt{eil101}} & & & & & & \\
     \hline
-    \multicolumn{1}{|r||}{\texttt{pr107}} & & & & & \\
+    \multicolumn{1}{|r||}{\texttt{pr107}} & & & & & & \\
     \hline
-    \multicolumn{1}{|r||}{\texttt{pr124}} & & & & & \\
+    \multicolumn{1}{|r||}{\texttt{pr124}} & & & & & & \\
     \hline
-    \multicolumn{1}{|r||}{\texttt{bier127}} & & & & & \\
+    \multicolumn{1}{|r||}{\texttt{bier127}} & & & & & & \\
     \hline
-    \multicolumn{1}{|r||}{\texttt{ch130}} & & & & & \\
+    \multicolumn{1}{|r||}{\texttt{ch130}} & & & & & & \\
     \hline
   \end{tabular}
-  \caption{Runtimes of $A_{seq}$ and $A_{dis}$ for the selected instances and configuration.}
+  \caption{Runtimes of $A_{seq}$ and $A_{dis}$ in a network of computers with $\text{Intel}^{\textregistered}$ $\text{Core}^{\texttrademark}$ i5-2400 CPUs @ 3.1GHz and 4GM RAM.}
+  \vspace*{-0.75em}
   \label{tbl:test2}
 \end{table}
 
-Furthermore, for every remotely spawned process, a function closure has to be created, serialised and sent to a remote node over the network. In case of the ant system this includes redundant data: every ant receives a configuration that contains the problem instance. This problem instance never changes and could conceptually be cached on the worker nodes. However, at the moment the possibility to do so is not given, but leaves room for future improvements. Note that the problem of distributing data to parallel processes did not come up in the case of $A_{con}$: all processes execute on the same computer and have access to the same data structure that is kept in memory.
-
 \begin{figure}[h!]
   \centering
-  \includegraphics[width=\textwidth]{img/test_distributed_1.pdf}
-  \caption{Plot of the runtimes of $A_{seq}$ and $A_{dis}.$}
-  \label{fig:test_distributed}
+  \includegraphics[width=\textwidth]{img/test_distributed.pdf}
+  \caption{The runtimes of $A_{seq}$ and $A_{con}$ based on the data from table \ref{tbl:test2}.}
+  \label{fig:test2}
 \end{figure}
+
+\clearpage
+\section{Interpretation}
+The test results show that in general, a speedup can be achieved when using the developed process calculus for program parallelisation. The runtime of $A_{con}$ decreases as there are more physical cores made available to carry out the computations. A similar behaviour can be observed for $A_{dis}$: the more worker nodes are connected, the faster a solution can be computed.
+
+However, when put into relation to the runtime of $A_{seq}$ on the respective hardware, $A_{con}$ and $A_{dis}$ show different properties. Depending on the scenario, $A_{con}$ achieves a speedup between $1.2$ and $1.57$ compared to $A_{seq}$ when 4 cores are used. Contrary to the expectation, $A_{dis}$ is not able to achieve a speedup compared to $A_{seq}$, but takes between ... and ... times as long as $A_{seq}$, depending on the scenario.
+
+The data shows that $A_{con}$ takes between $1.14$ and $1.91$ times as long as $A_{seq}$ to find solutions when only using one core. This may be explained with the introduced overhead for expressing parallelism using our process calculus and interpreting the process structures. Depending on the scenario, $A_{con}$ needs 2 or 3 cores to be able to achieve a speedup compared to $A_{seq}$. We expect that $A_{con}$ could perform even faster with more than 4 cores, however one should not forget that the sequential part of the program gives an upper bound to the maximum achievable speedup as stated by \textsc{Amdahl}'s law \cite{}.
+
+In our tests, $A_{dis}$ was not able to outperform $A_{seq}$, no matter how many workers are connected. In order to explain this, different things may have to be taken into account. On the one hand, the process interpreter has to request a worker node for every process from the master node and wait for the reply. Since network communication takes remarkably longer than forking a local thread, a much higher overhead is introduced in $A_{dis}$ than in $A_{con}$. On the other hand, for every process that is spawned remotely, a function closure has to be serialised, sent to a remote node and deserialised there. Before termination, the remote process has to serialise its result and send it back to the caller. This way of making data available to the processes takes remarkably longer than shared access to the memory as is the case in $A_{con}$. It is left open for future work to tackle these problems.
