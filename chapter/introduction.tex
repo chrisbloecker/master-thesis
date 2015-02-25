@@ -19,4 +19,4 @@ The technique we use to achieve an \enquote{automated} distribution of a process
 Once we have an algebra for computations, we want to assess its applicability in practice. We are interested in whether it is possible to achieve a speedup in execution of a program simply by modelling parts of it for parallel execution, both in case of parallelism on only one computer and in a distributed system.
 
 \section{Results}
-\lipsum[1-6]
+We introduce a process calculus that can be used to describe parallel programs on a high level of abstraction and use \textsf{Haskell} for the implementation. The process calculus hides technical details concerning process management and communication between processes. Tests show that it is generally possible to achieve a speedup by parallelising programs using our process calculus. However, in the case of distribution of processes across a network of computers, future work remains open.
