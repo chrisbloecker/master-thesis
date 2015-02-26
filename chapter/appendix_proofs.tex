@@ -1,5 +1,6 @@
 \chapter{Proofs}
 \label{chp:proofs}
+The proofs in this appendix establish the laws proposed in \chpref{chp:laws} as well as the theorem on process equivalence after substitution of a sub-process with an equivalent sub-process from \chpref{chp:semantic_equivalence}.
 
 \vfill
 \begin{theorem}[Associative property of sequence composition]
@@ -67,6 +68,32 @@ Then $\sem{\parallel{C}{P}{\choice{B}{Q}{R}}} = \sem{\choice{B}{\parallel{C}{P}{
 \hfill$\blacksquare$
 \end{myproof}
 
+
+\begin{theorem}[Distributivity of sequence composition over parallel composition]
+\label{thm:distributivity_sequence_parallel}
+Sequence composition distributes over parallel composition, i.e. for any processes $C, P, Q, R \in \mathcal{P}$ with suitable type signatures, the following equivalence holds:
+\begin{equation*}
+  \sequence{P}{\parallel{C}{Q}{R}} \equiv \parallel{C}{\sequence{P}{Q}}{\sequence{P}{R}}.
+\end{equation*}
+\end{theorem}
+
+\begin{myproof}[Distributivity of sequence composition over parallel composition]
+Let $C, P, Q, R \in \mathcal{P}$ be processes with type signatures $\typesignature{C}{\left( c, d \right)}{e}, \typesignature{P}{a}{b}, \typesignature{Q}{b}{c}, \typesignature{R}{b}{d}$.
+
+Then $\sem{\sequence{P}{\parallel{C}{Q}{R}}} = \sem{\parallel{C}{\sequence{P}{Q}}{\sequence{P}{R}}}$.
+\begin{eqnarray*}
+  & & \sem{\sequence{P}{\parallel{C}{Q}{R}}} \\
+  & \overset{\defref{def:sem_sequence}}{=}   & \sem{\parallel{C}{Q}{R}} \circ \sem{P} \\
+  & \overset{\defref{def:sem_parallel}}{=}   & x \mapsto \sem{C} \left( \sem{Q} \left( x \right), \sem{R} \left( x \right) \right) \circ \sem{P} \\
+  & \overset{\text{function composition}}{=} & x \mapsto \sem{C} \left( \sem{Q} \left( \sem{P} \left( x \right) \right), \sem{R} \left( \sem{P} \left( x \right) \right) \right) \\
+  & \overset{\defref{def:sem_sequence}}{=}   & x \mapsto \sem{C} \left( \sem{\sequence{P}{Q}} \left( x \right), \sem{\sequence{P}{R}} \left( x \right) \right) \\
+  & \overset{\defref{def:sem_parallel}}{=}   & \sem{\parallel{C}{\sequence{P}{Q}}{\sequence{P}{R}}}
+\end{eqnarray*}
+
+\hfill$\blacksquare$
+\end{myproof}
+
+
 \begin{theorem}[Distributivity of sequence composition over choice composition]
 \label{thm:distributivity_sequence_choice}
 Sequence composition distributes over choice composition, i.e. for any processes $B \in \mathcal{B}$ and $P, Q, R \in \mathcal{P}$ with suitable type signatures, the following equivalence holds:
@@ -94,7 +121,7 @@ Then $\sem{\sequence{P}{\choice{B}{Q}{R}}} = \sem{\choice{B}{\sequence{P}{Q}}{\s
                  \left( x \mapsto \bot \right) \circ \sem{P} & \text{otherwise}
                \end{array}
         \right. \\
-  & \overset{\defref{def:sem_sequence}, ToDo}{=} & x \mapsto \left\{\begin{array}{ll}
+  & \overset{\defref{def:sem_sequence}}{=} & x \mapsto \left\{\begin{array}{ll}
                                                                       \sem{\sequence{P}{Q}} \left( x \right) & \text{if } B \left( x \right) \\
                                                                       \sem{\sequence{P}{R}} \left( x \right) & \text{if } \overline{B \left( x \right)} \\
                                                                       \bot & \text{otherwise}
@@ -107,73 +134,40 @@ Then $\sem{\sequence{P}{\choice{B}{Q}{R}}} = \sem{\choice{B}{\sequence{P}{Q}}{\s
 \hfill$\blacksquare$
 \end{myproof}
 
-\begin{theorem}[Distributivity of sequence composition over parallel composition]
-\label{thm:distributivity_sequence_parallel}
-Sequence composition distributes over parallel composition, i.e. for any processes $C, P, Q, R \in \mathcal{P}$ with suitable type signatures, the following equivalence holds:
+
+\begin{theorem}[$Id$ is a left and right neutral element for sequence composition]
+\label{thm:idempotence_identity}
+Sequential composition of any process $P \in \mathcal{P}$ with the identity process $Id$ on the left or on the right yields $P$.
 \begin{equation*}
-  \sequence{P}{\parallel{C}{Q}{R}} \equiv \parallel{C}{\sequence{P}{Q}}{\sequence{P}{R}}.
+  \sequence{Id}{P} \equiv P \equiv \sequence{P}{Id}
 \end{equation*}
 \end{theorem}
 
-\begin{myproof}[Distributivity of sequence composition over parallel composition]
-Let $C, P, Q, R \in \mathcal{P}$ be processes with type signatures $\typesignature{C}{\left( c, d \right)}{e}, \typesignature{P}{a}{b}, \typesignature{Q}{b}{c}, \typesignature{R}{b}{d}$.
-
-Then $\sem{\sequence{P}{\parallel{C}{Q}{R}}}{x} = \sem{\parallel{C}{\sequence{P}{Q}}{\sequence{P}{R}}}{x}$.
+\begin{myproof}[$Id$ is a left and right neutral element for sequence composition]
+\label{prf:neutral_id}
+Let $P \in \mathcal{P}$ be a process and $Id$ be the identity process. $Id$ is a left and right neutral element for sequence composition.
 \begin{eqnarray*}
-  & & \sem{\sequence{P}{\parallel{C}{Q}{R}}}{x} \\
-  & \overset{\defref{def:sem_sequence}}{=} & \sem{\parallel{C}{Q}{R}}{\sem{P}{x}} \\
-  & \overset{\defref{def:sem_parallel}}{=} & \sem{C}{\left( \sem{Q}{\sem{P}{x}}, \sem{R}{\sem{P}{x}} \right)} \\
-  & \overset{\defref{def:sem_sequence}}{=} & \sem{C}{\left( \sem{\sequence{P}{Q}}{x}, \sem{\sequence{P}{R}}{x} \right)} \\
-  & \overset{\defref{def:sem_parallel}}{=} & \sem{\parallel{C}{\sequence{P}{Q}}{\sequence{P}{R}}}{x}
+  & & \sem{\sequence{Id}{P}} \\
+    & \overset{\defref{def:sem_sequence}}{=} & \sem{P} \circ \sem{Id} \\
+    & \overset{\defref{def:sem_id}}{=} & \sem{P} \circ \left( x \mapsto x \right) \\
+    & \overset{\text{composition with identity function}}{=} & \sem{P} \\
+    & \overset{\text{composition with identity function}}{=} & \left( x \mapsto x \right) \circ \sem{P} \\
+    & \overset{\defref{def:sem_id}}{=} & \sem{Id} \circ \sem{P} \\
+    & \overset{\defref{def:sem_sequence}}{=} & \sem{\sequence{P}{Id}} \\
 \end{eqnarray*}
 
 \hfill$\blacksquare$
 \end{myproof}
 
 
-\begin{theorem}[Idempotence of choice composition]
-\label{thm:idempotence_choice}
-For any predicate $B \in \mathcal{B}$ and any process $P \in \mathcal{P}$, choice composition of $P$ with itself yields a process that behaves like $P$, regardless of the used predicate $B$.
+\begin{corollary}[Idempotence of sequence composition respecting the identity process]
+Since $Id$ is both a left and right neutral element of sequence composition, $Id$ is an idempotent element respecting sequence composition. The following equation follows directly from proof \ref{prf:neutral_id}:
 \begin{equation*}
-  \choice{B}{P}{P} \equiv P
+  \sem{\sequence{Id}{Id}} = \sem{Id}.
 \end{equation*}
-\end{theorem}
-
-\begin{myproof}[Idempotence of choice composition]
-Let $B \in \mathcal{B}$ and $P \in \mathcal{P}$ be processes with type signatures $\typesignature{B}{a}{T_{Boolean}}, \typesignature{P}{a}{b}$. 
-
-Then $\sem{\choice{B}{P}{P}}{x} = \sem{P}{x}$.
-\begin{eqnarray*}
-  & & \sem{\choice{B}{P}{P}}{x} \\
-    & \overset{\defref{def:sem_choice}}{=} & \left\{\begin{array}{ll}
-                                                      \sem{P}{x} & \text{if } B \left( x \right) \\
-                                                      \sem{P}{x} & \text{if } \overline{B \left( x \right)}
-                                                    \end{array}
-                                             \right. \\
-    & = & \sem{P}{x}
-\end{eqnarray*}
 
 \hfill$\blacksquare$
-\end{myproof}
-
-%\begin{theorem}[Idempotence of sequence composition respecting the identity process]
-%\label{thm:idempotence_identity}
-%Sequential composition of the identity process $Id$ with itself yields the identity process.
-%\begin{equation*}
-%  \sequence{Id}{Id} \equiv Id.
-%\end{equation*}
-%\end{theorem}
-
-%\begin{myproof}[Idempotence of sequence composition respecting the identity process]
-%Let $Id \in \mathcal{P}$ be the identity process and compose it with itself using sequence composition. The resulting process is the identity process $Id$, i.e. $\sem{\sequence{Id}{Id}}{x} = \sem{Id}{x}$.
-%\begin{eqnarray*}
-%  & & \sem{\sequence{Id}{Id}}{x} \\
-%    & \overset{\defref{def:sem_sequence}}{=} & \sem{Id}{\sem{Id}{x}} \\
-%    & \overset{\defref{def:sem_id}}{=} & \sem{Id}{x}
-%\end{eqnarray*}
-%
-%\hfill$\blacksquare$
-%\end{myproof}
+\end{corollary}
 
 
 \begin{theorem}[Idempotence of sequence composition respecting the error process]
@@ -185,41 +179,109 @@ Sequential composition of the error process $Err$ with itself yields the error p
 \end{theorem}
 
 \begin{myproof}[Idempotence of sequence composition respecting the identity process]
-Let $Id \in \mathcal{P}$ be the identity process and compose it with itself using sequence composition. The resulting process is the identity process $Id$, i.e. $\sem{\sequence{Id}{Id}}{x} = \sem{Id}{x}$.
+Let $Err$ be the error process. Sequential composition of $Err$ with itself yields $Err$, i.e. $\sem{\sequence{Err}{Err}} = \sem{Err}$.
 \begin{eqnarray*}
-  a
+  & & \sem{\sequence{Err}{Err}} \\
+    & \overset{\defref{def:sem_sequence}}{=} & \sem{Err} \circ \sem{Err} \\
+    & \overset{\defref{def:sem_err}}{=} & \left( x \mapsto \bot \right) \circ \left( x \mapsto \bot \right) \\
+    & \overset{\text{function composition}}{=} & x \mapsto \bot \\
+    & \overset{\defref{def:sem_err}}{=} & \sem{Err}
 \end{eqnarray*}
 
 \hfill$\blacksquare$
 \end{myproof}
 
 
-\begin{theorem}[$Id$ is a left and right unit for sequence composition]
-\label{thm:idempotence_identity}
-Sequential composition of any process $P \in \mathcal{P}$ with the identity process $Id$ on the left or on the right yields $P$.
-\begin{equation*}
-  \sequence{Id}{P} \equiv P \equiv \sequence{P}{Id}
-\end{equation*}
+
+\begin{theorem}[Substitution with an equivalent process leaves semantics unchanged]
+\label{thm:substitution_equivalence}
+Let $P, Q, R \in \mathcal{P}$ be processes and let $Q \equiv R$. Then, substituting one or more occurrences of $Q$ in $P$ with $R$ leaves $\sem{P}$ unchanged:
+  \begin{equation*}
+    Q \equiv R \rightarrow P \equiv P_{\left[ Q / R \right]}.
+  \end{equation*}
 \end{theorem}
 
-\begin{myproof}[$Id$ is a left and right unit for sequence composition]
-Let $P \in \mathcal{P}$ be a process and $Id$ be the identity process. $Id$ is a left and right unit for sequence composition.
-\begin{eqnarray*}
-  & & \sem{\sequence{Id}{P}}{x} \\
-    & \overset{\defref{def:sem_sequence}}{=} & \sem{P}{\sem{Id}{x}} \\
-    & \overset{\defref{def:sem_id}}{=} & \sem{P}{x} \\
-    & \overset{\defref{def:sem_id}}{=} & \sem{Id}{\sem{P}{x}} \\
-    & \overset{\defref{def:sem_sequence}}{=} & \sem{\sequence{P}{Id}}{x} \\
-\end{eqnarray*}
+\begin{myproof}[Substitution with an equivalent process leaves semantics unchanged]
+In the following, let $P, Q, R, S, T \in \mathcal{P}$ be processes with $Q \equiv R$.
+
+Consider the case that $Q$ is not a sub-process of $P$. Then, trivially $P \equiv P_{\left[ Q / R \right]}$.
+
+Now consider the case that $Q$ is a sub-process of $P$ and distinguish between its structural properties:
+\begin{enumerate}
+  \item $P = Q$ is a basic process with intrinsic function $f_Q$. Replacing $Q$ with $R$ gives $P_{\left[ Q / R \right]} = R$ with intrinsic function $f_R$. Since $Q \equiv R$, it must be $f_Q = f_R$ and thus $P \equiv P_{\left[ Q / R \right]}$. This establishes the basic case.
+  \item $P = \sequence{Q}{S}$ has the structure of sequence composition. Then:
+    \begin{eqnarray*}
+      \sem{P} & = & \sem{\sequence{Q}{S}} \\
+              & \overset{\defref{def:sem_sequence}}{=} & \sem{S} \circ \sem{Q} \\
+              & \overset{\sem{Q} = \sem{R}}{=} & \sem{S} \circ \sem{R} \\
+              & \overset{\defref{def:sem_sequence}}{=} & \sem{sequence{R}{S}} \\
+              & = & \sem{P_{\left[ Q / R \right]}}
+    \end{eqnarray*}
+    And thus $P \equiv P_{\left[ Q / R \right]}$.
+    \vspace*{-2em}
+  \item Analogously to (2), $P \equiv P_{\left[ Q / R \right]}$ can be shown for $P = \sequence{S}{Q}$.
+  \item $P = \choice{Q}{S}{T}$ has the structure of choice composition. Then:
+    \begin{eqnarray*}
+      \sem{P} & = & \sem{\choice{Q}{S}{T}} \\
+              & \overset{\defref{def:sem_choice}}{=} & x \mapsto \left\{ \begin{array}{ll}
+                                                                           \sem{S} \left( x \right) & \text{if } Q \left( x \right) \\
+                                                                           \sem{T} \left( x \right) & \text{if } \overline{Q \left( x \right)} \\
+                                                                           \bot & \text{otherwise}
+                                                                         \end{array}
+                                                                 \right. \\
+              & \overset{\sem{Q} = \sem{R}}{=} & x \mapsto \left\{ \begin{array}{ll}
+                                                              \sem{S} \left( x \right) & \text{if } R \left( x \right) \\
+                                                              \sem{T} \left( x \right) & \text{if } \overline{R \left( x \right)} \\
+                                                              \bot & \text{otherwise}
+                                                            \end{array}
+                                                   \right. \\
+              & \overset{\defref{def:sem_choice}}{=} & \sem{\choice{R}{S}{T}} \\
+              & = & \sem{P_{\left[ Q / R \right]}}
+    \end{eqnarray*}
+    And thus $P \equiv P_{\left[ Q / R \right]}$.
+    \item $P = \choice{S}{Q}{T}$ has the structure of choice composition. Then:
+    \begin{eqnarray*}
+      \sem{P} & = & \sem{\choice{S}{Q}{T}} \\
+              & \overset{\defref{def:sem_choice}}{=} & x \mapsto \left\{ \begin{array}{ll}
+                                                                           \sem{Q} \left( x \right) & \text{if } S \left( x \right) \\
+                                                                           \sem{T} \left( x \right) & \text{if } \overline{S \left( x \right)} \\
+                                                                           \bot & \text{otherwise}
+                                                                         \end{array}
+                                                                 \right. \\
+              & \overset{\sem{Q} = \sem{R}}{=} & x \mapsto \left\{ \begin{array}{ll}
+                                                              \sem{R} \left( x \right) & \text{if } S \left( x \right) \\
+                                                              \sem{T} \left( x \right) & \text{if } \overline{S \left( x \right)} \\
+                                                              \bot & \text{otherwise}
+                                                            \end{array}
+                                                   \right. \\
+              & \overset{\defref{def:sem_choice}}{=} & \sem{\choice{S}{R}{T}} \\
+              & = & \sem{P_{\left[ Q / R \right]}}
+    \end{eqnarray*}
+    And thus $P \equiv P_{\left[ Q / R \right]}$.
+  \item Analogously to (5), $P \equiv P_{\left[ Q / R \right]}$ can be shown for $P = \choice{S}{T}{Q}$.
+  \item $P = \parallel{Q}{S}{T}$ has the structure of parallel composition. Then:
+    \begin{eqnarray*}
+      \sem{P} & = & \sem{\parallel{Q}{S}{T}} \\
+              & \overset{\defref{def:sem_parallel}}{=} & x \mapsto \sem{Q} \left( \sem{S}\left(x\right), \sem{T}\left(x\right) \right) \\
+              & \overset{\sem{Q} = \sem{R}}{=} & x \mapsto \sem{R} \left( \sem{S}\left(x\right), \sem{T}\left(x\right) \right) \\
+              & \overset{\defref{def:sem_parallel}}{=} & \sem{\parallel{R}{S}{T}} \\
+              & = & \sem{P_{\left[ Q / R \right]}}
+    \end{eqnarray*}
+    And thus $P \equiv P_{\left[ Q / R \right]}$.
+  \item $P = \parallel{S}{Q}{T}$ has the structure of parallel composition. Then:
+    \begin{eqnarray*}
+      \sem{P} & = & \sem{\parallel{S}{Q}{T}} \\
+              & \overset{\defref{def:sem_parallel}}{=} & x \mapsto \sem{S} \left( \sem{Q}\left(x\right), \sem{T}\left(x\right) \right) \\
+              & \overset{\sem{Q} = \sem{R}}{=} & x \mapsto \sem{S} \left( \sem{R}\left(x\right), \sem{T}\left(x\right) \right) \\
+              & \overset{\defref{def:sem_parallel}}{=} & \sem{\parallel{S}{R}{T}} \\
+              & = & \sem{P_{\left[ Q / R \right]}}
+    \end{eqnarray*}
+    And thus $P \equiv P_{\left[ Q / R \right]}$.
+  \item Analogously to (8), $P \equiv P_{\left[ Q / R \right]}$ can be shown for $P = \parallel{S}{T}{Q}$.
+  \item $P = \repetition{Q}{S}$ has the structure of repetition. Then $P \equiv P_{\left[ Q / R \right]}$ since repetition is expressed in terms of choice composition and sequence composition and process equivalence for these cases has been shown in (2), (3), (4), (5), (6).
+  \item $P = \repetition{S}{Q}$ has the structure of repetition. Then $P \equiv P_{\left[ Q / R \right]}$ since repetition is expressed in terms of choice composition and sequence composition and process equivalence for these cases has been shown in (2), (3), (4), (5), (6).
+\end{enumerate}
+In all cases, $P \equiv P_{\left[ Q / R \right]}$ holds an thus, \thmref{thm:substitution_equivalence} is valid.
 
 \hfill$\blacksquare$
 \end{myproof}
-
-\begin{corollary}[Idempotence of sequence composition respecting the identity process]
-Since $Id$ is both a left and right unit of sequence composition, $Id$ is an idempotent element respecting sequence composition, i.e. for any process $P \in \mathcal{P}$, the following equation holds:
-\begin{equation*}
-  \sequence{Id}{P} \equiv \sequence{P}{Id}.
-\end{equation*}
-
-\hfill$\blacksquare$
-\end{corollary}
