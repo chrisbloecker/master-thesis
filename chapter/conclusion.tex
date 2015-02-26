@@ -1,11 +1,16 @@
 \chapter{Conclusion}
+\vspace*{-0.5em}
 Our goal was the design of a process calculus that allows the description of parallel programs on a high level of abstraction while hiding technical details about parallelisation and process communication, which we have reached. We have taken a look at two prominent process calculi, namely \textsc{CCS} and \textsc{CSP}, but found that they are unsuitable for our purposes. They both involve a notation of process communication and non-determinism, which is an undesired property for application in practice.
 
+\vspace*{-0.25em}
 We have designed our own process calculus and used \textsf{Haskell} for a direct implementation. The process calculus introduces a small set of process combinators that are used to compose processes. Each of the process combinators involves rules concerning its static semantics. These rules have been represented in \textsf{Haskell} using a generalised algebraic data type\index{Generalised algebraic data type} that only allows composition of suitable processes. The semantics of processes has been defined inductively, based on the used process combinator and the semantics of the sub-processes. For the implementation of process semantics in \textsf{Haskell}, given by an interpreter, we have chosen two variants: \textsf{Concurrent Haskell} and \textsf{Cloud Haskell}. The implementation has been straight forward, directly reflecting the formal definition. We found that \textsf{Haskell} was particularly well suited for this.
 
+\vspace*{-0.25em}
 To illustrate the usability of our process calculus, we have given two examples. One of them being a parallel interpreter for arithmetic expressions and the other one a prototype of an artificial ant system. We have created three variants of the ant system: a parallelised variant using our implementation based on \textsf{Concurrent Haskell}, a distributed variant using our implementation based on \textsf{Cloud Haskell} and a sequential variant.
 
+\vspace*{-0.25em}
 Our tests have shown that the ant system using our implementation based on \textsf{Concurrent Haskell} achieves a speedup compared to the sequential version. The ant system using our implementation based on \textsf{Cloud Haskell} has not achieved a speedup but taken significantly longer than the sequential variant. 
 
+\vspace*{-0.25em}
 We conclude that our process calculus is mature enough for practical application and to lead to a speedup when used for parallelisation. However, our implementation based on \textsf{Cloud Haskell} introduces too much overhead in the conducted tests and couldn't lead to a speedup, we're afraid this might be an indication for practical inapplicability. For future work, it remains to be seen if this is the case in general or only in our test case.
-\vspace*{-2em}
+\vspace*{-0.5em}
