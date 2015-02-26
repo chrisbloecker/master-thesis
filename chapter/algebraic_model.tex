@@ -251,11 +251,16 @@ Let $P \in \mathcal{P}$ be a composed process. Then the processes $P$ is compose
 % ------------------------------------------------------------------------------
 % choice
 % ------------------------------------------------------------------------------
-\begin{definition}[Shorthand notion for predicate processes]
-Let $B \in \mathcal{B}$ be a predicate process. Then $B \left( x \right)$ is a shorthand notion for $\sem{B} \left( x \right) = True$ and $\overline{B \left( x \right)}$ is a shorthand notion for $\sem{B} \left( x \right) = False$.
+\begin{definition}[Shorthand notation for predicate processes]
+Let $B \in \mathcal{B}$ be a predicate process. Then $B \left( x \right)$ is a shorthand notion for $\sem{B} \left( x \right) = True$ and $\overline{B \left( x \right)}$ is a shorthand notation for $\sem{B} \left( x \right) = False$.
 
 \hfill\qedsymbol
 \end{definition}
+
+
+\nomenclature{$B\left(x\right)$}{Shorthand notation for $\sem{B} \left( x \right) = True$}
+\nomenclature{$\overline{B\left(x\right)}$}{Shorthand notation for $\sem{B} \left( x \right) = False$}
+
 
 The semantics of a process with the structure of choice composition is that of one of its sub-processes. A predicate is employed to inspect the input and decide which of the sub-processes determines the semantics.
 \begin{definition}[Semantics of choice composition\index{Semantics!Choice}]
@@ -402,22 +407,21 @@ Let $P, Q \in \mathcal{P}$ be processes. Then $P$ and $Q$ are equivalent iff the
 
 \begin{definition}[Process substitution\index{Process!substitution}]
 \label{def:process_substitution}
-Let $P, Q, R \in \mathcal{P}$ be processes and let $Q$ be a sub-process of $P$. Then $P$ can be transformed into a new process by replacing one or more occurrence of $Q$ in $P$ with $R$. This is denoted by $P_{\left[ Q / R \right]}$.
+Let $P, Q, R \in \mathcal{P}$ be processes and let $Q$ be a sub-process of $P$. Then $P$ can be transformed into a new process by replacing occurrence of $Q$ in $P$ with $R$. This is denoted by $P_{\left[ Q / R \right]}$.
 
 \hfill\qedsymbol
 \end{definition}
 
-\nomenclature{$P_{\left[ Q / R \right]}$}{Substitution of sub-process $Q$ by $R$ in $P$}
+\nomenclature{$P_{\left[ Q / R \right]}$}{Substitution of sub-process $Q$ with $R$ in $P$}
 
 
 \begin{theorem}[Substitution with an equivalent process leaves semantics unchanged]
 \label{thm:process_substitution}
-Let $P, Q, R \in \mathcal{P}$ be processes and let $Q$ be a sub-process of $P$. Then, if $Q \equiv R$, substituting one or more occurrences of $Q$ in $P$ with $R$ leaves $\sem{P}$ unchanged.
+Let $P, Q, R \in \mathcal{P}$ be processes and let $Q \equiv R$. Then, substituting one or more occurrences of $Q$ in $P$ with $R$ leaves $\sem{P}$ unchanged:
   \begin{equation*}
-    P \equiv P_{\left[ Q / R \right]} \Leftrightarrow Q \equiv R
+    Q \equiv R \rightarrow P \equiv P_{\left[ Q / R \right]}.
   \end{equation*}
-If $Q$ is not a sub-process of $P$, $P \equiv P_{\left[ Q / R \right]}$ is trivially true, since $P$ is unaltered by the substitution.
-
+  
   \hfill\qedsymbol
 \end{theorem}
 
