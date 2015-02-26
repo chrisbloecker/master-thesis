@@ -370,7 +370,8 @@ Consider the definition of $\delta$ and $D$ from \expref{exp:sem_atomic} and let
     \sem{\repetition{B}{D}} & = & \sem{\choice{B}{\sequence{D}{\repetition{B}{D}}}{Id}} \\
                             & = & x \mapsto \left\{ \begin{array}{ll} 
                                                       \sem{\sequence{D}{\repetition{B}{D}}} \left( x \right) & \text{if } x < 1024 \\
-                                                      \sem{Id} \left( x \right)                              & \text{if } x \geq 1024 
+                                                      \sem{Id} \left( x \right)                              & \text{if } x \geq 1024 \\
+                                                      \bot                                                   & \text{otherwise}
                                                     \end{array}
                                             \right. \\
                             & = & \ldots
@@ -448,51 +449,34 @@ As a final remark, we point out that, for a process $P$, an inverse process as d
 \clearpage
 \section{Laws\index{Laws}}
 \label{chp:laws}
-\vspace*{-0.75em}
 In \chpref{chp:semantic_equivalence}, \defref{def:process_equivalence}, we have defined under which circumstances two processes are equivalent. This definition, together with the definitions for process semantics given in \chpref{chp:semantics}, allows us to find a set of laws regarding process equivalence in our model that can be used by the user of the calculus to transform processes into different representations.
 
 In the following, let $B \in \mathcal{B}$ and $C, P, Q, R \in \mathcal{P}$ be processes with suitable type signatures for composition in the respective cases. Proofs for the stated laws can be found in \appref{chp:proofs}.
 
-\vspace*{-0.75em}
 \subsection{Associativity\index{Associativity}\index{Laws!Associativity}}
-\vspace*{-0.75em}
 The associative property holds for sequence composition.
-\vspace*{-0.75em}
 \begin{eqnarray*}
   \sequence{P}{\sequence{Q}{R}} & \equiv & \sequence{\sequence{P}{Q}}{R}
 \end{eqnarray*}
-\vspace*{-0.75em}
 
 \subsection{Distributivity\index{Distributivity}\index{Laws!Distributivity}}
-\vspace*{-0.75em}
 Parallel and sequence composition distribute over choice composition. Also, sequence composition distributes over parallel composition.
-\vspace*{-0.75em}
 \begin{eqnarray*}
   \parallel{C}{P}{\choice{B}{Q}{R}} & \equiv & \choice{B}{\parallel{C}{P}{Q}}{\parallel{C}{P}{R}} \\
   \sequence{P}{\choice{B}{Q}{R}} & \equiv & \choice{B}{\sequence{P}{Q}}{\sequence{P}{R}} \\
   \sequence{P}{\parallel{C}{Q}{R}} & \equiv & \parallel{C}{\sequence{P}{Q}}{\sequence{P}{R}}
 \end{eqnarray*}
-\vspace*{-0.75em}
 
 \subsection{Neutral elements\index{Neutral element}\index{Laws!Neutral Element}}
-\vspace*{-0.75em}
 The identity process $Id$ is both a left and right neutral element for sequential composition.
-\vspace*{-1.5em}
 \begin{eqnarray*}
   \sequence{Id}{P} & \equiv & P \\
   \sequence{P}{Id} & \equiv & P
 \end{eqnarray*}
-\vspace*{-0.75em}
 
 \subsection{Idempotence\index{Idempotence}\index{Laws!Idempotence}}
-\vspace*{-0.75em}
-Regardless of the used predicate, every process is idempotent regarding choice composition. The identity process $Id$ is idempotent regarding sequence composition since it is both a left and right neutral element of choice composition. The error process $Err$ is idempotent regarding sequence composition due to process' strictness in the undefined value. Furthermore, both $Id$ and $Err$ are idempotent respective to repetition composition, regardless of the used predicate.
-\vspace*{-0.75em}
+The identity process $Id$ is idempotent regarding sequence composition since it is both a left and right neutral element of choice composition. The error process $Err$ is idempotent regarding sequence composition since it always produces the undefined value.
 \begin{eqnarray*}
-  \choice{B}{P}{P} & \equiv & P \\
   \sequence{Id}{Id} & \equiv & Id \\
   \sequence{Err}{Err} & \equiv & Err \\
-  \repetition{B}{Id} & \equiv & Id \\
-  \repetition{B}{Err} & \equiv & Err
 \end{eqnarray*}
-\vspace*{-2em}
