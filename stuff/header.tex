@@ -46,12 +46,6 @@
 \usepackage{makeidx}
 \usepackage{lscape}
 
-% for pictures
-\usepackage{tikz}
-\usetikzlibrary{positioning,shadows,arrows,shapes.geometric}
-\newcommand{\figannotation}[1]{\tikz{\node[fill=black, inner sep = 2pt][circle] {\tiny\color{white}{#1}};}}
-\newcommand{\smallfigannotation}[1]{\tikz{\node[fill=black, inner sep = 2pt, minimum size=10pt][circle] {\tiny\color{white}{#1}};}}
-
 \theoremstyle{theorem}
 \newtheorem{theorem}{Theorem}[chapter]
 \newtheorem{definition}[theorem]{Definition}
@@ -75,7 +69,7 @@
 
 %% Document properties %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newcommand{\projname}{Hive}
-\newcommand{\titel}{A process calculus\\ for\\ parallel and distributed programming\\ in Haskell}
+\newcommand{\titel}{A Process Calculus for\\ Parallel and Distributed Programming\\ in Haskell}
 \newcommand{\authorname}{Christopher Blöcker}
 \newcommand{\thesisname}{Master Thesis}
 \newcommand{\untertitel}{}
@@ -121,7 +115,7 @@
 \newcommand{\sem}[1]{sem \left\langle #1 \right\rangle}
 
 %% layout for nomenclature
-\setlength{\nomlabelwidth}{.20\hsize}
+\setlength{\nomlabelwidth}{.30\hsize}
 \renewcommand{\nomlabel}[1]{#1 \dotfill}
 \setlength{\nomitemsep}{-\parsep}
 
