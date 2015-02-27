@@ -43,7 +43,7 @@ Err :: Process a a
 \end{lstlisting}
 
 Basic processes are turned into processes by wrapping them using the \texttt{Basic}\index{Data constructor!Basic} data constructor. The developer is cautioned about using basic processes that incorporate side-effects as they potentially render the laws introduced in \chpref{chp:laws} invalid. \texttt{Basic}\index{Data constructor!Basic} takes a basic process\index{Process!Basic} of type \texttt{BasicProcess a b}, i.e. a computation in the \texttt{IO} monad that takes an input of type \texttt{a} and outputs a value of type \texttt{b}.
-\begin{lstlisting}[language=Haskell,caption=Signature of the \texttt{Simple} data constructor.,numbers=left,frame=bt,firstnumber=6]
+\begin{lstlisting}[language=Haskell,caption=Signature of the \texttt{Basic} data constructor.,numbers=left,frame=bt,firstnumber=6]
 Basic :: BasicProcess a b
       -> Process a b
 \end{lstlisting}
@@ -203,7 +203,7 @@ data Process a b where
 \end{lstlisting}
 
 \texttt{Basic} reflects the adaptations that are necessary to use \textsf{Cloud Haskell} for remote interpretation of processes: the output type of the wrapped basic process must have an instance of \texttt{Serializable} and a static \texttt{SerializableDict} for the same type must be provided. As mentioned in \chpref{chp:cloud_haskell}, this is necessary so remotely\footnote{This is true for locally spawned processes as well, as we can conceptually not distinguish between them: \textsf{Cloud Haskell} transparently takes care of that we can use both local and remote processes in the same way. Technically, however, we could inspect the process identifier and tell if the respective process is running on the same or a different node.} spawned processes know how to serialise their output and send it back to the caller.
-\begin{lstlisting}[language=Haskell,caption=Signature of the \texttt{Const} and \texttt{Simple} data constructors.,numbers=left,frame=bt,firstnumber=5]
+\begin{lstlisting}[language=Haskell,caption=Signature of the \texttt{Const} and \texttt{Basic} data constructors.,numbers=left,frame=bt,firstnumber=5]
 Basic :: (Serializable b)
       => CH.Static (SerializableDict b)
       -> BasicProcess a b
@@ -253,9 +253,9 @@ The signature of \texttt{runProcess} has to be extended by an additional paramet
 runProcess :: Master -> Process a b -> a -> CH.Process b
 \end{lstlisting}
 
-For a \texttt{Basic}\index{Process interpreter!Simple} process in a process structure, the process interpreter asks the master node for an available worker node where it can run the wrapped basic process on. This operation blocks until the master node is able to satisfy the request for an available worker node and supplies it to the interpreter. The interpreter then uses the closure generator \texttt{closureGen}, to generate a closure that is serialised and sent to the worker node for execution. This operation blocks until execution of the remotely spawned process has terminated and a result is obtained. The interpreter gives the worker node back to the master and returns the remotely calculated result to its caller.
-\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Simple} processes.,label=lst:runprocess_simple,numbers=left,frame=bt,firstnumber=3]
-runProcess master (Simple sDict closureGen) x = do
+For a \texttt{Basic}\index{Process interpreter!Basic} process in a process structure, the process interpreter asks the master node for an available worker node where it can run the wrapped basic process on. This operation blocks until the master node is able to satisfy the request for an available worker node and supplies it to the interpreter. The interpreter then uses the closure generator \texttt{closureGen}, to generate a closure that is serialised and sent to the worker node for execution. This operation blocks until execution of the remotely spawned process has terminated and a result is obtained. The interpreter gives the worker node back to the master and returns the remotely calculated result to its caller.
+\begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Basic} processes.,label=lst:runprocess_simple,numbers=left,frame=bt,firstnumber=3]
+runProcess master (Basic sDict closureGen) x = do
   node <- getNode master =<< getSelfPid
   res  <- call sDict node (closureGen x)
   returnNode master node
