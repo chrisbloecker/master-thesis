@@ -4,7 +4,7 @@ In the previous chapter we have seen two examples of process calculi\index{Proce
 
 First, let us define what we mean by \textit{process}\index{Process}: a process is (a piece of) a computer program. It can run concurrently with other processes. A process receives an input\index{Input} and produces an output\index{Output}. Essentially, a process can be seen as a function\index{Function} and just like that, it is pure and free of side-effects\index{Side-effect}, it does not have any other state\index{State} than the input it receives upon creation.
 
-For now we are not interested in \textbf{what} a process does or \textbf{how} it does that. We treat processes as black boxes that receive an input, perform an action and eventually produce an output. Our point of interest is the composition of processes and the definition of the semantics of the resulting processes.
+For now we are not interested in \textbf{what} a process does or \textbf{how} it does that. We treat processes as black boxes that receive an input, perform an action and eventually produce an output. Our point of interest is the composition of processes and the definition of the semantics of the resulting processes, which we define in the form of denotational semantics.
 
 \section{Syntax\index{Syntax}}
 \label{chp:syntax}
@@ -174,7 +174,7 @@ and invalid otherwise. The type signature of the resulting process is $\typesign
 \clearpage
 \section{Semantics\index{Semantics}}
 \label{chp:semantics}
-In \chpref{chp:syntax} we have introduced syntactical rules for process construction and in \chpref{chp:static_semantics} we have introduced static semantics of processes. In this section, we define the semantics of processes. 
+In \chpref{chp:syntax} we have introduced syntactical rules for process construction and in \chpref{chp:static_semantics} we have introduced static semantics of processes. In this section, we define the semantics of processes by giving them a denotation as it is common in the design of programming languages \cite{DenSem}.
 
 For the definition of process semantics, we introduce the polymorphic function 
 \begin{equation*}
@@ -193,7 +193,7 @@ For every atomic process, there is a function that is intrinsic to that particul
     \label{eqn:sem_atomic}
     \sem{P} = f_P
   \end{equation*}
-  \vspace*{-0.25em}
+  \vspace*{-0.5em}
   \hfill\qedsymbol
 \end{definition}
 
@@ -207,7 +207,7 @@ Let $Id \in \mathcal{P}$ be the identity process, i.e. the process that always o
   \label{eqn:sem_id}
   \sem{Id} = x \mapsto x
 \end{equation*}
-  \vspace*{-0.25em}
+  \vspace*{-0.5em}
   \hfill\qedsymbol
 \end{definition}
 
@@ -233,6 +233,7 @@ Let $Err \in \mathcal{P}$ be the error process, i.e. the process that always out
     \label{eqn:sem_error}
     \sem{Err} = x \mapsto \bot
   \end{equation*}
+  \vspace*{-0.5em}
   \hfill\qedsymbol
 \end{definition}
 
@@ -366,6 +367,8 @@ Let $B \in \mathcal{B}$ and $P \in \mathcal{P}$ be processes and let them be com
   \end{equation*}
   \hfill\qedsymbol
 \end{definition}
+
+The existence of a solution satisfying \defref{def:sem_repetition} is not immediately obvious. However, this is a well-known and well-studied problem. The theory of least fixed point semantics from domain theory guarantees the existence of a solution and gives information about how to find it \cite{DenSem}.
 
 \begin{example}[Semantics of repetition composition\index{Semantics!Repetition}]
 \label{exp:sem_repetition}
