@@ -1,6 +1,6 @@
 \chapter{Implementation\index{Implementation}}
 \label{chp:implementation}
-In this chapter we describe two implementations\index{Implementation} of the algebraic model from \chpref{chp:algebraic_model} in \textsf{Haskell}\index{Haskell}. We closely resemble the structure and semantics of the algebraic model in our data model in \textsf{Haskell}, so it is straightforward to transform process structures formulated in \textsf{Haskell} into a representation in our model and reason about them. As a useful consequence, the laws stated in \chpref{chp:laws} transform from the model to processes in our implementation and remain valid.
+In this chapter we describe two implementations\index{Implementation} of the calculus from \chpref{chp:algebraic_model} in \textsf{Haskell}\index{Haskell}. We closely resemble the structure and semantics of the algebraic model in our data model in \textsf{Haskell}, so it is straightforward to transform process structures formulated in \textsf{Haskell} into a representation in our model and reason about them. As a useful consequence, the laws stated in \chpref{chp:laws} transform from the model to processes in our implementation and remain valid.
 
 For one of the implementations, we use \textsf{Concurrent Haskell} and fork local threads in the \texttt{IO} monad for parallelisation on one computer. For the other one, we use \textsf{Cloud Haskell} to distribute processes into a distributed system and run them in \textsf{Cloud Haskell}'s \texttt{Process} monad. Other implementation based on e.g. \textsf{Parallel Haskell} are imaginable.
 
@@ -236,7 +236,9 @@ The master\index{Node!master} node is responsible for handling client\index{Clie
 
 Worker nodes\index{Node!worker} are kept very simple. When started and supplied with the master's address, they report their availability to the master and wait for further instruction.
 
-The process interpreter\index{Interpreter}, is run in a new process by the master for every client request\index{Request} that is received. The interpreter takes the process description from the request and distributes the incorporated sub-processes\index{Sub-process} to worker\index{Node!worker} nodes or executes them locally if they have been marked for local execution using the \texttt{Local} wrapper. For every basic process, the interpreter asks the master for a worker node where it can run the basic process on. When receiving a request for a worker node, the master fetches one from a FIFO queue and returns it to the interpreter as soon as there is one available. After a basic process has finished execution on a worker node, the interpreter returns the respective worker node to the master for future allocation to other interpreters. %It would very well be possible to employ a more sophisticated scheduling\index{Scheduling} algorithm, but the combination of a FIFO\index{FIFO} queue and a work stealing\index{Work stealing} \cite{} alike behaviour of the process interpreter is fairly efficient and easy to implement. At this time, our primary goal is not to achieve the best possible load balancing or employ the most efficient technique for queueing worker nodes, however this leaves room for future improvement.
+The process interpreter\index{Interpreter}, is run in a new process by the master for every client request\index{Request} that is received. The interpreter takes the process description from the request and distributes the incorporated sub-processes\index{Sub-process} to worker\index{Node!worker} nodes or executes them locally if they have been marked for local execution using the \texttt{Local} wrapper. For every basic process, the interpreter asks the master for a worker node where it can run the basic process on. When receiving a request for a worker node, the master fetches one from a FIFO queue and returns it to the interpreter as soon as there is one available. After a basic process has finished execution on a worker node, the interpreter returns the respective worker node to the master for future allocation to other interpreters.
+
+The code of the distribution system can be found in \appref{app:dvd}.
 
 
 \subsection{Process interpreter\index{Process interpreter}\index{Interpreter}}
@@ -280,36 +282,8 @@ runProcess master (Multilel ps fold) x = do
   runProcess master fold (x, ress)
 \end{lstlisting}
 
-The adaptations that have to be made for the remaining process types, i.e. \texttt{Choice}, \texttt{Parallel}, \texttt{Sequence} and \texttt{Repetition} are minimal. They involve adding the necessary \texttt{master} parameter and adaptations specific to the \textsf{Cloud Haskell} \texttt{Process} monad, i.e. using \texttt{spawnLocal} instead of \texttt{forkIO} and lifting actions on mvars into the \texttt{Process} monad using \texttt{liftIO}. The implementation can be found in \appref{app:distributed_split_slice}.
+The adaptations that have to be made for the remaining process types, i.e. \texttt{Choice}, \texttt{Parallel}, \texttt{Sequence} and \texttt{Repetition} are minimal. They involve adding the necessary \texttt{master} parameter and adaptations specific to the \textsf{Cloud Haskell} \texttt{Process} monad, i.e. using \texttt{spawnLocal} instead of \texttt{forkIO} and lifting actions on mvars into the \texttt{Process} monad using \texttt{liftIO}. The implementation can be found in \appref{app:distributed_split_slice} and \appref{app:dvd}.
 
-
-%\subsection{Handling a request}
-%Now that we have taken a look at how our system is structured and how the process interpreter works, we want to take a look at what happens in the system when a client submits a request.
-
-%Assume the master node is running already with a set of worker nodes connected. The client has knowledge about the master's address and the ability to directly send requests to it. \Figref{fig:request_handling} shows the behaviour of the system in the event a request is submitted by a client. Note that not all involved worker nodes are shown explicitly, but symbolically combined as \enquote{Worker}.
-
-%\begin{figure}[h!]
-%  \centering
-%  \input{img/request_handling.tex}
-%  \caption{Behaviour of the system when a request is submitted by a client.}
-%  \label{fig:request_handling}
-%\end{figure}
-
-%\begin{enumerate}
-%  \item The client submits a request to the master.
-%  \item The master replies with the assigned ticket to the client.
-%  \item The master spawns a process interpreter on its local node and passes the request to it.
-%  \item The interpreter asks the master for workers for the purpose of spawning processes on them.
-%  \item The master replies with available workers to the interpreter. If there are no workers available, the master waits with its reply until workers are available.
-%  \item The interpreter spawns processes on the workers .
-%  \item Once a process on a worker has calculated its result, it sends it back to the interpreter and terminates.
-%  \item The client supplies the previously received ticket number to the master, hoping the request has been processes completely.
-%  \item The master tells the client that there is no response available yet.
-%  \item After execution of processes on the workers, the interpreter returns them to the master for further allocation to other interpreters. Note that steps 4 to 10 can, and most likely will, happen multiple times while processing a request.
-%  \item Once the interpreter has finished processing the client's request, it submits the solution to the problem to the master.
-%  \item The client supplies the ticket to the master again.
-%  \item The master responds to the client with the calculated solution.
-%\end{enumerate}
 
 \clearpage
 \section{Example: a parallel interpreter for arithmetic expressions\index{Example}}

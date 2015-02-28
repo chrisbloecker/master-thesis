@@ -206,7 +206,7 @@ In the following, let $P, Q, R, S, T \in \mathcal{P}$ be processes with $Q \equi
 
 Consider the case that $Q$ is not a sub-process of $P$. Then, trivially $P \equiv P_{\left[ Q / R \right]}$.
 
-Now consider the case that $Q$ is a sub-process of $P$ and distinguish between its structural properties:
+Now consider the case that $Q$ is a sub-process of $P$. The claimed property can be shown by structural induction:
 \begin{enumerate}
   \item $P = Q$ is a basic process with intrinsic function $f_Q$. Replacing $Q$ with $R$ gives $P_{\left[ Q / R \right]} = R$ with intrinsic function $f_R$. Since $Q \equiv R$, it must be $f_Q = f_R$ and thus $P \equiv P_{\left[ Q / R \right]}$. This establishes the basic case.
   \item $P = \sequence{Q}{S}$ has the structure of sequence composition. Then:
@@ -281,7 +281,7 @@ Now consider the case that $Q$ is a sub-process of $P$ and distinguish between i
   \item $P = \repetition{Q}{S}$ has the structure of repetition. Then $P \equiv P_{\left[ Q / R \right]}$ since repetition is expressed in terms of choice composition and sequence composition and process equivalence for these cases has been shown in (2), (3), (4), (5), (6).
   \item $P = \repetition{S}{Q}$ has the structure of repetition. Then $P \equiv P_{\left[ Q / R \right]}$ since repetition is expressed in terms of choice composition and sequence composition and process equivalence for these cases has been shown in (2), (3), (4), (5), (6).
 \end{enumerate}
-In all cases, $P \equiv P_{\left[ Q / R \right]}$ holds an thus, \thmref{thm:substitution_equivalence} is valid.
+In all cases $P \equiv P_{\left[ Q / R \right]}$ holds. Thus, \thmref{thm:substitution_equivalence} is valid.
 
 \hfill$\blacksquare$
 \end{myproof}
