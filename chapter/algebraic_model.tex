@@ -32,20 +32,20 @@ Let $\mathcal{P}$ be the set of processes\index{Process} and let $P, Q, R \in \m
 % static semantics
 % ==============================================================================
 
-\section{Static Semantics\index{Semantics!static}}
+\section{Static Semantics\index{Semantics!Static}}
 \label{chp:static_semantics}
-In this section, we define the static semantics of the process combinators in our calculus\index{Calculus}. We define what a \textbf{basic}\index{Process!basic} and what a \textbf{composed}\index{Process!composed} process is and we equip processes with a type signature\index{Type!signature}. The \textbf{type signatures} of processes are used to determine whether they can be composed using a certain combinator to yield a valid process with respect to their types.
+In this section, we define the static semantics of the process combinators\index{Process!Combinator} in our calculus\index{Calculus}. We define what a \textbf{basic}\index{Process!Basic} and what a \textbf{composed}\index{Process!Composed} process is and we equip processes with a type signature\index{Type!Signature}. The \textbf{type signatures} of processes are used to determine whether they can be composed using a certain combinator to yield a valid process with respect to their types.
 
-As before, let $\mathcal{P}$ be the set of processes. A basic\index{Process!basic}, or atomic\index{Process!atomic}, process is a process that performs an atomic operation an is no further divisible insofar, that it does not involve any of the introduced process combinators. A composed\index{Process!composed} process is a process that is composed of other processes, using one or many process combinators.
+As before, let $\mathcal{P}$ be the set of processes. A basic\index{Process!Basic} process is a process that performs a basic operation an is no further divisible insofar, that it does not involve any of the introduced process combinators. A composed\index{Process!Composed} process is a process that is composed of other processes, using one or many process combinators.
 
-Intuitively, we call values that we present to processes their \textbf{input} and values produced by processes their \textbf{output}.
+Intuitively, we call values that we present to processes their \textbf{input}\index{Input} and values produced by processes their \textbf{output}\index{Output}.
 
 \begin{definition}[Types\index{Type}]
 Let $\mathcal{T}$ be the set of types and $T_i$ a type for every $i$ with
 \begin{equation*}
   \mathcal{T} = \bigcup_i \left\{ T_i \right\}
 \end{equation*}
-Furthermore, let lowercase letters, e.g. $a, b, c$ be type variables, i.e. placeholders for types.
+Furthermore, let lowercase letters, e.g. $a, b, c$ be type variables\index{Type!Variable}, i.e. placeholders for types.
 
 \hfill\qedsymbol
 \end{definition}
@@ -59,7 +59,7 @@ Let $T_{Boolean} \in \mathcal{T}$ be the type of truth values with
 \hfill\qedsymbol
 \end{definition}
 
-\begin{definition}[Undefined values]
+\begin{definition}[Undefined values\index{Undefined Value}]
 For every $T_i \in \mathcal{T}$, let $\bot_i \in T_i$ be the undefined value of type $T_i$ that is distinguishable from every other value of type $T_i$. Every type implicitly contains an undefined value, even if not explicitly mentioned\footnote{That means the type $T_{Boolean}$ actually contains the three values $False$, $True$ and $\bot_{Boolean}$.}. When talking about the undefined value $\bot$, we omit its type and only mention it explicitly when necessary.
 
 \hfill\qedsymbol
@@ -70,7 +70,7 @@ For every $T_i \in \mathcal{T}$, let $\bot_i \in T_i$ be the undefined value of 
 % ------------------------------------------------------------------------------
 % type signature
 % ------------------------------------------------------------------------------
-\begin{definition}[Type signature\index{Type!signature}]
+\begin{definition}[Type signature\index{Type!Signature}]
 \label{def:type_signature}
 The type signature of a process states of which types the input and the output of the respective process are. Let $\rho \colon \mathcal{P} \to \mathcal{T} \times \mathcal{T}$ be the function that assigns a type signature to processes.
 
@@ -96,7 +96,7 @@ Let $Id \in \mathcal{P}$ be the identity process, i.e. the process that outputs 
 % ------------------------------------------------------------------------------
 % processes as predicates
 % ------------------------------------------------------------------------------
-In the following, we also call processes $B \in \mathcal{P}$ with output type $T_{Boolean}$, i.e. with the property $\rho \left( B \right) = \left( a, T_{Boolean} \right)$ for some $a$ \textit{predicates}. They are used to express deterministic choice between processes and termination of repetition.
+In the following, we also call processes $B \in \mathcal{P}$ with output type $T_{Boolean}$, i.e. with the property $\rho \left( B \right) = \left( a, T_{Boolean} \right)$ for some $a$ \textit{predicates}\index{Predicate}. They are used to express deterministic choice between processes and termination of repetition.
 
 % ------------------------------------------------------------------------------
 % choice
@@ -187,8 +187,8 @@ $sem$ takes a process $P \in \mathcal{P}$ and returns its meaning, i.e. the func
 % ------------------------------------------------------------------------------
 % atomic process
 % ------------------------------------------------------------------------------
-For every basic process, there is a function that is intrinsic to that particular process: for a basic process $P \in \mathcal{P}$, let its intrinsic function be called $f_P$. Composed processes do not involve an intrinsic function and the notation $f_P$ does not make sense if $P$ is not an atomic process. The semantics of an atomic\index{Process!atomic} process $P \in \mathcal{P}$ is directly given by its intrinsic function.
-\begin{definition}[Semantics of atomic processes\index{Semantics!atomic process}]
+For every basic process, there is a function that is intrinsic to that particular process: for a basic process $P \in \mathcal{P}$, let its intrinsic function\index{Intrinsic Function} be called $f_P$. Composed processes do not involve an intrinsic function and the notation $f_P$ does not make sense if $P$ is not an atomic process. The semantics of a basic\index{Process!Basic} process $P \in \mathcal{P}$ is directly given by its intrinsic function.
+\begin{definition}[Semantics of basic processes\index{Semantics!Basic Process}]
   \label{def:sem_atomic}
   Let $P$ be an atomic process, then the semantics $\sem{P}$ is given by $P$'s intrinsic function $f_P$:
   \begin{equation*}
@@ -199,22 +199,7 @@ For every basic process, there is a function that is intrinsic to that particula
   \hfill\qedsymbol
 \end{definition}
 
-% ------------------------------------------------------------------------------
-% id
-% ------------------------------------------------------------------------------
-\begin{definition}[Semantics of the identity process\index{Semantics!identity process}\index{Process!identity}\index{Identity process}]
-\label{def:sem_id}
-Let $Id \in \mathcal{P}$ be the identity process, i.e. the process that always outputs its input. Its semantics is:
-\begin{equation*}
-  \label{eqn:sem_id}
-  \sem{Id} = x \mapsto x.
-\end{equation*}
-  \vspace*{-0.5em}
-  \hfill\qedsymbol
-\end{definition}
-
-
-\begin{example}[Semantics of an atomic process]
+\begin{example}[Semantics of basic processes]
   \label{exp:sem_atomic}
   Let $\sigma \colon \mathbb{N} \to \mathbb{N}, x \mapsto x+1$ be the function that is intrinsic to the atomic process $S \in \mathcal{P}$. Then the semantics $\sem{S}$ of $S$ is given by its intrinsic function $\sigma$:
   \begin{equation*}
@@ -226,11 +211,25 @@ Let $Id \in \mathcal{P}$ be the identity process, i.e. the process that always o
   \end{equation*}
 \end{example}
 
+% ------------------------------------------------------------------------------
+% id
+% ------------------------------------------------------------------------------
+\begin{definition}[Semantics of the identity process\index{Semantics!Identity Process}\index{Process!Identity}\index{Identity Process}]
+\label{def:sem_id}
+Let $Id \in \mathcal{P}$ be the identity process, i.e. the process that always outputs its input. Its semantics is:
+\begin{equation*}
+  \label{eqn:sem_id}
+  \sem{Id} = x \mapsto x.
+\end{equation*}
+  \vspace*{-0.5em}
+  \hfill\qedsymbol
+\end{definition}
+
 
 The semantics of the error process $Err$, no matter which input it receives, is always the undefined value $\bot$ of the respective type. 
-\begin{definition}[Semantics of the error process\index{Semantics!error process}\index{Process!error}\index{Error process}]
+\begin{definition}[Semantics of the error process\index{Semantics!Error Process}\index{Process!Error}\index{Error Process}]
 \label{def:sem_err}
-Let $Err \in \mathcal{P}$ be the error process, i.e. the process that always outputs the undefined value $\bot$. Its semantics is:
+Let $Err \in \mathcal{P}$ be the error process, i.e. the process that always outputs the undefined value\index{Undefined Value} $\bot$. Its semantics is:
   \begin{equation*}
     \label{eqn:sem_error}
     \sem{Err} = x \mapsto \bot.
@@ -242,7 +241,7 @@ Let $Err \in \mathcal{P}$ be the error process, i.e. the process that always out
 % ------------------------------------------------------------------------------
 % composed processes
 % ------------------------------------------------------------------------------
-The semantics of composed\index{Process!composed} processes is determined by their structure, i.e. the used process combinator, and the semantics of the involved sub-processes. The semantics of processes created by choice composition, parallel composition and sequence composition is defined inductively. The semantics of processes created by repetition composition is given by a recursive equation.
+The semantics of composed\index{Process!Composed} processes is determined by their structure, i.e. the used process combinator, and the semantics of the involved sub-processes\index{Sub-process}. The semantics of processes created by choice composition, parallel composition and sequence composition is defined inductively. The semantics of processes created by repetition composition is given by a recursive equation.
 
 \begin{definition}[Sub-process\index{Sub-process}]
 Let $P \in \mathcal{P}$ be a composed process. Then the processes $P$ is composed of are called the sub-processes of $P$.
@@ -254,7 +253,7 @@ Let $P \in \mathcal{P}$ be a composed process. Then the processes $P$ is compose
 % choice
 % ------------------------------------------------------------------------------
 \begin{definition}[Shorthand notation for predicate processes]
-Let $B$ be a predicate. Then $B \left( x \right)$ is a shorthand notion for $\sem{B} \left( x \right) = True$ and $\overline{B \left( x \right)}$ is a shorthand notation for $\sem{B} \left( x \right) = False$. For non-predicates this notation is not defined.
+Let $B$ be a predicate\index{Predicate}. Then $B \left( x \right)$ is a shorthand notion for $\sem{B} \left( x \right) = True$ and $\overline{B \left( x \right)}$ is a shorthand notation for $\sem{B} \left( x \right) = False$. For non-predicates this notation is not defined.
 
 \hfill\qedsymbol
 \end{definition}
@@ -359,7 +358,7 @@ Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_ato
 % ------------------------------------------------------------------------------
 % repetition
 % ------------------------------------------------------------------------------
-The semantics of a process with the structure of repetition composition is given by a recursive equation. It involves repeated sequential composition of a process with itself. A predicate is employed to test the process' input for a property and determine the length of the process composition sequence.
+The semantics of a process with the structure of repetition composition is given by a recursive equation. It involves repeated sequential composition of a process with itself. A predicate is employed to test the process's input for a property and determine the length of the process composition sequence.
 \begin{definition}[Semantics of repetition composition\index{Semantics!Repetition}]
 \label{def:sem_repetition}
 Let $B$ be a predicate, let $P \in \mathcal{P}$ be processes and let them be composed using repetition composition, i.e. $\repetition{B}{P}$. Then the semantics of $\repetition{B}{P}$ is given by the recursive equation
@@ -370,7 +369,7 @@ Let $B$ be a predicate, let $P \in \mathcal{P}$ be processes and let them be com
   \hfill\qedsymbol
 \end{definition}
 
-The existence of a solution satisfying \defref{def:sem_repetition} is not immediately obvious. However, this is a well-known and well-studied problem. The theory of least fixed point semantics from domain theory guarantees the existence of a solution and gives information about how to find it \cite{DenSem}.
+The existence of a solution satisfying \defref{def:sem_repetition} is not immediately obvious. However, this is a well-known and well-studied problem. The theory of least fixed point semantics\index{Least Fixed Point Semantics} from domain theory\index{Domain Theory} guarantees the existence of a solution and gives information about how to find it \cite{DenSem}.
 
 \begin{example}[Semantics of repetition composition\index{Semantics!Repetition}]
 \label{exp:sem_repetition}
@@ -409,7 +408,7 @@ Let $P, Q \in \mathcal{P}$ be processes. Then $P$ and $Q$ are equivalent iff the
 
 \nomenclature{$\equiv$}{Process equivalence}
 
-\begin{definition}[Process substitution\index{Process!substitution}]
+\begin{definition}[Process substitution\index{Process!Substitution}]
 \label{def:process_substitution}
 Let $P, Q, R \in \mathcal{P}$ be processes and let $Q$ be a sub-process of $P$. Then $P$ can be transformed into a new process by replacing one or more occurrence of $Q$ in $P$ with $R$. This is denoted by $P_{\left[ Q / R \right]}$.
 
@@ -435,7 +434,7 @@ The property stated in \thmref{thm:process_substitution} allows us to transform 
 % ------------------------------------------------------------------------------
 % inverse process
 % ------------------------------------------------------------------------------
-\begin{definition}[Inverse process\index{Process!inverse}\index{Inverse process}]
+\begin{definition}[Inverse process\index{Process!Inverse}\index{Inverse process}]
 \label{def:inverse_process}
 Let $P \in \mathcal{P}$ be a process. Then an inverse process $\overline{P}$ for $P$ is a process that satisfies the following property:
   \begin{equation*}
