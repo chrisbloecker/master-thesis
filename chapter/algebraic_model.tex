@@ -1,3 +1,36 @@
+\nomenclature[301]{$\choice{\_}{\_}{\_}$\dotfill}{Choice composition of processes}
+\nomenclature[302]{$\parallel{\_}{\_}{\_}$\dotfill}{Parallel composition of processes}
+\nomenclature[303]{$\sequence{\_}{\_}$\dotfill}{Sequential composition of processes}
+\nomenclature[304]{$\repetition{\_}{\_}$\dotfill}{Repetition of a process}
+
+\nomenclature[310]{\hfill}{}
+
+\nomenclature[311]{$\mathcal{P}$\dotfill}{Set of all processes}
+\nomenclature[312]{$B, C, P, Q, R, S, T$\dotfill}{Processes}
+\nomenclature[313]{$\mathcal{T}$\dotfill}{Set of types}
+\nomenclature[314]{$T_i$\dotfill}{Data type $i$}
+\nomenclature[315]{$a,b,c,d,e$\dotfill}{Type variables}
+\nomenclature[316]{$\rho$\dotfill}{Function that assigns a type signature to a process}
+\nomenclature[317]{$\bot$\dotfill}{The undefined value}
+
+\nomenclature[320]{\hfill}{}
+\nomenclature[321]{$sem$\dotfill}{Function that gives the semantics of a process}
+\nomenclature[322]{$f_P$\dotfill}{Intrinsic function of a basic process $P$}
+\nomenclature[323]{$\circ$\dotfill}{Function composition}
+\nomenclature[324]{$B\left(x\right)$\dotfill}{Shorthand notation for $\sem{B} \left( x \right) = True$}
+\nomenclature[325]{$\overline{B\left(x\right)}$\dotfill}{Shorthand notation for $\sem{B} \left( x \right) = False$}
+\nomenclature[326]{$Id$\dotfill}{The identity process}
+\nomenclature[327]{$Err$\dotfill}{The error process}
+
+\nomenclature[330]{\hfill}{}
+\nomenclature[331]{$\equiv$\dotfill}{Process equivalence}
+\nomenclature[332]{$P_{\left[ Q / R \right]}$\dotfill}{Substitution of sub-process $Q$ with $R$ in $P$}
+\nomenclature[333]{$\overline{P}$\dotfill}{Process that is inverse to $P$}
+
+\nomenclature[900]{\hfill}{}
+\nomenclature[931]{iff\dotfill}{if and only if}
+
+
 \chapter{The Calculus\index{Calculus}}
 \label{chp:algebraic_model}
 \label{chp:calculus}
@@ -16,16 +49,6 @@ Let $\mathcal{P}$ be the set of processes\index{Process} and let $P, Q, R \in \m
   \item $\sequence{P}{Q}$ \hspace*{4.8em} (Sequence)\index{Syntax!Sequence}
   \item $\repetition{R}{P}$ \hspace*{4.4em} (Repetition)\index{Syntax!Repetition}
 \end{itemize}
-
-\nomenclature{$\mathcal{P}$}{Set of all processes}
-\nomenclature{$\mathcal{B}$}{Set of processes with output type $T_{Boolean}$}
-\nomenclature{$B, C, P, Q, R, S, T$}{Processes}
-\nomenclature{$\choiceop$}{Operator used in choice composition}
-\nomenclature{$\parallelop$}{Operator used in parallel composition}
-\nomenclature{$\sequenceop$}{Operator used in sequence composition}
-\nomenclature{$\repetitionop$}{Operator used in repetition}
-\nomenclature{$a,b,c,d,e$}{Type variables}
-\nomenclature{$T_i$}{Data type $i$}
 
 
 % ==============================================================================
@@ -65,7 +88,6 @@ For every $T_i \in \mathcal{T}$, let $\bot_i \in T_i$ be the undefined value of 
 \hfill\qedsymbol
 \end{definition}
 
-\nomenclature{$\mathcal{T}$}{Set of types}
 
 % ------------------------------------------------------------------------------
 % type signature
@@ -88,11 +110,6 @@ Let $Id \in \mathcal{P}$ be the identity process, i.e. the process that outputs 
 \hfill\qedsymbol
 \end{definition}
 
-\nomenclature{$Id$}{The identity process}
-\nomenclature{$Err$}{The error process}
-\nomenclature{$\bot$}{The undefined value}
-\nomenclature{$\rho$}{Function that assigns a type signature to a process}
-
 % ------------------------------------------------------------------------------
 % processes as predicates
 % ------------------------------------------------------------------------------
@@ -114,7 +131,7 @@ and invalid otherwise. The type signature of the resulting process is $\typesign
 \hfill\qedsymbol
 \end{definition}
 
-\nomenclature{iff}{if and only if}
+
 
 % ------------------------------------------------------------------------------
 % parallel
@@ -169,10 +186,6 @@ and invalid otherwise. The type signature of the resulting process is $\typesign
 % ==============================================================================
 % semantics
 % ==============================================================================
-\nomenclature{$sem$}{Function that gives the semantics of a process}
-\nomenclature{$f_P$}{Intrinsic function of a basic process $P$}
-\nomenclature{$\circ$}{Function composition}
-
 \clearpage
 \section{Semantics\index{Semantics}}
 \label{chp:semantics}
@@ -257,10 +270,6 @@ Let $B$ be a predicate\index{Predicate}. Then $B \left( x \right)$ is a shorthan
 
 \hfill\qedsymbol
 \end{definition}
-
-
-\nomenclature{$B\left(x\right)$}{Shorthand notation for $\sem{B} \left( x \right) = True$}
-\nomenclature{$\overline{B\left(x\right)}$}{Shorthand notation for $\sem{B} \left( x \right) = False$}
 
 
 The semantics of a process with the structure of choice composition is that of one of its sub-processes. A predicate is employed to inspect the input and decide which of the sub-processes determines the semantics.
@@ -406,7 +415,6 @@ Let $P, Q \in \mathcal{P}$ be processes. Then $P$ and $Q$ are equivalent iff the
   \hfill\qedsymbol
 \end{definition}
 
-\nomenclature{$\equiv$}{Process equivalence}
 
 \begin{definition}[Process substitution\index{Process!Substitution}]
 \label{def:process_substitution}
@@ -414,8 +422,6 @@ Let $P, Q, R \in \mathcal{P}$ be processes and let $Q$ be a sub-process of $P$. 
 
 \hfill\qedsymbol
 \end{definition}
-
-\nomenclature{$P_{\left[ Q / R \right]}$}{Substitution of sub-process $Q$ with $R$ in $P$}
 
 
 \begin{theorem}[Substitution with an equivalent process leaves semantics unchanged]
@@ -442,8 +448,6 @@ Let $P \in \mathcal{P}$ be a process. Then an inverse process $\overline{P}$ for
   \end{equation*}
   \hfill\qedsymbol
 \end{definition}
-
-\nomenclature{$\overline{P}$}{Process that is inverse to $P$}
 
 
 As a final remark, we point out that, for a process $P$, an inverse process as defined in \defref{def:inverse_process} does \textbf{not} exist in general since not every computable function is invertible\footnote{Take, e.g. the function $f \colon x \mapsto x^2$. Clearly, $f$ is not injective since $f \left( x \right) = f \left( -x \right)$ and therefore not invertible. However, there is an inverse relation $\overline{f_r} \colon x \mapsto \left\{ \overline{x} \,|\, f \left( \overline{x} \right) = x \right\}$ that maps a value $x$ to the set of values that, if $f$ is applied to them, yield $x$.}.

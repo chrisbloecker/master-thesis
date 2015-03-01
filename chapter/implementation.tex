@@ -1,3 +1,6 @@
+\nomenclature[940]{ghc\dotfill}{The Glasgow Haskell Compiler}
+\nomenclature[941]{JSON\dotfill}{JavaScript Object Notation}
+
 \chapter{Implementation\index{Implementation}}
 \label{chp:implementation}
 In this chapter, we describe two implementations\index{Implementation} of the calculus from \chpref{chp:algebraic_model} in \textsf{Haskell}\index{Haskell}. We design our implementation in \textsf{Haskell} to closely resemble the structure and semantics of our calculus, so it is straightforward to transform process structures formulated in \textsf{Haskell} into a representation in our calculus and reason about them. As a useful consequence, the laws stated in \chpref{chp:laws} transform from the calculus to processes in our implementation and remain valid.
@@ -5,8 +8,6 @@ In this chapter, we describe two implementations\index{Implementation} of the ca
 For one of the implementations, we use \textsf{Concurrent Haskell}\index{Concurrent Haskell}\index{Haskell!Concurrent Haskell} and fork local threads in the \texttt{IO} monad for parallelisation on one computer. For the other one, we use \textsf{Cloud Haskell}\index{Cloud Haskell}\index{Haskell!Cloud Haskell} to distribute processes into a distributed system and run them in \textsf{Cloud Haskell}'s \texttt{Process} monad. Other implementations based on, e.g. \textsf{Parallel Haskell} are imaginable.
 
 Ideally, we want the two implementations to be usable interchangeably by simply importing the desired implementation and without changing any of the productive code, however, we cannot achieve this at the moment. When using the implementation based on \textsf{Cloud Haskell}, we need to require additional properties of the data types that are transmitted over the network to other processes. Furthermore, in order to run code remotely, the code has to be known on the remote node since \textsf{ghc}\footnote{The Glasgow Haskell Compiler, c.f. \url{https://www.haskell.org/ghc/}.}\index{GHC} does not support serialising and transmitting functions over the network \cite{Epstein:2011:THC:2034675.2034690}. To solve this problem, a trick is used that requires us to change the model of basic processes slightly. However, we are optimistic that in future versions of \textsf{ghc} it will be possible to achieve full interchangeability of both (and possibly more) implementations.
-
-\nomenclature{ghc}{The Glasgow Haskell Compiler}
 
 
 \clearpage
@@ -233,8 +234,6 @@ For the interpretation of process structures in a distributed system, some kind 
 The architecture of the system's infrastructure is intentionally kept simple and is as shown in \figref{fig:architecture}. It involves a designated \textbf{master}\index{Node!Master} node and a collection of \textbf{worker}\index{Node!Worker} nodes. The master node provides an interface\index{Interface} through which processes can be inserted into the system by a client.
 
 When a client\index{Client} wants to submit a request\index{Request}, he has to make use of the interface and supply a problem description in an appropriate format, e.g. a JSON\footnote{JavaScript Object Notation \url{http://www.json.org/}}\index{JSON} document. A parser reads the submitted JSON document, generates a corresponding process structure from its content and passes it on to the process interpreter if the document contains a valid process description. For simplicity, we assume in the following that a request equals an interpretable process description.
-
-\nomenclature{JSON}{JavaScript Object Notation}
 
 The master\index{Node!Master} node is responsible for handling client\index{Client} requests, logging information related to the received requests and managing connected nodes. When a request is received, the master spawns a new \textsf{Cloud Haskell} process that runs the process interpreter\index{Interpreter} and passes the request to the new process where it is interpreted. At the same time, the master assigns a ticket ID to the request, logs the request together with its ID to a database\footnote{For this purpose, the \texttt{acid-state} library is used. \texttt{acid-state} allows to save \textsf{Haskell} values into a file-based database if their type has an instance of \texttt{SafeCopy}. Further information on \texttt{acid-state} can be found at \url{http://acid-state.seize.it/} and \url{https://github.com/acid-state/acid-state}} and reports the ticket ID to the client. When the interpreter finishes interpretation of the process structure from the request, it reports the result to the master. The master saves the result to the database and associates it with the according ticket ID. At any time, the client can try to retrieve the result by supplying the request's ticket ID to the master through the interface. The master then tries to read the result from the database, but only replies to the client's satisfaction after the interpretation of the request has been finished and the result logged to the database.
 

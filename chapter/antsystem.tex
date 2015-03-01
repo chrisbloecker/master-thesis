@@ -1,15 +1,30 @@
-\chapter{A real world example\index{Example}}
+\nomenclature[500]{\hfill}{}
+\nomenclature[501]{$G$\dotfill}{A graph}
+\nomenclature[502]{$V$\dotfill}{Set of nodes of a graph}
+\nomenclature[503]{$E$\dotfill}{Set of edges of a graph}
+\nomenclature[504]{$\delta$\dotfill}{Labelling function for graph edges}
+\nomenclature[505]{$\phi$\dotfill}{Function that gives the length of a path in a graph}
+
+\nomenclature[510]{\hfill}{}
+\nomenclature[511]{$N\left(i\right)$\dotfill}{Set of unvisited neighbour nodes of node $i$}
+\nomenclature[512]{$\eta_{i,j}$\dotfill}{Heuristic value of edge from node $i$ to $j$}
+\nomenclature[513]{$\tau_{i,j}$\dotfill}{Pheromone concentration on edge from node $i$ to $j$}
+\nomenclature[514]{$\tau_0$\dotfill}{Initial pheromone concentration}
+\nomenclature[515]{$\tau^+_i$\dotfill}{Pheromone amount to be deposited by ant $i$}
+\nomenclature[516]{$\alpha$\dotfill}{Value to weigh the influence of pheromones}
+\nomenclature[517]{$\beta$\dotfill}{Value to weigh the influence of heuristic information}
+\nomenclature[518]{$p_j$\dotfill}{Probability of visiting node $j$ next}
+\nomenclature[519]{$s_i$\dotfill}{Solution candidate $i$}
+\nomenclature[520]{$c_s$\dotfill}{Costs of solution $s$}
+
+\nomenclature[950]{TSP\dotfill}{Travelling Salesman Problem}
+
+\chapter{A Real World Example\index{Example}}
 In this chapter, we use the previously developed process calculus to build a distributed program that finds solutions for the travelling salesman problem\index{Travelling Salesman Problem}. Since the travelling salesman problem is considered to be a computationally hard optimisation problem, we do not have extended hopes in finding optimal solutions and therefore apply the meta-heuristic\index{Meta-heuristic} approach of artificial ant systems to solve it.
 
 \section{The travelling salesman problem\index{Travelling Salesman Problem}}
 \label{chp:tsp}
 The travelling salesman problem (or short: \textsc{TSP}\index{TSP}) is a graph theoretic\index{Graph Theory} optimisation problem. For a graph $G = \left( V, E, \delta \right)$ where $V = \left\{ v_1, v_2, \ldots, v_n \right\}$ is the set of nodes, $E \subseteq V \times V$ is the set of edges, i.e. the connections between the nodes, and $\delta \colon E \to \mathbb{N}$ is a function that assigns a length to every edge, the \textsc{TSP} asks for the \textbf{shortest} round trip through the nodes of $G$.
-
-\nomenclature{$G$}{A graph}
-\nomenclature{$V$}{Set of nodes of a graph}
-\nomenclature{$E$}{Set of edges of a graph}
-\nomenclature{$\delta$}{Labelling function for graph edges}
-\nomenclature{TSP}{Travelling Salesman Problem}
 
 
 A round trip\index{Round Trip} is a permutation\index{Permutation} of the nodes of $G$, hence every node appears exactly once in a round trip. The length of a round trip is given by the sum of the lengths of its pieces, which are defined by $\delta$. Let $i = \left( i_1, i_2, \ldots, i_n \right)$ be a permutation of the natural numbers from $[1, n] \subset \mathbb{N}$. $i$ defines a numbering for the nodes of $G$ and represents a permutation of them. Let $r_i = \left( v_{i_1}, v_{i_2}, \ldots v_{i_n} \right)$ be the round trip defined by the indices given by $i$. The length $\phi \left( r_i \right)$ of $r_i$ is implied by $\delta$ and can be calculated by
@@ -19,7 +34,6 @@ A round trip\index{Round Trip} is a permutation\index{Permutation} of the nodes 
 \end{equation*}
 Note that in order to resemble the cyclic nature of a permutation, the length of the edge from the last node back to the first node must not be forgotten. This is necessary to make the path induced by the permutation a round trip.
 
-\nomenclature{$\phi$}{Function that gives the length of a path in a graph}
 
 The \textsc{TSP} is considered to be a computationally hard optimisation\index{Optimisation Problem} problem and belongs to the class of $\mathcal{NP}$-hard problems \cite{Garey:1979:CIG:578533}. This means that there is no known efficient algorithm\index{Algorithm} that finds the solution to an arbitrary, non-restricted instance of the \textsc{TSP}. Furthermore, it is widely believed that no such algorithm can exist at all. Except for some special cases where there are constraints put on the structure of the graph, the only way to find the optimal solution is to check \textbf{all} possible solutions for optimality. Since for an arbitrary graph the number of possible solutions is exponential in its number of nodes, the approach of exploring \textbf{every} possible solution is impractical even for graphs with reasonably few nodes. For an extended discussion of the \textsc{TSP}, see \cite{shmoys1985traveling}.
 
@@ -43,32 +57,29 @@ Artificial ant systems are inspired by the swarm behaviour of ants from ant colo
 
 Artificial ant systems resemble the described situation from nature and employ a graph\index{Graph} to do so. Depending on the problem at hand, one node of the graph is selected to represent the ant colony. At this special node, ants are generated to perform an exploration of the graph and construct a solution to the problem represented by the graph. In case of the \textsc{TSP}\index{TSP}, a valid solution is one that represents a permutation of the graph's nodes and it does not matter which node is selected to represent the colony since every node has to appear in the solution exactly once. An ant starts its round trip\index{Round Trip} through the graph at the colony, selects one of the unvisited nodes and proceeds to it. It continues doing so until it has visited all of the nodes, then it returns to the colony.
 
-When construction a round trip\index{Round Trip} for a graph $G = \left( V, E, \delta \right)$, ants are guided by two different values. On the one hand, they use a heuristic value, based on the value of an edge to estimate its desirability: for an edge $e \in E$, its heuristic value is given by
+When construction a round trip\index{Round Trip} for a graph $G = \left( V, E, \delta \right)$, ants are guided by two different values. On the one hand, they use a heuristic value, based on the value of an edge to estimate its desirability: for an edge $\left(i, j\right) \in E$, its heuristic value is given by
 \vspace*{-0.5em}
 \begin{equation}
   \label{eqn:eta}
-  \eta \left( e \right) = \frac{1}{\delta \left( e \right)}.
+  \eta_{i,j} = \frac{1}{\delta \left( \left(i, j \right) \right)}.
 \end{equation}
 
 \vspace*{-0.5em}
-An edge with a smaller value, i.e. a short edge, has a higher heuristic value than a long edge. For ants, higher heuristic values are desirable, i.e. short edges. On the other hand, pheromone trails are used. In the beginning, an initial pheromone concentration $\tau_0$ is deposited on every edge of the graph. As the ant system preforms its work, the pheromone values are updated and changed over time.
+An edge with a smaller value, i.e. a short edge, has a higher heuristic value than a long edge. For ants, higher heuristic values are desirable, i.e. short edges. On the other hand, pheromone trails $\tau$ are used. The pheromone concentration on the edge from node $i$ to $j$ is denoted by $\tau_{i,j}$. In the beginning, an initial pheromone concentration $\tau_0$ is deposited on every edge of the graph. As the ant system preforms its work, the pheromone values are updated and changed over time.
 
-\nomenclature{$N\left(i\right)$}{Set of unvisited neighbour nodes of node $i$}
 
 In each step, an ant picks the next node to visit non-deterministically based on a visiting probability obtained from a combination of heuristic and pheromone values. Let $N \left( i \right)$ be the set of unvisited neighbour nodes for an ant that is currently at node $i$. The probability of visiting node $j$ is given by
 \vspace*{-0.5em}
 \begin{equation}
   \label{eqn:probability}
-  p_j = \frac{\tau_{i,j}^\alpha \eta_{i,j}^\beta}{\sum_{j \in N} \tau_{i,j}^\alpha \eta_{i,j}^\beta}.
+  p_{j} = \frac{\tau_{i,j}^\alpha \eta_{i,j}^\beta}{\sum_{j \in N \left( i \right)} \tau_{i,j}^\alpha \eta_{i,j}^\beta}.
 \end{equation}
 
 \vspace*{-0.5em}
-where $\alpha$ and $\beta$ are values to weigh the influence of $\tau$ and $\eta$. $\tau_{i,j}$ and $\eta_{i,j}$ are just a short hand notation for the pheromone concentration on the edge between nodes $i$ and $j$, and the heuristic value of that edge, respectively. A random value $r \in \left[0, 1 \right]$ is generated to choose a node. However, to save runtime, the approach from \cite{Bloecker} is applied and only the nominators from \eqnref{eqn:probability} are calculated. Then, instead of generating a random value $r \in \left[0, 1 \right]$, a value $r' \in \left[0, \sum_{j \in N} p_j \right]$ is generated for the selection of the next node. The result is left unchanged by this modification.
+where $\alpha$ and $\beta$ are values to weigh the influence of $\tau$ and $\eta$. A random value $r \in \left[0, 1 \right]$ is generated and used to choose a node based on the visiting probabilities. However, to save runtime, the approach from \cite{Bloecker} is applied and only the nominators from \eqnref{eqn:probability} are calculated. Then, instead of generating a random value $r \in \left[0, 1 \right]$, a value $r' \in \left[0, \sum_{j \in N \left( i \right)} p_j \right]$ is generated and used for the selection of a node. The result is left unchanged by this modification.
 
 As a direct consequence of how ants construct their way through the graph, they need a complete graph to operate on, otherwise they might run into situations where they get stuck in one node because there are no more reachable, unvisited nodes left from where they are. Fortunately, every graph can be extended to be a complete graph without altering the optimal solution to the \textsc{TSP}: Let $G = \left( V, E, \delta \right)$ be a graph. For every edge $\overline{e}$ that does not exist in the graph, i.e. $\overline{e} \in \left( V \times V \right) \setminus E$, we introduce a new edge and assign a suitably large value $\delta \left( \overline{e} \right)$ to it, e.g. $\delta \left( \overline{e} \right) = 1 + \sum_{e \in E} \delta \left( e \right)$. We make sure that none of the added edges can possibly be part of an optimal solution by assigning a value to them that is guaranteed to be higher than the value of the optimal solution. For other problems, the process of adapting the graph to a suitable form may look differently.
 
-\nomenclature{$s_i$}{Solution candidate $i$}
-\nomenclature{$c_s$}{Costs of solution $s$}
 
 When all ants have finished the construction of a round trip, each of them deposits new pheromones on all the edges it has used for the construction of its solution. The longer the round trip is, the less desirable it is and hence, the less pheromones should be added by that ant. Let $s_i$ be the solution candidate, i.e. the round trip, that has been constructed by ant $i$ and let $c_s$ be its costs, induced by $\delta$ and summation over the used edges in $s_i$. Then ant $i$ is allowed to deposit additional pheromones of $\tau_i^+ = \frac{1}{c}$ on every used edge and $\tau_i^+ = 0$ on unused edges. Note that there are various other ways to handle pheromone updates, many of which can be found in \cite{Dorigo:2004:ACO:975277}.
 
@@ -205,9 +216,9 @@ Now, all the necessary pieces to put together an ant system are prepared: the pr
 \begin{lstlisting}[language=Haskell,frame=tb,numbers=left,firstnumber=66,label=lst:ant_system_complete,caption=Transformation of a configuration for an ant system into a process hierarchy., basicstyle=\footnotesize\ttfamily]
 mkAntSystem :: Int -> Process Configuration Solution
 mkAntSystem ants =
-  let antRunsP = Multilel (replicate ants antP) (Local combinePathsP)
-      innerP   = antRunsP `Sequence` Local (evaporationP `Sequence` cycleP)
-      cyclesP  = Repetition continueP innerP
+  let antsP   = Multilel (replicate ants antP) (Local combinePathsP)
+      innerP  = antsP `Sequence` Local (evaporationP `Sequence` cycleP)
+      cyclesP = Repetition continueP innerP
   in cyclesP `Sequence` Local extractSolutionP
 \end{lstlisting}
 
