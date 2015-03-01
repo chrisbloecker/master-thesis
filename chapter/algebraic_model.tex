@@ -1,7 +1,7 @@
 \chapter{The Calculus\index{Calculus}}
 \label{chp:algebraic_model}
 \label{chp:calculus}
-In the previous chapter we have seen two examples of process calculi\index{Process!Calculus} and how they work. In this chapter, we develop our own calculus and define its semantics\index{Semantics}. In contrast to \textsc{CCS} and \textsc{CSP}, our model does not involve non-determinism in the choice between processes. Furthermore, it does not involve any explicit notation of communication between processes.
+In the previous chapter, we have seen two examples of process calculi\index{Process!Calculus} and how they work. In this chapter, we develop our own calculus and define its semantics\index{Semantics}. In contrast to \textsc{CCS} and \textsc{CSP}, our model does not involve non-determinism in the choice between processes. Furthermore, it does not involve any explicit notation of communication between processes.
 
 First, let us define what we understand as a \textit{process}\index{Process}: a process is (a piece of) a computer program. It can run concurrently with other processes. A process receives an input\index{Input} and produces an output\index{Output}. Essentially, a process can be seen as a function\index{Function} and just like that, it is pure and free of side-effects\index{Side-effect}, it does not have any other state\index{State} than the input it receives upon creation.
 
@@ -34,7 +34,7 @@ Let $\mathcal{P}$ be the set of processes\index{Process} and let $P, Q, R \in \m
 
 \section{Static Semantics\index{Semantics!static}}
 \label{chp:static_semantics}
-In this section we define the static semantics of the process combinators in our calculus\index{Calculus}. We define what a \textbf{basic}\index{Process!basic} and what a \textbf{composed}\index{Process!composed} process is and we equip processes with a type signature\index{Type!signature}. The \textbf{type signatures} of processes are used to determine whether they can be composed using a certain combinator to yield a valid process with respect to their types.
+In this section, we define the static semantics of the process combinators in our calculus\index{Calculus}. We define what a \textbf{basic}\index{Process!basic} and what a \textbf{composed}\index{Process!composed} process is and we equip processes with a type signature\index{Type!signature}. The \textbf{type signatures} of processes are used to determine whether they can be composed using a certain combinator to yield a valid process with respect to their types.
 
 As before, let $\mathcal{P}$ be the set of processes. A basic\index{Process!basic}, or atomic\index{Process!atomic}, process is a process that performs an atomic operation an is no further divisible insofar, that it does not involve any of the introduced process combinators. A composed\index{Process!composed} process is a process that is composed of other processes, using one or many process combinators.
 
@@ -359,7 +359,7 @@ Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_ato
 % ------------------------------------------------------------------------------
 % repetition
 % ------------------------------------------------------------------------------
-The semantics of a process with the structure of repetition composition is given by a recursive equation. It involved repeated sequential composition of a process with itself. A predicate is employed to test the process' input for a property and determine the length of the process composition sequence.
+The semantics of a process with the structure of repetition composition is given by a recursive equation. It involves repeated sequential composition of a process with itself. A predicate is employed to test the process' input for a property and determine the length of the process composition sequence.
 \begin{definition}[Semantics of repetition composition\index{Semantics!Repetition}]
 \label{def:sem_repetition}
 Let $B$ be a predicate, let $P \in \mathcal{P}$ be processes and let them be composed using repetition composition, i.e. $\repetition{B}{P}$. Then the semantics of $\repetition{B}{P}$ is given by the recursive equation
@@ -430,7 +430,7 @@ Let $P, Q, R \in \mathcal{P}$ be processes and let $Q \equiv R$. Then, substitut
 \end{theorem}
 
 
-The property stated in \thmref{thm:process_substitution} allows us to transforms processes into a different representation without altering their semantics and optimising them according to some measurable property. E.g. one might want to find more \enquote{simple} representation of a process or reduce its complexity by replacing sub-processes. A proof of \thmref{thm:process_substitution} can be found in \appref{chp:proofs}, proof \ref{prf:substitution}.
+The property stated in \thmref{thm:process_substitution} allows us to transform processes into a different representation without altering their semantics and to optimise them according to some measurable property. E.g. one might want to find a more \enquote{simple} representation of a process or reduce its complexity by replacing sub-processes. A proof of \thmref{thm:process_substitution} can be found in \appref{chp:proofs}, proof \ref{prf:substitution}.
 
 % ------------------------------------------------------------------------------
 % inverse process

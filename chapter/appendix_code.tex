@@ -13,13 +13,13 @@ runProcess _ Err _ =
   return undefined
 
 runProcess master (Basic sDict closureGen) x = do
-  node <- getNode master =<< getSelfPid
+  node <- getNode master
   res  <- call sDict node (closureGen x)
   returnNode master node
   return res
 
 runProcess _ (Local p) x = do
-  fakeMaster <- getFakeMaster =<< getSelfPid
+  fakeMaster <- getFakeMaster
   res <- runProcess fakeMaster p x
   terminateMaster fakeMaster
   return res
@@ -58,7 +58,7 @@ runProcessHelper master p x mvar = do
 \label{app:ant_system_processes}
 
 \begin{lstlisting}[language=Haskell,frame=tb,numbers=left,caption=Implementation of basic processes for the ant system., basicstyle=\footnotesize\ttfamily]
-ant :: Configuration -> CH.Process AntSolution
+ant :: Configuration -> CH.Process Solution
 ant Configuration {..} = do
   path <- runAnt graph pheromones [1] (nodes graph \\ [1])
   return (path, pathLength' graph path)
@@ -82,13 +82,13 @@ combinePaths (conf@(Configuration {..}), ass) = return conf { pheromones = phero
 evaporations :: Configuration -> CH.Process Configuration
 evaporations (conf@Configuration {..}) = return conf { pheromones = evaporation rho pheromones }
 
-iter :: Configuration -> CH.Process Configuration
-iter conf@Configuration {..} = return conf { iterations = iterations - 1 }
+cycle :: Configuration -> CH.Process Configuration
+cycle conf@Configuration {..} = return conf { iterations = iterations - 1 }
 
-continueIter :: Configuration -> CH.Process Bool
-continueIter Configuration {..} = return (iterations > 0)
+continue :: Configuration -> CH.Process Bool
+continue Configuration {..} = return (iterations > 0)
 
-extractSolution :: Configuration -> CH.Process AntSolution
+extractSolution :: Configuration -> CH.Process Solution
 extractSolution (Configuration {..}) = return (path, pathLen)
 \end{lstlisting}
 

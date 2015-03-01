@@ -11,7 +11,7 @@ As input for the ant systems, we use a set of 10 instances from the TSPLIB\footn
 
 We configure the ant systems using parameters based on suggestions given in \cite{Dorigo:2004:ACO:975277}: $n$ ants for a graph of size $n$, $100$ iterations, initial pheromone concentration $\tau_0 = 2$, evaporation factor $\rho = 0.1$ and $\alpha = 2, \beta = 5$.
 
-Since $A_{seq}$, $A_{con}$ and $A_{dis}$ are implementation of the same meta-heuristic and only differ in their parallelisation, we expect them to produce similar solutions in all cases. However, we're not interested in the proposed solutions but rather in the necessary time to obtain them. We use the runtime of $A_{seq}$ as a reference and compare the runtimes of $A_{con}$ and $A_{dis}$ against that.
+Since $A_{seq}$, $A_{con}$ and $A_{dis}$ are implementations of the same meta-heuristic and only differ in their parallelisation, we expect them to produce similar solutions in all cases. However, we are not interested in the proposed solutions but rather in the necessary time to obtain them. We use the runtime of $A_{seq}$ as a reference and compare the runtimes of $A_{con}$ and $A_{dis}$ against that.
 
 The tests for comparing $A_{con}$ to $A_{seq}$ are carried out on an $\text{Intel}^{\textregistered}$ $\text{Core}^{\texttrademark}$ i7-3770 CPU @ 3.4GHz with 16GB RAM. We use \textsf{ghc} to compile the programs and the compiler flags \texttt{-O2} for $A_{seq}$ and \texttt{-threaded -O2} for $A_{con}$. We run $A_{con}$ with 1, 2, 3 and 4 cores active, using the \texttt{+RTS -N} option.
 
@@ -103,7 +103,7 @@ The results of the test runs for the comparison of $A_{seq}$ and $A_{con}$ are s
 \begin{figure}[h!]
   \centering
   \includegraphics[width=\textwidth]{img/test_distributed.pdf}
-  \caption{The runtimes of $A_{seq}$ and $A_{dis}$ based on the data from table \ref{tbl:test2}.}
+  \caption{The runtimes of $A_{seq}$ and $A_{dis}$ based on the data from table \ref{tbl:test2}. Runtimes over 650s are not shown in the plot.}
   \label{fig:test2}
 \end{figure}
 
@@ -115,4 +115,4 @@ However, when put into relation to the runtime of $A_{seq}$ on the respective ha
 
 The data shows that $A_{con}$ takes between $1.14$ and $1.91$ times as long as $A_{seq}$ to find solutions when only using one core. This may be explained with the introduced overhead for expressing parallelism using our process calculus and interpreting the process structures. Depending on the scenario, $A_{con}$ needs 2 or 3 cores to be able to outperform $A_{seq}$. We expect that $A_{con}$ could perform even faster with more than 4 cores, however one should not forget that the sequential part of the program gives an upper bound for the maximum achievable speedup as stated by \textsc{Amdahl}'s law.
 
-In our tests, $A_{dis}$ was not able to outperform $A_{seq}$, no matter how many workers are connected. In order to explain this, different things may have to be taken into account. On the one hand, the process interpreter has to request a worker node for every process from the master node and wait for the reply. Since network communication takes remarkably longer than forking a local thread, a much higher overhead is introduced in $A_{dis}$ than in $A_{con}$. On the other hand, for every process that is spawned remotely, a function closure has to be serialised, sent to a remote node and deserialised there. Before termination, the remote process has to serialise its result and send it back to the caller. This way of making data available to the processes takes remarkably longer than shared access to the memory as is the case in $A_{con}$. It is left open for future work to investigate in the reasons for this.
+In our tests, $A_{dis}$ was not able to outperform $A_{seq}$, no matter how many workers were connected. In order to explain this, different things may have to be taken into account. On the one hand, the process interpreter has to request a worker node for every process from the master node and wait for the reply. Since network communication takes remarkably longer than forking a local thread, a much higher overhead is introduced in $A_{dis}$ than in $A_{con}$. On the other hand, for every process that is spawned remotely, a function closure has to be serialised, sent to a remote node and deserialised there. Before termination, the remote process has to serialise its result and send it back to the caller. This way of making data available to the processes takes remarkably longer than shared access to the memory as is the case in $A_{con}$. It is left open for future work to investigate in the reasons for this.
