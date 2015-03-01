@@ -9,6 +9,7 @@ Sequence composition has associative property, i.e. for any three processes $P, 
 \begin{equation*}
   \sequence{P}{\sequence{Q}{R}} \equiv \sequence{\sequence{P}{Q}}{R}.
 \end{equation*}
+\hfill$\qedsymbol$
 \end{theorem}
 
 \begin{myproof}[Associative property of sequence composition]
@@ -23,8 +24,7 @@ Then $\sem{\sequence{P}{\sequence{Q}{R}}} = \sem{\sequence{\sequence{P}{Q}}{R}}$
   & \overset{\defref{def:sem_sequence}}{=} & \sem{R} \circ \sem{\sequence{P}{Q}} \\
   & \overset{\defref{def:sem_sequence}}{=} & \sem{\sequence{\sequence{P}{Q}}{R}}
 \end{eqnarray*}
-
-\hfill$\blacksquare$
+Thus, \thmref{thm:associativity_sequence} is valid. \hfill$\blacksquare$
 \end{myproof}
 
 
@@ -35,6 +35,9 @@ Parallel composition distributes over choice composition, i.e. for any processes
 \begin{equation*}
   \parallel{C}{P}{\choice{B}{Q}{R}} \equiv \choice{B}{\parallel{C}{P}{Q}}{\parallel{C}{P}{R}}.
 \end{equation*}
+
+\vspace*{-1em}
+\hfill$\qedsymbol$
 \end{theorem}
 
 \begin{myproof}[Distributivity of parallel composition over choice composition]
@@ -65,7 +68,8 @@ Then $\sem{\parallel{C}{P}{\choice{B}{Q}{R}}} = \sem{\choice{B}{\parallel{C}{P}{
   & \overset{\defref{def:sem_choice}}{=}   & \sem{\choice{B}{\parallel{C}{P}{Q}}{\parallel{C}{P}{R}}}
 \end{eqnarray*}
 
-\hfill$\blacksquare$
+\vspace*{-1em}
+Thus, \thmref{thm:distributivity_parallel_choice} is valid. \hfill$\blacksquare$
 \end{myproof}
 
 
@@ -75,6 +79,9 @@ Sequence composition distributes over parallel composition, i.e. for any process
 \begin{equation*}
   \sequence{P}{\parallel{C}{Q}{R}} \equiv \parallel{C}{\sequence{P}{Q}}{\sequence{P}{R}}.
 \end{equation*}
+
+\vspace*{-1em}
+\hfill$\qedsymbol$
 \end{theorem}
 
 \begin{myproof}[Distributivity of sequence composition over parallel composition]
@@ -90,7 +97,8 @@ Then $\sem{\sequence{P}{\parallel{C}{Q}{R}}} = \sem{\parallel{C}{\sequence{P}{Q}
   & \overset{\defref{def:sem_parallel}}{=}   & \sem{\parallel{C}{\sequence{P}{Q}}{\sequence{P}{R}}}
 \end{eqnarray*}
 
-\hfill$\blacksquare$
+\vspace*{-1em}
+Thus, \thmref{thm:distributivity_sequence_parallel} is valid. \hfill$\blacksquare$
 \end{myproof}
 
 
@@ -100,6 +108,9 @@ Sequence composition distributes over choice composition, i.e. for any processes
 \begin{equation*}
   \sequence{P}{\choice{B}{Q}{R}} \equiv \choice{B}{\sequence{P}{Q}}{\sequence{P}{R}}.
 \end{equation*}
+
+\vspace*{-0.75em}
+\hfill$\qedsymbol$
 \end{theorem}
 
 \begin{myproof}[Distributivity of sequence composition over choice composition]
@@ -130,8 +141,8 @@ Then $\sem{\sequence{P}{\choice{B}{Q}{R}}} = \sem{\choice{B}{\sequence{P}{Q}}{\s
   & \overset{\defref{def:sem_choice}}{=}   & \sem{\choice{B}{\sequence{P}{Q}}{\sequence{P}{R}}}
 \end{eqnarray*}
 
-
-\hfill$\blacksquare$
+\vspace*{-0.75em}
+Thus, \thmref{thm:distributivity_sequence_choice} is valid. \hfill$\blacksquare$
 \end{myproof}
 
 
@@ -141,6 +152,9 @@ Sequential composition of any process $P \in \mathcal{P}$ with the identity proc
 \begin{equation*}
   \sequence{Id}{P} \equiv P \equiv \sequence{P}{Id}
 \end{equation*}
+
+\vspace*{-0.75em}
+\hfill$\qedsymbol$
 \end{theorem}
 
 \begin{myproof}[$Id$ is a left and right neutral element for sequence composition]
@@ -156,9 +170,11 @@ Let $P \in \mathcal{P}$ be a process and $Id$ be the identity process. $Id$ is a
     & \overset{\defref{def:sem_sequence}}{=} & \sem{\sequence{P}{Id}} \\
 \end{eqnarray*}
 
-\hfill$\blacksquare$
+\vspace*{-2em}
+Thus, \thmref{thm:idempotence_identity} is valid. \hfill$\blacksquare$
 \end{myproof}
 
+\clearpage
 
 \begin{corollary}[Idempotence of sequence composition respecting the identity process]
 Since $Id$ is both a left and right neutral element of sequence composition, $Id$ is an idempotent element respecting sequence composition. The following equation follows directly from proof \ref{prf:neutral_id}:
@@ -171,11 +187,13 @@ Since $Id$ is both a left and right neutral element of sequence composition, $Id
 
 
 \begin{theorem}[Idempotence of sequence composition respecting the error process]
-\label{thm:idempotence_identity}
+\label{thm:idempotence_err}
 Sequential composition of the error process $Err$ with itself yields the error process.
 \begin{equation*}
   \sequence{Err}{Err} \equiv Err.
 \end{equation*}
+
+\hfill$\qedsymbol$
 \end{theorem}
 
 \begin{myproof}[Idempotence of sequence composition respecting the identity process]
@@ -188,7 +206,7 @@ Let $Err$ be the error process. Sequential composition of $Err$ with itself yiel
     & \overset{\defref{def:sem_err}}{=} & \sem{Err}
 \end{eqnarray*}
 
-\hfill$\blacksquare$
+Thus, \thmref{thm:idempotence_err} is valid. \hfill$\blacksquare$
 \end{myproof}
 
 
@@ -199,9 +217,12 @@ Let $P, Q, R \in \mathcal{P}$ be processes and let $Q \equiv R$. Then, substitut
   \begin{equation*}
     Q \equiv R \rightarrow P \equiv P_{\left[ Q / R \right]}.
   \end{equation*}
+  
+  \hfill$\qedsymbol$
 \end{theorem}
 
 \begin{myproof}[Substitution with an equivalent process leaves semantics unchanged]
+\label{prf:substitution}
 In the following, let $P, Q, R, S, T \in \mathcal{P}$ be processes with $Q \equiv R$.
 
 Consider the case that $Q$ is not a sub-process of $P$. Then, trivially $P \equiv P_{\left[ Q / R \right]}$.
@@ -218,7 +239,6 @@ Now consider the case that $Q$ is a sub-process of $P$. The claimed property can
               & = & \sem{P_{\left[ Q / R \right]}}
     \end{eqnarray*}
     And thus $P \equiv P_{\left[ Q / R \right]}$.
-    \vspace*{-2em}
   \item Analogously to (2), $P \equiv P_{\left[ Q / R \right]}$ can be shown for $P = \sequence{S}{Q}$.
   \item $P = \choice{Q}{S}{T}$ has the structure of choice composition. Then:
     \begin{eqnarray*}
