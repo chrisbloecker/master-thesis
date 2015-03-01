@@ -11,15 +11,15 @@ Ideally, we want the two implementations to be usable interchangeably by simply 
 
 \clearpage
 
-\section{Implementation using Concurrent Haskell\index{Concurrent Haskell}}
+\section{Implementation using Concurrent Haskell\index{Concurrent Haskell}\index{Haskell!Concurrent Haskell}}
 \label{chp:local}
 In the implementation for local parallelisation on one computer, we make use of \textsf{Concurrent Haskell}\index{Concurrent Haskell}\index{Haskell!Concurrent Haskell}. Basic processes are represented as computations in the \texttt{IO} monad. Parallelisation is achieved by running processes that are modelled for parallel execution concurrently in lightweight threads using \texttt{forkIO}, synchronisation is done using \texttt{MVar}s.
 
 An introduction to \textsf{Concurrent Haskell} and \textsf{Haskell}'s \texttt{IO} monad can be found in standard \textsf{Haskell} literature such as \cite{Hutton}, \cite{Bird} or \cite{Marlow}. The fact that we use the \texttt{IO} monad has immediate consequences: we cannot force processes to be free of side-effects\index{Side-effect}, hence they can perform actions like, e.g. reading from or writing to the file system.
 
-\subsection{Data model\index{Data model}}
+\subsection{Data model\index{Data Model}}
 \label{chp:local_model}
-Our data model directly resembles the structure of the syntactic rules of process composition from \chpref{chp:syntax}. We use the power of \textsf{Haskell}'s type system and a generalised algebraic data type\index{Generalised algebraic data type} to assure the model meets the requirements concerning static semantics formulated in \chpref{chp:static_semantics} and prevent the creation of invalid processes with respect to static semantics.
+Our data model directly resembles the structure of the syntactic rules of process composition from \chpref{chp:syntax}. We use the power of \textsf{Haskell}'s type system and a generalised algebraic data type\index{Generalised Algebraic Data Type} to assure the model meets the requirements concerning static semantics formulated in \chpref{chp:static_semantics} and prevent the creation of invalid processes with respect to static semantics.
 
 As mention before, basic processes are computations in the \texttt{IO} monad. They receive an input of type \texttt{a} and output a value of type \texttt{b}.
 \begin{lstlisting}[language=Haskell,caption=Representation of basic processes as computations in the \texttt{IO} monad.,label=fig:local_computation,numbers=left,frame=bt]
@@ -85,7 +85,7 @@ Multilel :: [Process a c]
          -> Process a b
 \end{lstlisting}
 
-\subsection{Process interpreter\index{Process interpreter}}
+\subsection{Process interpreter\index{Process Interpreter}}
 In this section, we discuss how the \texttt{Process} interpreter works in detail by taking a look at its implementation.
 
 Processes can be executed by providing them with an input using the \texttt{runProcess} function. \texttt{runProcess} runs in the \texttt{IO} monad, it takes a process of type \texttt{Process a b} and an input for that process of corresponding type \texttt{a}. The execution of a process yields a result of type \texttt{b}. \texttt{runProcess} is the implementation of the function $sem$ introduced in \chpref{chp:semantics} that defines the semantics of a process.
@@ -93,33 +93,33 @@ Processes can be executed by providing them with an input using the \texttt{runP
 runProcess :: Process a b -> a -> IO b
 \end{lstlisting}
 
-The semantics of an \texttt{Id}\index{Process interpreter!Id} process is as given in \defref{def:sem_id}: it simply outputs its input.
+The semantics of an \texttt{Id}\index{Process Interpreter!Id} process is as given in \defref{def:sem_id}: it simply outputs its input.
 \begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Id} processes.,label=lst:local_runprocess_const,numbers=left,frame=bt,firstnumber=2]
 runProcess Id x =
   return x
 \end{lstlisting}
 
-The semantics of an \texttt{Err}\index{Process interpreter!Err} process is as stated in \defref{def:sem_err}. The error process outputs the undefined value regardless of its input.
+The semantics of an \texttt{Err}\index{Process Interpreter!Err} process is as stated in \defref{def:sem_err}. The error process outputs the undefined value regardless of its input.
 \begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Err} processes.,label=lst:local_runprocess_const,numbers=left,frame=bt,firstnumber=4]
 runProcess Err _ =
   return undefined
 \end{lstlisting}
 
-A \texttt{Basic}\index{Process interpreter!Basic} process is simply a wrapper for a computation \texttt{f} in the \texttt{IO} monad, which is the equivalent of an intrinsic function of a basic process as described in \chpref{chp:semantics}. The interpretation of a \texttt{Basic} process is done by applying the process's intrinsic function \texttt{f} to the process's input \texttt{x}, as given in \defref{def:sem_atomic}.
+A \texttt{Basic}\index{Process Interpreter!Basic} process is simply a wrapper for a computation \texttt{f} in the \texttt{IO} monad, which is the equivalent of an intrinsic function\index{Intrinsic Function} of a basic process as described in \chpref{chp:semantics}. The interpretation of a \texttt{Basic} process is done by applying the process's intrinsic function \texttt{f} to the process's input \texttt{x}, as given in \defref{def:sem_atomic}.
 \begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Basic} processes.,label=lst:local_runprocess_simple,numbers=left,frame=bt,firstnumber=6]
 runProcess (Basic f) x =
   f x
 \end{lstlisting}
 
 For the interpretation of \texttt{Choice} processes, the output of \texttt{predicate} when supplied with input \texttt{x} has to be obtained first by making use of the interpreter function \texttt{runProcess}. Then, based on the predicate's output, the choice between executing either \texttt{p1} or \texttt{p2} is made as defined in \defref{def:sem_choice}.
-\index{Process interpreter!Choice}
+\index{Process Interpreter!Choice}
 \begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Choice} processes.,label=lst:local_runprocess_choice,numbers=left,frame=bt,firstnumber=8]
 runProcess (Choice predicate p1 p2) x = do
   b <- runProcess predicate x
   runProcess (if b then p1 else p2) x
 \end{lstlisting}
 
-A \texttt{Parallel}\index{Process interpreter!Parallel} process involves two process for concurrent execution, namely \texttt{p1} and \texttt{p2}, as well as a combinator process \texttt{combinator} to combine the outputs of \texttt{p1} and \texttt{p2}. In order to execute two processes at the same time, a second thread needs to be forked and the interpretation of one of the processes has to be delegated there. To do so, the auxiliary function \texttt{runProcessHelper} is implemented: \texttt{runProcessHelper} takes a process \texttt{p} that should be interpreted, an input \texttt{x} for \texttt{p} and an \texttt{MVar}. \texttt{runProcessHelper} determined the output of \texttt{p} applied to \texttt{x} by making use of \texttt{runProcess} and saves the output to the \texttt{MVar}.
+A \texttt{Parallel}\index{Process Interpreter!Parallel} process involves two process for concurrent execution, namely \texttt{p1} and \texttt{p2}, as well as a combinator process \texttt{combinator} to combine the outputs of \texttt{p1} and \texttt{p2}. In order to execute two processes at the same time, a second thread needs to be forked and the interpretation of one of the processes has to be delegated there. To do so, the auxiliary function \texttt{runProcessHelper} is implemented: \texttt{runProcessHelper} takes a process \texttt{p} that should be interpreted, an input \texttt{x} for \texttt{p} and an \texttt{MVar}. \texttt{runProcessHelper} determined the output of \texttt{p} applied to \texttt{x} by making use of \texttt{runProcess} and saves the output to the \texttt{MVar}.
 \begin{lstlisting}[language=Haskell,caption=Auxiliary function for the interpretation of \texttt{Parallel} processes.,label=lst:local_runprocesshelper,numbers=left,frame=bt,firstnumber=11]
 runProcessHelper :: Process a b -> a -> MVar b -> IO ()
 runProcessHelper p x mvar = putMVar mvar =<< runProcess p x
@@ -135,19 +135,19 @@ runProcess (Parallel p1 p2 combinator) x = do
   runProcess combinator (r1, r2)
 \end{lstlisting}
 
-For the interpretation of a \texttt{Sequence}\index{Process interpreter!Sequence} process, \texttt{runProcess} is employed to obtain the output of \texttt{p1} when supplied with input \texttt{x}. Then, the output of \texttt{p1} if used as input for the interpretation of \texttt{p2} with \texttt{runProcess}, as defined in \defref{def:sem_sequence}. The implementation of this is straightforward, using the bind operator \texttt{>}\texttt{>=}.
+For the interpretation of a \texttt{Sequence}\index{Process Interpreter!Sequence} process, \texttt{runProcess} is employed to obtain the output of \texttt{p1} when supplied with input \texttt{x}. Then, the output of \texttt{p1} if used as input for the interpretation of \texttt{p2} with \texttt{runProcess}, as defined in \defref{def:sem_sequence}. The implementation of this is straightforward, using the bind operator \texttt{>}\texttt{>=}.
 \begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Sequence} processes.,label=lst:local_runprocess_sequence,numbers=left,frame=bt,firstnumber=19]
 runProcess (Sequence p1 p2) x =
   runProcess p1 x >>= runProcess p2
 \end{lstlisting}
 
-The \texttt{Repetition}\index{Process interpreter!Repetition} process is used to express repeated execution of a process. As stated in \defref{def:sem_repetition}, repetition is expressed in terms of a combination of choice and sequential composition.
+The \texttt{Repetition}\index{Process Interpreter!Repetition} process is used to express repeated execution of a process. As stated in \defref{def:sem_repetition}, repetition is expressed in terms of a combination of choice and sequential composition.
 \begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Repetition} processes.,numbers=left,frame=bt,firstnumber=21]
 runProcess rep@(Repetition predicate p) x =
   runProcess (Choice predicate (p `Sequence` rep) Id) x
 \end{lstlisting}
 
-Finally, there is the \texttt{Multilel}\index{Process interpreter!Multilel} process that can be expressed as a combination of \texttt{Parallel} and \texttt{Sequence} processes. The list of processes that should all be executed in parallel is transformed into a hierarchy of parallel processes, composed using the \texttt{Parallel} data constructor, by \texttt{foldr}. For the combination of the processes' results, two helper processes are employed: \texttt{emptyListP} and \texttt{consP}. \texttt{emptyListP} is a process that ignores its input and returns the empty list. \texttt{consP} is the process variant of the cons operator \texttt{(:)} and is used together with \texttt{emptyListP} to produce the list of result values. A third helper process \texttt{pairP} is used to create a pair of the original input value \texttt{x} and the list of result values from the parallel composition of processes. The final result of the \texttt{Multilel} process is produced by folding the result values together using the process \texttt{fold}.
+Finally, there is the \texttt{Multilel}\index{Process Interpreter!Multilel} process that can be expressed as a combination of \texttt{Parallel} and \texttt{Sequence} processes. The list of processes that should all be executed in parallel is transformed into a hierarchy of parallel processes, composed using the \texttt{Parallel} data constructor, by \texttt{foldr}. For the combination of the processes' results, two helper processes are employed: \texttt{emptyListP} and \texttt{consP}. \texttt{emptyListP} is a process that ignores its input and returns the empty list. \texttt{consP} is the process variant of the cons operator \texttt{(:)} and is used together with \texttt{emptyListP} to produce the list of result values. A third helper process \texttt{pairP} is used to create a pair of the original input value \texttt{x} and the list of result values from the parallel composition of processes. The final result of the \texttt{Multilel} process is produced by folding the result values together using the process \texttt{fold}.
 \begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Multilel} processes.,label=lst:local_runprocess_multilel,numbers=left,frame=bt,firstnumber=23]
 runProcess (Multilel ps fold) x =
   flip runProcess x $
@@ -188,7 +188,7 @@ In \textsf{Haskell}, functions can only be executed, composed and passed as argu
 
 After a \texttt{Closure} has been executed, the result is serialised and sent back to the caller. However, the type system cannot infer the type and serialisability of the result automatically and therefore additional information needs to be provided\footnote{Specifically, the problem is that the type constructors can be constrained with required type class instances for parameters. On deconstruction, this information is not available and therefore needs to be added explicitly again.}. For a type \texttt{a}, serialisation information can be provided with a value of type \texttt{Static (SerializableDict a)}. Basically, this is an explicit type tag that enables the selection of the correct serialisation function for type \texttt{a}.
 
-\subsection{Data model\index{Data model}}
+\subsection{Data model\index{Data Model}}
 \label{chp:distributed_model}
 The data model for the representation of processes stays almost unchanged: only the definition of basic processes and the \texttt{Basic} data constructor for processes have to be adapted to meet specific requirements that arise with the use of \textsc{Cloud Haskell}. Basic processes are now functions that take an input of type \texttt{a} and return a closure that contains a \textsf{Cloud Haskell} process producing an output of type \texttt{b} when executed.
 \begin{lstlisting}[language=Haskell,caption=Representation of basic processes as computations in the \texttt{CH.Process} monad.,numbers=left,frame=bt]
@@ -230,7 +230,7 @@ For the interpretation of process structures in a distributed system, some kind 
   \label{fig:architecture}
 \end{figure}
 
-The architecture of the system's infrastructure is intentionally kept simple and is as shown in \figref{fig:architecture}. It involves a designated \textbf{master}\index{Node!master} node and a collection of \textbf{worker}\index{Node!Worker} nodes. The master node provides an interface\index{Interface} through which processes can be inserted into the system by a client.
+The architecture of the system's infrastructure is intentionally kept simple and is as shown in \figref{fig:architecture}. It involves a designated \textbf{master}\index{Node!Master} node and a collection of \textbf{worker}\index{Node!Worker} nodes. The master node provides an interface\index{Interface} through which processes can be inserted into the system by a client.
 
 When a client\index{Client} wants to submit a request\index{Request}, he has to make use of the interface and supply a problem description in an appropriate format, e.g. a JSON\footnote{JavaScript Object Notation \url{http://www.json.org/}}\index{JSON} document. A parser reads the submitted JSON document, generates a corresponding process structure from its content and passes it on to the process interpreter if the document contains a valid process description. For simplicity, we assume in the following that a request equals an interpretable process description.
 
@@ -245,7 +245,7 @@ The process interpreter\index{Interpreter} is run in a new process by the master
 The source code of the distribution system can be found in \appref{app:dvd}.
 
 
-\subsection{Process interpreter\index{Process interpreter}\index{Interpreter}}
+\subsection{Process interpreter\index{Process Interpreter}\index{Interpreter}}
 \label{chp:interpreter}
 Now that a distributed system is involved, the implementation of the process interpreter needs to be adapted to this situation. Where there was only local parallelisation in the \texttt{IO} monad in \textsf{Concurrent Haskell} involved before, process interpretation has to be adapted to the specifics of the \textsf{Cloud Haskell}\index{Cloud Haskell} \texttt{Process} monad. This particularly involves execution of processes on remote nodes.
 
@@ -259,7 +259,7 @@ The signature of \texttt{runProcess} has to be extended by an additional paramet
 runProcess :: Master -> Process a b -> a -> CH.Process b
 \end{lstlisting}
 
-For a \texttt{Basic}\index{Process interpreter!Basic} process in a process structure, the process interpreter asks the master node for an available worker node on which it can run the wrapped basic process. This operation blocks until the master node is able to satisfy the request for an available worker node and supplies it to the interpreter. The interpreter then uses the closure generator \texttt{closureGen} to generate a closure that is serialised and sent to the worker node for execution. This operation blocks until execution of the remotely spawned process has terminated and a result is obtained. The interpreter gives the worker node back to the master and returns the remotely calculated result to its caller.
+For a \texttt{Basic}\index{Process Interpreter!Basic} process in a process structure, the process interpreter asks the master node for an available worker node on which it can run the wrapped basic process. This operation blocks until the master node is able to satisfy the request for an available worker node and supplies it to the interpreter. The interpreter then uses the closure generator \texttt{closureGen} to generate a closure that is serialised and sent to the worker node for execution. This operation blocks until execution of the remotely spawned process has terminated and a result is obtained. The interpreter gives the worker node back to the master and returns the remotely calculated result to its caller.
 \begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Basic} processes.,label=lst:runprocess_simple,numbers=left,frame=bt,firstnumber=3]
 runProcess master (Basic sDict closureGen) x = do
   node <- getNode master
@@ -268,7 +268,7 @@ runProcess master (Basic sDict closureGen) x = do
   return res
 \end{lstlisting}
 
-Processes that are wrapped into a \texttt{Local}\index{Process interpreter!Local} wrapper are supposed to be executed locally on the same node by the process interpreter instead of being distributed to remote nodes, including all sub-processes\index{Sub-process}. To accomplish this behaviour, a little trick is applied: a fake master that always returns the local node when asked for an available worker node is created and used for all sub-processes of the \texttt{Local} process. When interpretation of all sub-process has finished, the fake master is terminated.
+Processes that are wrapped into a \texttt{Local}\index{Process Interpreter!Local} wrapper are supposed to be executed locally on the same node by the process interpreter instead of being distributed to remote nodes, including all sub-processes\index{Sub-process}. To accomplish this behaviour, a little trick is applied: a fake master that always returns the local node when asked for an available worker node is created and used for all sub-processes of the \texttt{Local} process. When interpretation of all sub-process has finished, the fake master is terminated.
 \begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Local} processes.,label=lst:runprocess_local,numbers=left,frame=bt,firstnumber=8]
 runProcess _ (Local p) x = do
   fakeMaster <- getFakeMaster
@@ -277,7 +277,7 @@ runProcess _ (Local p) x = do
   return res
 \end{lstlisting}
 
-A problem arises in the interpretation of \texttt{Multilel}\index{Process interpreter!Multilel} processes. Where it was possible to create auxiliary processes for the expression of \texttt{Multilel} in terms of \texttt{Parallel} and \texttt{Sequence} in the implementation based on \textsf{Concurrent Haskell}, this is not possible in \textsf{Cloud Haskell} at the moment. Processes of type \texttt{Basic} require a \textbf{specific} \texttt{SerializableDict} for the type of their output, which must be known at compile time. This prevents the use of polymorphic processes and makes a direct implementation of the parallelisation necessary, analogous to the implementation of \texttt{Parallel} processes. For each of the processes that should be executed in parallel, \texttt{runProcessHelper} is spawned in a new thread\footnote{Spawning a process in \textsf{Cloud Haskell} is actually implemented using the \texttt{forkIO} functionality from \textsf{Concurrent Haskell} and creates a lightweight thread on a node.}, receiving an \texttt{MVar} to take up the output of the respective process. When all processes have terminated and their outputs have been obtained from the \texttt{MVar}s, the process \texttt{fold} is used to combine the results together into a single value.
+A problem arises in the interpretation of \texttt{Multilel}\index{Process Interpreter!Multilel} processes. Where it was possible to create auxiliary processes for the expression of \texttt{Multilel} in terms of \texttt{Parallel} and \texttt{Sequence} in the implementation based on \textsf{Concurrent Haskell}, this is not possible in \textsf{Cloud Haskell} at the moment. Processes of type \texttt{Basic} require a \textbf{specific} \texttt{SerializableDict} for the type of their output, which must be known at compile time. This prevents the use of polymorphic processes and makes a direct implementation of the parallelisation necessary, analogous to the implementation of \texttt{Parallel} processes. For each of the processes that should be executed in parallel, \texttt{runProcessHelper} is spawned in a new thread\footnote{Spawning a process in \textsf{Cloud Haskell} is actually implemented using the \texttt{forkIO} functionality from \textsf{Concurrent Haskell} and creates a lightweight thread on a node.}, receiving an \texttt{MVar} to take up the output of the respective process. When all processes have terminated and their outputs have been obtained from the \texttt{MVar}s, the process \texttt{fold} is used to combine the results together into a single value.
 \begin{lstlisting}[language=Haskell,caption=Implementation of the interpreter for \texttt{Multilel} processes.,label=lst:runprocess_multilel,numbers=left,frame=bt,firstnumber=13]
 runProcess master (Multilel ps fold) x = do
   mvars <- forM ps $ \_ -> liftIO newEmptyMVar
@@ -286,13 +286,13 @@ runProcess master (Multilel ps fold) x = do
   runProcess master fold (x, ress)
 \end{lstlisting}
 
-The adaptations that have to be made for the remaining process types, i.e. \texttt{Choice}\index{Process interpreter!Choice}, \texttt{Parallel}\index{Process interpreter!Parallel}, \texttt{Sequence}\index{Process interpreter!Sequence} and \texttt{Repetition}\index{Process interpreter!Repetition} are minimal. They involve adding the necessary \texttt{master} parameter and adaptations specific to the \textsf{Cloud Haskell} \texttt{Process} monad, i.e. using \texttt{spawnLocal} instead of \texttt{forkIO} and lifting actions on \texttt{MVar}s into the \texttt{Process} monad using \texttt{liftIO}. The implementation can be found in \appref{app:distributed_split_slice} and \appref{app:dvd}.
+The adaptations that have to be made for the remaining process types, i.e. \texttt{Choice}\index{Process Interpreter!Choice}, \texttt{Parallel}\index{Process Interpreter!Parallel}, \texttt{Sequence}\index{Process Interpreter!Sequence} and \texttt{Repetition}\index{Process Interpreter!Repetition} are minimal. They involve adding the necessary \texttt{master} parameter and adaptations specific to the \textsf{Cloud Haskell} \texttt{Process} monad, i.e. using \texttt{spawnLocal} instead of \texttt{forkIO} and lifting actions on \texttt{MVar}s into the \texttt{Process} monad using \texttt{liftIO}. The implementation can be found in \appref{app:distributed_split_slice} and \appref{app:dvd}.
 
 
 \clearpage
 \section{Example: a parallel interpreter for arithmetic expressions\index{Example}}
 \label{chp:example}
-After discussing the process model and the interpreter that takes care of process interpretation, we give an example of how to apply the process calculus. To do so, we develop the typical hello world program for interpreters, i.e. an interpreter\index{Interpreter} for arithmetic expressions\index{Arithmetic expression} with parallel evaluation of sub-expressions. Except for some imports of standard \textsf{Haskell} libraries, this example is self-contained. It is intentionally kept very simple and the necessity of a parallelised interpreter for arithmetic expressions is certainly not given. However, an interpreter for arithmetic expressions is fairly simple and thus well suited to illustrate how to apply the process calculus to it.
+After discussing the process model and the interpreter that takes care of process interpretation, we give an example of how to apply the process calculus. To do so, we develop the typical hello world program for interpreters, i.e. an interpreter\index{Interpreter} for arithmetic expressions\index{Arithmetic Expression} with parallel evaluation of sub-expressions. Except for some imports of standard \textsf{Haskell} libraries, this example is self-contained. It is intentionally kept very simple and the necessity of a parallelised interpreter for arithmetic expressions is certainly not given. However, an interpreter for arithmetic expressions is fairly simple and thus well suited to illustrate how to apply the process calculus to it.
 
 An arithmetic expression \texttt{Expr} is either a value \texttt{Val} containing an \texttt{Int} or a combination of two arithmetic expressions. The combinators for arithmetic expressions are addition \texttt{Add}, subtraction \texttt{Sub}, multiplication \texttt{Mul} and division \texttt{Div}.
 \begin{lstlisting}[language=Haskell, caption=Data model for the representation of arithmetic expressions., label=lst:arith_model, numbers=left, frame=bt]
