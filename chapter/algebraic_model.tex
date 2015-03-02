@@ -73,17 +73,10 @@ Furthermore, let lowercase letters, e.g. $a, b, c$ be type variables\index{Type!
 \hfill\qedsymbol
 \end{definition}
 
-\begin{definition}[The type Boolean]
-Let $T_{Boolean} \in \mathcal{T}$ be the type of truth values with
-\begin{equation*}
-  T_{Boolean} = \left\{False, True \right\}.
-\end{equation*}
-
-\hfill\qedsymbol
-\end{definition}
+A type represents a set of values, all of which share some common property and therefore, are attributed to the same type. Examples include the type of natural numbers $T_\mathbb{N}$, commonly referred to as \textit{integers}, and the type of boolean values $T_{Boolean} = \left\{False, True \right\}$.
 
 \begin{definition}[Undefined values\index{Undefined Value}]
-For every $T_i \in \mathcal{T}$, let $\bot_i \in T_i$ be the undefined value of type $T_i$ that is distinguishable from every other value of type $T_i$. Every type implicitly contains an undefined value, even if not explicitly mentioned\footnote{That means the type $T_{Boolean}$ actually contains the three values $False$, $True$ and $\bot_{Boolean}$.}. When talking about the undefined value $\bot$, we omit its type and only mention it explicitly when necessary.
+For every $T_i \in \mathcal{T}$, let $\bot_i \in T_i$ be the undefined value of type $T_i$ that is distinguishable from every other value of type $T_i$. Every type implicitly contains an undefined value, even if not explicitly mentioned\footnote{That means that the type of natural numbers $T_\mathbb{N}$ contains the undefined value $\bot_\mathbb{N}$ and the type $T_{Boolean}$ actually contains the three values $False$, $True$ and $\bot_{Boolean}$.}. When talking about the undefined value $\bot$, we omit its type and only mention it explicitly when necessary.
 
 \hfill\qedsymbol
 \end{definition}
@@ -105,15 +98,17 @@ The type signature of a process states of which types the input and the output o
 
 \begin{definition}[Identity\index{Process!Identity} and error\index{Process!Error} process]
 \label{def:static_id_err}
-Let $Id \in \mathcal{P}$ be the identity process, i.e. the process that outputs its input, and let $Err \in \mathcal{P}$ be the error process, i.e. the process that always returns the undefined value. To be precise, there is an identity process $Id_i$ with $\typesignature{Id_i}{T_i}{T_i}$ and an error process $Err_i$ with $\typesignature{Err_i}{T_i}{T_i}$ for every $T_i \in \mathcal{T}$. For simplicity, we refer to them as $Id$ and $Err$, but keep in mind that for every type there is a specific identity and error process. Let their type signatures be $\typesignature{Id}{a}{a}$ and $\typesignature{Err}{a}{a}$, where $a$ is a type variable resembling the fact that $Id$ and $Err$ represent a family of processes.
+Let $Id \in \mathcal{P}$ be the identity process, i.e. the process that outputs its input, and let $Err \in \mathcal{P}$ be the error process, i.e. the process that always returns the undefined value.
 
 \hfill\qedsymbol
 \end{definition}
 
+To be precise, there is an identity process $Id_i$ with $\typesignature{Id_i}{T_i}{T_i}$ and an error process $Err_i$ with $\typesignature{Err_i}{T_i}{T_i}$ for every $T_i \in \mathcal{T}$. For simplicity, we refer to them as $Id$ and $Err$, but keep in mind that for every type, there is a specific identity and error process. Let their type signatures be $\typesignature{Id}{a}{a}$ and $\typesignature{Err}{a}{a}$, where $a$ is a type variable resembling the fact that $Id$ and $Err$ represent a family of processes.
+
 % ------------------------------------------------------------------------------
 % processes as predicates
 % ------------------------------------------------------------------------------
-In the following, we also call processes $B \in \mathcal{P}$ with output type $T_{Boolean}$, i.e. with the property $\rho \left( B \right) = \left( a, T_{Boolean} \right)$ for some $a$ \textit{predicates}\index{Predicate}. They are used to express deterministic choice between processes and termination of repetition.
+In the following, we also call processes $B \in \mathcal{P}$ with output type $T_{Boolean}$, i.e. with the property $\rho \left( B \right) = \left( a, T_{Boolean} \right)$ \textit{predicates}\index{Predicate}. They are used to express deterministic choice between processes and termination of repetition.
 
 % ------------------------------------------------------------------------------
 % choice
@@ -189,21 +184,21 @@ and invalid otherwise. The type signature of the resulting process is $\typesign
 \clearpage
 \section{Semantics\index{Semantics}}
 \label{chp:semantics}
-In \chpref{chp:syntax} we have introduced the syntactical rules for process construction and in \chpref{chp:static_semantics} we have introduced static semantics of processes. In this section, we define the semantics of processes by giving them a denotation as it is common in the design of programming languages \cite{DenSem}.
+In \chpref{chp:syntax} we have introduced the syntactical rules for process construction and in \chpref{chp:static_semantics} we have introduced static semantics of process composition. In this section, we define the semantics of processes by giving them a denotation as it is common in the design of programming languages \cite{DenSem}.
 
 For the definition of process semantics, we introduce the polymorphic function 
 \begin{equation*}
   sem \colon \mathcal{P} \to a \to b.
 \end{equation*}
-$sem$ takes a process $P \in \mathcal{P}$ and returns its meaning, i.e. the function computed by $P$. We write $\sem{P}$ for that. Since $\sem{P}$ is a function, it can be applied to a concrete input value for $P$, written as $\sem{P} \left( x \right)$. The expression $\sem{P} \left( x \right)$ is valid iff $x$ is of appropriate type to be used as input for $P$.
+$sem$ takes a process $P \in \mathcal{P}$ and returns its meaning, i.e. the function computed by $P$. We write $\sem{P}$ for that. Since $\sem{P}$ is a function, it can be applied to a concrete input value $x$ for $P$, written as $\sem{P} \left( x \right)$. The expression $\sem{P} \left( x \right)$ is valid iff $x$ is of appropriate type to be used as input for $P$.
 
 % ------------------------------------------------------------------------------
 % atomic process
 % ------------------------------------------------------------------------------
-For every basic process, there is a function that is intrinsic to that particular process: for a basic process $P \in \mathcal{P}$, let its intrinsic function\index{Intrinsic Function} be called $f_P$. Composed processes do not involve an intrinsic function and the notation $f_P$ does not make sense if $P$ is not an atomic process. The semantics of a basic\index{Process!Basic} process $P \in \mathcal{P}$ is directly given by its intrinsic function.
-\begin{definition}[Semantics of basic processes\index{Semantics!Basic Process}]
+For every basic process, there is a function that is intrinsic to that particular process: for a basic process $P \in \mathcal{P}$, let its intrinsic function\index{Intrinsic Function} be called $f_P$. Composed processes do not involve an intrinsic function and the notation $f_P$ does not make sense if $P$ is not a basic process. The semantics of a basic\index{Process!Basic} process $P \in \mathcal{P}$ is directly given by its intrinsic function.
+\begin{definition}[Semantics of a basic process\index{Semantics!Basic Process}]
   \label{def:sem_atomic}
-  Let $P$ be an atomic process, then the semantics $\sem{P}$ is given by $P$'s intrinsic function $f_P$:
+  Let $P$ be a basic process, then the semantics $\sem{P}$ is given by $P$'s intrinsic function $f_P$:
   \begin{equation*}
     \label{eqn:sem_atomic}
     \sem{P} = f_P.
@@ -214,11 +209,11 @@ For every basic process, there is a function that is intrinsic to that particula
 
 \begin{example}[Semantics of basic processes]
   \label{exp:sem_atomic}
-  Let $\sigma \colon \mathbb{N} \to \mathbb{N}, x \mapsto x+1$ be the function that is intrinsic to the atomic process $S \in \mathcal{P}$. Then the semantics $\sem{S}$ of $S$ is given by its intrinsic function $\sigma$:
+  Let $\sigma \colon T_\mathbb{N} \to T_\mathbb{N}, x \mapsto x+1$ be the function that is intrinsic to the basic process $S \in \mathcal{P}$. Then the semantics $\sem{S}$ of $S$ is given by its intrinsic function $\sigma$:
   \begin{equation*}
     \sem{S} = \sigma = x \mapsto x+1
   \end{equation*}
-  Let $\delta \colon \mathbb{N} \to \mathbb{N}, x \mapsto 2x$ be the function that is intrinsic to the atomic process $D \in \mathcal{P}$. Then the semantics $\sem{D}$ of $D$ is given by its intrinsic function $\delta$:
+  Let $\delta \colon T_\mathbb{N} \to T_\mathbb{N}, x \mapsto 2x$ be the function that is intrinsic to the basic process $D \in \mathcal{P}$. Then the semantics $\sem{D}$ of $D$ is given by its intrinsic function $\delta$:
   \begin{equation*}
     \sem{D} = \delta = x \mapsto 2x
   \end{equation*}
@@ -254,7 +249,7 @@ Let $Err \in \mathcal{P}$ be the error process, i.e. the process that always out
 % ------------------------------------------------------------------------------
 % composed processes
 % ------------------------------------------------------------------------------
-The semantics of composed\index{Process!Composed} processes is determined by their structure, i.e. the used process combinator, and the semantics of the involved sub-processes\index{Sub-process}. The semantics of processes created by choice composition, parallel composition and sequence composition is defined inductively. The semantics of processes created by repetition composition is given by a recursive equation.
+The semantics of composed\index{Process!Composed} processes is determined by their structure, i.e. the used process combinator, and the semantics of the involved sub-processes\index{Sub-process}. The semantics of processes created by choice composition, parallel composition and sequential composition is defined inductively. The semantics of processes created by repetition composition is given by a recursive equation.
 
 \begin{definition}[Sub-process\index{Sub-process}]
 Let $P \in \mathcal{P}$ be a composed process. Then the processes $P$ is composed of are called the sub-processes of $P$.
@@ -290,7 +285,7 @@ Let $B$ be a predicate, let $P, Q \in \mathcal{P}$ be processes and let them be 
 
 \begin{example}[Semantics of choice composition]
 \label{exp:sem_chice}
-Consider the definitions of $S$ and $D$ from \expref{exp:sem_atomic}. Furthermore, let $Even \in \mathcal{P}$ with $\typesignature{Even}{\mathbb{N}}{T_{Bool}}$ be the process that outputs $True$ if its input is an even number and $False$ otherwise. If we compose $S$ and $D$, guarded by $Even$, using the choice composition, the semantics of the resulting process is as follows:
+Consider the definitions of $S$ and $D$ from \expref{exp:sem_atomic}. Furthermore, let $Even \in \mathcal{P}$ with $\typesignature{Even}{\mathbb{N}}{T_{Bool}}$ be the process that outputs $True$ if its input is an even number and $False$ otherwise. If we compose $S$ and $D$, guarded by $Even$, using choice composition, the semantics of the resulting process is as follows:
   \begin{equation*}
     \sem{\choice{Even}{S}{D}} = x \mapsto \left\{\begin{array}{ll}
       \sem{S}\left(x\right) & \text{if } x \text{ is even} \\
@@ -318,7 +313,7 @@ Let $P, Q, R \in \mathcal{P}$ be processes and let them be composed using parall
 
 \begin{example}[Semantics of parallel composition]
 \label{exp:sem_parallel}
-Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_atomic}. Furthermore, let $sum \colon \mathbb{N} \times \mathbb{N} \to \mathbb{N}, \left( x, y \right) \mapsto x + y$ be the function that is intrinsic to the atomic process $Sum \in \mathcal{P}$. Then the semantics of the process created by parallel composition of $S$ and $D$, combined with $Sum$, is: 
+Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_atomic}. Furthermore, let $sum \colon T_\mathbb{N} \times T_\mathbb{N} \to T_\mathbb{N}, \left( x, y \right) \mapsto x + y$ be the function that is intrinsic to the basic process $Sum \in \mathcal{P}$. Then the semantics of the process created by parallel composition of $S$ and $D$, combined with $Sum$, is: 
   \begin{eqnarray*}
     \sem{\parallel{Sum}{S}{D}} & = & x \mapsto \sem{Sum}{\left( \sem{S} \left( x \right), \sem{D} \left( x \right) \right)} \\
                                & = & x \mapsto \sem{Sum}{\left( \sigma\left(x\right), \delta\left(x\right) \right)} \\
@@ -336,7 +331,7 @@ Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_ato
 The semantics of a process with the structure of sequential composition is given by applying the function defined by its sub-processes sequentially. This can be expressed using function composition.
 \begin{definition}[Semantics of sequential composition\index{Semantics!Sequence}]
 \label{def:sem_sequence}
-Let $P, Q \in \mathcal{P}$ be processes and let them be composed using sequence composition, i.e. $\sequence{P}{Q}$. Then the semantics of the resulting process is given by function composition:
+Let $P, Q \in \mathcal{P}$ be processes and let them be composed using sequential composition, i.e. $\sequence{P}{Q}$. Then the semantics of the resulting process is given by function composition:
   \begin{equation*}
     \label{eqn:sem_sequence}
     \sem{\sequence{P}{Q}} = \sem{Q} \circ \sem{P} = x \mapsto \sem{Q} \left( \sem{P} \left( x \right) \right)
@@ -347,7 +342,7 @@ Let $P, Q \in \mathcal{P}$ be processes and let them be composed using sequence 
 
 \begin{example}[Semantics of sequential composition]
 \label{exp:sem_sequence}
-Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_atomic} and use sequence composition to compose $D$ and $S$. Since function composition does not have commutative properties, $\sequence{S}{D}$ and $\sequence{D}{S}$ yield different results.
+Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_atomic} and use sequential composition to compose $D$ and $S$. Since function composition $\circ$ does not have commutative properties, $\sequence{S}{D}$ and $\sequence{D}{S}$ yield different results.
   \begin{eqnarray*}
     \sem{\sequence{S}{D}} & = & \sem{D} \circ \sem{S} \\
                           & = & \delta \circ \sigma \\
@@ -370,28 +365,35 @@ Consider the definitions of $\sigma, \delta, S$ and $D$ from \expref{exp:sem_ato
 The semantics of a process with the structure of repetition composition is given by a recursive equation. It involves repeated sequential composition of a process with itself. A predicate is employed to test the process's input for a property and determine the length of the process composition sequence.
 \begin{definition}[Semantics of repetition composition\index{Semantics!Repetition}]
 \label{def:sem_repetition}
-Let $B$ be a predicate, let $P \in \mathcal{P}$ be processes and let them be composed using repetition composition, i.e. $\repetition{B}{P}$. Then the semantics of $\repetition{B}{P}$ is given by the recursive equation
+Let $B$ be a predicate, let $P \in \mathcal{P}$ be processes and let them be composed using repetition composition, i.e. $\repetition{B}{P}$. Then the semantics of $\repetition{B}{P}$ is given by the following recursive equation:
   \begin{equation*}
     \label{eqn_sem_repetition}
-    \sem{\repetition{B}{P}} = \sem{\choice{B}{\sequence{P}{\repetition{B}{P}}}{Id}}
+    \sem{\repetition{B}{P}} = \sem{\choice{B}{\sequence{P}{\repetition{B}{P}}}{Id}}.
   \end{equation*}
   \hfill\qedsymbol
 \end{definition}
 
-The existence of a solution satisfying \defref{def:sem_repetition} is not immediately obvious. However, this is a well-known and well-studied problem. The theory of least fixed point semantics\index{Least Fixed Point Semantics} from domain theory\index{Domain Theory} guarantees the existence of a solution and gives information about how to find it \cite{DenSem}.
+The existence of a solution satisfying \defref{def:sem_repetition} is not immediately obvious. However, this is a well-known and well-studied problem. The theory of \textit{least fixed point semantics}\index{Least Fixed Point Semantics} from domain theory\index{Domain Theory} guarantees the existence of a solution and gives information about how to find it \cite{DenSem}.
 
 \begin{example}[Semantics of repetition composition\index{Semantics!Repetition}]
 \label{exp:sem_repetition}
-Consider the definition of $\delta$ and $D$ from \expref{exp:sem_atomic} and let $B \in \mathcal{B}$ be a predicate that returns $True$ if its input is smaller than 1024 and $False$ if its input is equal to 1024 or bigger.
+Consider the definition of $\delta$ and $D$ from \expref{exp:sem_atomic} and let $B$ be a predicate that returns $True$ if its input is smaller than 1024 and $False$ if its input is equal to 1024 or bigger.
   \begin{eqnarray*}
-    \sem{\repetition{B}{D}} & = & \sem{\choice{B}{\sequence{D}{\repetition{B}{D}}}{Id}} \\
-                            & = & x \mapsto \left\{ \begin{array}{ll} 
-                                                      \sem{\sequence{D}{\repetition{B}{D}}} \left( x \right) & \text{if } x < 1024 \\
-                                                      \sem{Id} \left( x \right)                              & \text{if } x \geq 1024 \\
-                                                      \bot                                                   & \text{otherwise}
-                                                    \end{array}
-                                            \right. \\
-                            & = & \ldots
+  & & \sem{\repetition{B}{D}} \\
+    & = & \sem{\choice{B}{\sequence{D}{\repetition{B}{D}}}{Id}} \\
+    & = & x \mapsto \left\{ \begin{array}{ll} 
+                              \sem{\sequence{D}{\repetition{B}{D}}} \left( x \right) & \text{if } x < 1024 \\
+                              \sem{Id} \left( x \right)                              & \text{if } x \geq 1024 \\
+                              \bot                                                   & \text{otherwise}
+                            \end{array}
+                    \right. \\
+    & = & x \mapsto \left\{ \begin{array}{ll} 
+                              \sem{\sequence{D}{\choice{B}{\sequence{D}{\repetition{B}{D}}}{Id}}} \left( x \right) & \text{if } x < 1024 \\
+                              \sem{Id} \left( x \right)                              & \text{if } x \geq 1024 \\
+                              \bot                                                   & \text{otherwise}
+                            \end{array}
+                    \right. \\
+    & = & \ldots
   \end{eqnarray*}
 $\repetition{B}{D}$ yields a process that takes its input, doubles it and passes it on recursively to itself as long as its input is smaller than 1024. If its input is bigger than 1024, it outputs its input.
 \end{example}
@@ -460,18 +462,18 @@ As a final remark, we point out that, for a process $P$, an inverse process as d
 \clearpage
 \section{Laws\index{Laws}}
 \label{chp:laws}
-In \chpref{chp:semantic_equivalence}, \defref{def:process_equivalence}, we have defined under which circumstances two processes are equivalent. This definition, together with the definitions for process semantics given in \chpref{chp:semantics}, allows us to find a set of laws regarding process equivalence in our calculus that can be used by the user of the calculus to transform processes into different representations satisfying his needs.
+In \chpref{chp:semantic_equivalence}, \defref{def:process_equivalence}, we have defined under which circumstances two processes are equivalent. This definition, together with the definitions for process semantics given in \chpref{chp:semantics}, allows us to find a set of laws regarding process equivalence in our calculus that can be used by the user of the calculus to transform processes into different representations, satisfying his needs.
 
 In the following, let $B$ be a predicate and let $C, P, Q, R \in \mathcal{P}$ be processes with suitable type signatures for composition in the respective cases. Proofs for the stated laws can be found in \appref{chp:proofs}.
 
 \subsection{Associativity\index{Associativity}\index{Laws!Associativity}}
-The associative property holds for sequence composition.
+The associative property holds for sequential composition.
 \begin{eqnarray*}
   \sequence{P}{\sequence{Q}{R}} & \equiv & \sequence{\sequence{P}{Q}}{R}
 \end{eqnarray*}
 
 \subsection{Distributivity\index{Distributivity}\index{Laws!Distributivity}}
-Parallel and sequence composition distribute over choice composition. Also, sequence composition distributes over parallel composition.
+Parallel and sequential composition distribute over choice composition. Also, sequence composition distributes over parallel composition.
 \begin{eqnarray*}
   \parallel{C}{P}{\choice{B}{Q}{R}} & \equiv & \choice{B}{\parallel{C}{P}{Q}}{\parallel{C}{P}{R}} \\
   \sequence{P}{\choice{B}{Q}{R}} & \equiv & \choice{B}{\sequence{P}{Q}}{\sequence{P}{R}} \\
@@ -486,7 +488,7 @@ The identity process $Id$ is both a left and right neutral element for sequentia
 \end{eqnarray*}
 
 \subsection{Idempotence\index{Idempotence}\index{Laws!Idempotence}}
-The identity process $Id$ and the error process $Err$ are idempotent\footnote{Let $S$ be a set and $\ast \colon S \times S \to S$ be a binary operation on the elements of $S$. An element $x \in S$ is considered idempotent with respect to $\ast$ if $x \ast x = x$. If for all $x \in S$ the idempotence property $x \ast x = x$ holds, the operation $\ast$ is considered idempotent.} elements regarding sequential composition.
+The identity process $Id$ and the error process $Err$ are idempotent\footnote{Let $S$ be a set and $\ast \colon S \times S \to S$ be a binary operation on the elements of $S$. An element $x \in S$ is considered to be idempotent with respect to $\ast$ if $x \ast x = x$. If for all $x \in S$ the idempotence property $x \ast x = x$ holds, the operation $\ast$ is considered idempotent.} elements regarding sequential composition.
 \begin{eqnarray*}
   \sequence{Id}{Id} & \equiv & Id \\
   \sequence{Err}{Err} & \equiv & Err \\

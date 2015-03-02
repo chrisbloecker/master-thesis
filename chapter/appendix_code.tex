@@ -33,19 +33,19 @@ runProcess master (Sequence p1 p2) x =
 
 runProcess master (Parallel combinator p1 p2) x = do
   mvar <- liftIO newEmptyMVar
-  _ <- spawnLocal $ runProcessHelper master p1 x mvar
-  r2 <- runProcess master p2 x
-  r1 <- liftIO $ takeMVar mvar
+  _    <- spawnLocal $ runProcessHelper master p1 x mvar
+  r2   <- runProcess master p2 x
+  r1   <- liftIO $ takeMVar mvar
   runProcess master combinator (r1, r2)
 
 runProcess master (Multilel ps fold) x = do
   mvars <- forM ps $ \_ -> liftIO newEmptyMVar
-  mapM_ (\(proc, mvar) -> spawnLocal $ runProcessHelper master proc x mvar) (ps `zip` mvars)
+  mapM_ (\(p, m) -> spawnLocal $ runProcessHelper master p x m)   (ps `zip` mvars)
   ress  <- forM mvars $ \mvar -> liftIO . takeMVar $ mvar
   runProcess master fold (x, ress)
 
 runProcess master rep@(Repetition pr p) x =
-  runProcess master (Choice pr (Sequence p rep) Id) x
+  runProcess master (Choice pr (p `Sequence` rep) Id) x
 
 runProcessHelper :: Master -> Process a b -> a -> MVar b -> CH.Process ()
 runProcessHelper master p x mvar = do
@@ -73,23 +73,23 @@ ant Configuration {..} = do
         let next  = fst . head . dropWhile ((< rand) . snd) $ zip unvisited (scanl1 (+) probs)
         runAnt g p (visited ++ [next]) (unvisited \\ [next])
 
-combinePaths :: (Configuration, [AntSolution]) -> CH.Process Configuration
-combinePaths (conf@(Configuration {..}), ass) = return conf { pheromones = pheromones', path = path', pathLen = len' }
+combinePaths :: (Configuration, [Solution]) -> CH.Process Configuration
+combinePaths (conf@(Configuration {..}), ss) = return conf { pheromones = pheromones', solution = solution' }
   where
-    pheromones'   = depositPheromones ass pheromones
-    (path', len') = minimumBy (compare `on` snd) ass
+    pheromones' = depositPheromones ss pheromones
+    solution'   = minimumBy (compare `on` snd) (solution:ss)
 
 evaporations :: Configuration -> CH.Process Configuration
 evaporations (conf@Configuration {..}) = return conf { pheromones = evaporation rho pheromones }
 
 cycle :: Configuration -> CH.Process Configuration
-cycle conf@Configuration {..} = return conf { iterations = iterations - 1 }
+cycle conf@Configuration {..} = return conf { cycles = cycles - 1 }
 
 continue :: Configuration -> CH.Process Bool
-continue Configuration {..} = return (iterations > 0)
+continue Configuration {..} = return (cycles > 0)
 
 extractSolution :: Configuration -> CH.Process Solution
-extractSolution (Configuration {..}) = return (path, pathLen)
+extractSolution (Configuration {..}) = return solution
 \end{lstlisting}
 
 \end{landscape}
