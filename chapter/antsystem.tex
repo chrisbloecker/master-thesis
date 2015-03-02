@@ -23,7 +23,7 @@
 \vspace*{-0.5em}
 In this chapter, we use the previously developed process calculus to build a distributed program that finds solutions for the travelling salesman problem\index{Travelling Salesman Problem}. Since the travelling salesman problem is considered to be a computationally hard optimisation problem, we do not have extended hopes in finding optimal solutions. This is a common case in practical applications. We apply the meta-heuristic\index{Meta-heuristic} approach of artificial ant systems to find approximate solutions for the travelling salesman problem.
 
-\section{The travelling salesman problem\index{Travelling Salesman Problem}}
+\section{The Travelling Salesman Problem\index{Travelling Salesman Problem}}
 \label{chp:tsp}
 \vspace*{-0.5em}
 The travelling salesman problem (or short: \textsc{TSP}\index{TSP}) is a graph theoretic\index{Graph Theory} optimisation problem. For a graph $G = \left( V, E, \delta \right)$ where $V = \left\{ v_1, v_2, \ldots, v_n \right\}$ is the set of nodes, $E \subseteq V \times V$ is the set of edges, i.e. the connections between the nodes, and $\delta \colon E \to \mathbb{N}$ is a function that assigns a length to every edge. The \textsc{TSP} asks for the \textbf{shortest} round trip through the nodes of $G$.
@@ -54,7 +54,7 @@ When applying this approach, it might happen that in the local neighbourhood of 
 
 The term meta-heuristic is chosen because it involves heuristics to guess solutions and is applicable to a wide field of problems. With a meta-heuristic, we have a \enquote{recipe} of how to build a heuristic algorithm to solve arbitrary problems, as long as we can define the local neighbourhood of a solution.
 
-\section{Artificial ant systems\index{Ant System}}
+\section{Artificial Ant Systems\index{Ant System}}
 \label{chp:ant_system}
 Artificial ant systems are a meta-heuristic\index{Meta-heuristic} approach that can be applied to a big variety of computationally hard optimisation problems that can be represented as a graph\index{Graph}, like the \textsc{TSP}. An overview about different types of ant systems and example applications can be found in \cite{Dorigo:2004:ACO:975277}. Here, we only briefly discuss one form of ant systems and use the developed process calculus to implement a prototype\index{Prototype} of an ant system that finds approximate solutions for instances of the \textsc{TSP}\index{TSP}. Without further mentioning, \cite{Dorigo:2004:ACO:975277} serves us as a reference throughout this chapter.
 

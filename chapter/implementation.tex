@@ -18,7 +18,7 @@ In the implementation for local parallelisation on one computer, we make use of 
 
 An introduction to \textsf{Concurrent Haskell} and \textsf{Haskell}'s \texttt{IO} monad can be found in standard \textsf{Haskell} literature such as \cite{Hutton}, \cite{Bird} or \cite{Marlow}. The fact that we use the \texttt{IO} monad has immediate consequences: we cannot force processes to be free of side-effects\index{Side-effect}, hence they can perform actions like, e.g. reading from or writing to the file system.
 
-\subsection{Data model\index{Data Model}}
+\subsection{Data Model\index{Data Model}}
 \label{chp:local_model}
 Our data model directly resembles the structure of the syntactic rules of process composition from \chpref{chp:syntax}. We use the power of \textsf{Haskell}'s type system and a generalised algebraic data type\index{Generalised Algebraic Data Type} to assure the model meets the requirements concerning static semantics formulated in \chpref{chp:static_semantics} and prevent the creation of invalid processes with respect to static semantics.
 
@@ -86,7 +86,7 @@ Multilel :: [Process a c]
          -> Process a b
 \end{lstlisting}
 
-\subsection{Process interpreter\index{Process Interpreter}}
+\subsection{Process Interpreter\index{Process Interpreter}}
 In this section, we discuss how the Process interpreter works in detail by taking a look at its implementation.
 
 Processes can be executed by providing them with an input using the \texttt{runProcess} function. \texttt{runProcess} runs in the \texttt{IO} monad, it takes a process of type \texttt{Process a b} and an input for that process of matching type. The execution of a process yields a result of type \texttt{b}. \texttt{runProcess} is the implementation of the function $sem$ introduced in \chpref{chp:semantics} that defines the semantics of processes.
@@ -189,7 +189,7 @@ In \textsf{Haskell}, functions can only be executed, composed and passed as argu
 
 After a closure has been executed, the result is serialised and sent back to the caller. However, the type system cannot infer the type and serialisability of the result automatically and therefore additional information needs to be provided\footnote{Specifically, the problem is that the type constructors can be constrained with required type class instances for parameters. On deconstruction, this information is not available and therefore needs to be added explicitly again.}. For a type \texttt{a}, serialisation information can be provided with a value of type \texttt{Static (SerializableDict a)}. Basically, this is an explicit type tag that enables the selection of the correct serialisation function for type \texttt{a}.
 
-\subsection{Data model\index{Data Model}}
+\subsection{Data Model\index{Data Model}}
 \label{chp:distributed_model}
 The data model for the representation of processes stays almost unchanged: only the definition of basic processes and the \texttt{Basic} data constructor for processes have to be adapted to meet specific requirements that arise with the use of \textsf{Cloud Haskell}. Basic processes are now functions that take an input of type \texttt{a} and return a closure that contains a \textsf{Cloud Haskell} process producing an output of type \texttt{b} when executed.
 \begin{lstlisting}[language=Haskell,caption=Representation of basic processes as computations in the \texttt{CH.Process} monad.,numbers=left,frame=bt]
@@ -219,7 +219,7 @@ Local :: Process a b
 
 The signatures of the rest of the data constructors, i.e. \texttt{Parallel}\index{Data constructor!Parallel}, \texttt{Sequence}\index{Data constructor!Sequence}, \texttt{Repetition}\index{Data constructor!Repetition} and \texttt{Multilel}\index{Data constructor!Multilel}, remain unchanged.
 
-\subsection{Architecture of the distribution infrastructure\index{Architecture}\index{Infrastructure}}
+\subsection{Architecture of the Distribution Infrastructure\index{Architecture}\index{Infrastructure}}
 \label{chp:infrastructure}
 For the interpretation of process structures in a distributed system, some kind of infrastructure and management of involved nodes is needed, so process execution can be delegated to them. In this section, we describe the architecture and functioning of our system.
 \vspace*{-0.5em}
@@ -244,7 +244,7 @@ The process interpreter\index{Interpreter} is run in a new process by the master
 The source code of the distribution system can be found in \appref{app:dvd}.
 
 
-\subsection{Process interpreter\index{Process Interpreter}\index{Interpreter}}
+\subsection{Process Interpreter\index{Process Interpreter}\index{Interpreter}}
 \label{chp:interpreter}
 Now that a distributed system is involved, the implementation of the process interpreter needs to be adapted to this situation. Where there was only local parallelisation in the \texttt{IO} monad in \textsf{Concurrent Haskell} involved before, process interpretation has to be adapted to the specifics of the \textsf{Cloud Haskell}\index{Cloud Haskell} \texttt{Process} monad. This particularly involves execution of processes on remote nodes.
 
@@ -292,7 +292,7 @@ The adaptations that have to be made for the interpretation of the remaining pro
 
 
 \clearpage
-\section{Example: a parallel interpreter for arithmetic expressions\index{Example}}
+\section{Example: a Parallel Interpreter for Arithmetic Expressions\index{Example}}
 \label{chp:example}
 After discussing the process model and the interpreter that takes care of process interpretation, we give an example of how to apply the process calculus. To do so, we develop the typical hello world program for interpreters, i.e. an interpreter\index{Interpreter} for arithmetic expressions\index{Arithmetic Expression} with parallel evaluation of sub-expressions. Except for the import of our process calculus, this example is self-contained and is intentionally kept very simple. The necessity of a parallelised interpreter for arithmetic expressions is certainly not given. However, an interpreter for arithmetic expressions is fairly simple and thus well suited to illustrate how to apply the process calculus to it.
 
