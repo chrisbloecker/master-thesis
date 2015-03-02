@@ -126,10 +126,10 @@ Then $\sem{\sequence{P}{\choice{B}{Q}{R}}} = \sem{\choice{B}{\sequence{P}{Q}}{\s
                                                                        \bot & \text{otherwise}
                                                                      \end{array}
                                                               \right.\right) \circ \sem{P} \\
-  & = & \left\{\begin{array}{ll}
-                 \left( x \mapsto \sem{Q} \left( x \right) \right) \circ \sem{P} & \text{if } B \left( x \right) \\
-                 \left( x \mapsto \sem{R} \left( x \right) \right) \circ \sem{P} & \text{if } \overline{B \left( x \right)} \\
-                 \left( x \mapsto \bot \right) \circ \sem{P} & \text{otherwise}
+  & = & x \mapsto \left\{\begin{array}{ll}
+                 \left( \sem{Q} \circ \sem{P} \right) \left( x \right) & \text{if } B \left( x \right) \\
+                 \left( \sem{R} \circ \sem{P} \right) \left( x \right) & \text{if } \overline{B \left( x \right)} \\
+                 \bot & \text{otherwise}
                \end{array}
         \right. \\
   & \overset{\defref{def:sem_sequence}}{=} & x \mapsto \left\{\begin{array}{ll}
@@ -186,29 +186,45 @@ Since $Id$ is both a left and right neutral element of sequential composition, $
 \end{corollary}
 
 
-\begin{theorem}[Idempotence of the error process with respect to sequential composition]
+\begin{theorem}[Sequential composition with the error process on the right]
+\label{thm:sequential_err_right}
+Sequential composition of any process $P \in \mathcal{P}$ with the error process $Err$ on the right yields the error process, i.e.
+\begin{equation*}
+  \sequence{P}{Err} \equiv Err.
+\end{equation*}
+
+\hfill$\qedsymbol$
+\end{theorem}
+
+
+\begin{myproof}[Sequential composition with the error process on the right]
+\label{prf:sequential_err_right}
+Let $P \in \mathcal{P}$ be a process and let $Err$ be the error process. Let $P$ be sequentially composed with $Err$ on the right, then $\sem{\sequence{P}{Err}} = \sem{Err}$.
+\begin{eqnarray*}
+  & & \sem{\sequence{P}{Err}} \\
+    & \overset{\defref{def:sem_sequence}}{=} & \sem{P} \circ \sem{Err} \\
+    & \overset{\defref{def:sem_sequence}}{=} & x \mapsto \sem{Err} \left( \sem{P} \left( x \right) \right) \\
+    & \overset{\defref{def:sem_err}}{=} & x \mapsto \bot \\
+    & \overset{\defref{def:sem_err}}{=} & \sem{Err}
+\end{eqnarray*}
+
+Thus, \thmref{thm:idempotence_err} is valid.
+
+\hfill$\blacksquare$
+\end{myproof}
+
+
+\begin{corollary}[Idempotence of the error process with respect to sequential composition]
 \label{thm:idempotence_err}
 The error process $Err$ is an idempotent element of sequential composition, i.e. sequential composition of the error process with itself yields the error process.
 \begin{equation*}
   \sequence{Err}{Err} \equiv Err.
 \end{equation*}
 
-\hfill$\qedsymbol$
-\end{theorem}
+This follows directly from proof \ref{prf:sequential_err_right}.
 
-\begin{myproof}[Idempotence of the error process with respect to sequential composition]
-Let $Err$ be the error process. Sequential composition of $Err$ with itself yields $Err$, i.e. $\sem{\sequence{Err}{Err}} = \sem{Err}$.
-\begin{eqnarray*}
-  & & \sem{\sequence{Err}{Err}} \\
-    & \overset{\defref{def:sem_sequence}}{=} & \sem{Err} \circ \sem{Err} \\
-    & \overset{\defref{def:sem_err}}{=} & \left( x \mapsto \bot \right) \circ \left( x \mapsto \bot \right) \\
-    & \overset{\text{function composition}}{=} & x \mapsto \bot \\
-    & \overset{\defref{def:sem_err}}{=} & \sem{Err}
-\end{eqnarray*}
-
-Thus, \thmref{thm:idempotence_err} is valid. \hfill$\blacksquare$
-\end{myproof}
-
+\hfill$\blacksquare$
+\end{corollary}
 
 
 \begin{theorem}[Substitution with an equivalent process leaves semantics unchanged]
@@ -221,6 +237,7 @@ Let $P, Q, R \in \mathcal{P}$ be processes and let $Q \equiv R$. Then, substitut
   \hfill$\qedsymbol$
 \end{theorem}
 
+\clearpage
 \begin{myproof}[Substitution with an equivalent process leaves semantics unchanged]
 \label{prf:substitution}
 In the following, let $P, Q, R, S, T \in \mathcal{P}$ be processes with $Q \equiv R$.

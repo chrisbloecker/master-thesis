@@ -462,17 +462,22 @@ As a final remark, we point out that, for a process $P$, an inverse process as d
 \clearpage
 \section{Laws\index{Laws}}
 \label{chp:laws}
+\vspace*{-0.75em}
 In \chpref{chp:semantic_equivalence}, \defref{def:process_equivalence}, we have defined under which circumstances two processes are equivalent. This definition, together with the definitions for process semantics given in \chpref{chp:semantics}, allows us to find a set of laws regarding process equivalence in our calculus that can be used by the user of the calculus to transform processes into different representations, satisfying his needs.
 
 In the following, let $B$ be a predicate and let $C, P, Q, R \in \mathcal{P}$ be processes with suitable type signatures for composition in the respective cases. Proofs for the stated laws can be found in \appref{chp:proofs}.
 
+\vspace*{-0.75em}
 \subsection{Associativity\index{Associativity}\index{Laws!Associativity}}
+\vspace*{-0.75em}
 The associative property holds for sequential composition.
 \begin{eqnarray*}
   \sequence{P}{\sequence{Q}{R}} & \equiv & \sequence{\sequence{P}{Q}}{R}
 \end{eqnarray*}
 
+\vspace*{-0.75em}
 \subsection{Distributivity\index{Distributivity}\index{Laws!Distributivity}}
+\vspace*{-0.75em}
 Parallel and sequential composition distribute over choice composition. Also, sequence composition distributes over parallel composition.
 \begin{eqnarray*}
   \parallel{C}{P}{\choice{B}{Q}{R}} & \equiv & \choice{B}{\parallel{C}{P}{Q}}{\parallel{C}{P}{R}} \\
@@ -480,16 +485,32 @@ Parallel and sequential composition distribute over choice composition. Also, se
   \sequence{P}{\parallel{C}{Q}{R}} & \equiv & \parallel{C}{\sequence{P}{Q}}{\sequence{P}{R}}
 \end{eqnarray*}
 
+\vspace*{-0.75em}
 \subsection{Neutral elements\index{Neutral Element}\index{Laws!Neutral Element}}
+\vspace*{-0.75em}
 The identity process $Id$ is both a left and right neutral element for sequential composition.
+\vspace*{-1em}
 \begin{eqnarray*}
   \sequence{Id}{P} & \equiv & P \\
   \sequence{P}{Id} & \equiv & P
 \end{eqnarray*}
 
+\vspace*{-0.75em}
 \subsection{Idempotence\index{Idempotence}\index{Laws!Idempotence}}
+\vspace*{-0.75em}
 The identity process $Id$ and the error process $Err$ are idempotent\footnote{Let $S$ be a set and $\ast \colon S \times S \to S$ be a binary operation on the elements of $S$. An element $x \in S$ is considered to be idempotent with respect to $\ast$ if $x \ast x = x$. If for all $x \in S$ the idempotence property $x \ast x = x$ holds, the operation $\ast$ is considered idempotent.} elements regarding sequential composition.
+\vspace*{-1em}
 \begin{eqnarray*}
   \sequence{Id}{Id} & \equiv & Id \\
-  \sequence{Err}{Err} & \equiv & Err \\
+  \sequence{Err}{Err} & \equiv & Err
 \end{eqnarray*}
+
+\vspace*{-0.75em}
+\subsection{Further Laws}
+\vspace*{-0.75em}
+Sequential composition with the error process $Err$ on the right always yields the error process.
+\vspace*{-1em}
+\begin{eqnarray*}
+  \sequence{P}{Err} & \equiv & Err
+\end{eqnarray*}
+\vspace*{-1.5em}
