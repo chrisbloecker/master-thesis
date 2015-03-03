@@ -177,7 +177,7 @@ Thus, \thmref{thm:idempotence_identity} is valid. \hfill$\blacksquare$
 \clearpage
 
 \begin{corollary}[Idempotence of the identity process with respect to sequential composition]
-Since $Id$ is both a left and right neutral element of sequential composition, $Id$ is an idempotent element respecting sequential composition. The following equation follows directly from proof \ref{prf:neutral_id}:
+Since $Id$ is both a left and right neutral element of sequential composition, $Id$ is an idempotent element respecting sequential composition. The following equivalence follows directly from proof \ref{prf:neutral_id}:
 \begin{equation*}
   \sem{\sequence{Id}{Id}} = \sem{Id}.
 \end{equation*}
@@ -208,7 +208,7 @@ Let $P \in \mathcal{P}$ be a process and let $Err$ be the error process. Let $P$
     & \overset{\defref{def:sem_err}}{=} & \sem{Err}
 \end{eqnarray*}
 
-Thus, \thmref{thm:idempotence_err} is valid.
+Thus, \thmref{thm:sequential_err_right} is valid.
 
 \hfill$\blacksquare$
 \end{myproof}
@@ -216,12 +216,10 @@ Thus, \thmref{thm:idempotence_err} is valid.
 
 \begin{corollary}[Idempotence of the error process with respect to sequential composition]
 \label{thm:idempotence_err}
-The error process $Err$ is an idempotent element of sequential composition, i.e. sequential composition of the error process with itself yields the error process.
+The error process $Err$ is an idempotent element of sequential composition, i.e. sequential composition of the error process with itself yields the error process. The following equivalence follows directly from proof \ref{prf:sequential_err_right}:
 \begin{equation*}
   \sequence{Err}{Err} \equiv Err.
 \end{equation*}
-
-This follows directly from proof \ref{prf:sequential_err_right}.
 
 \hfill$\blacksquare$
 \end{corollary}
