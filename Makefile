@@ -1,7 +1,6 @@
 # pdf creator and index creator
 LATEX  = pdflatex
 BIBTEX = bibtex
-DVIPDF = dvipdf
 INDEX  = makeindex
 
 # filename ant extensions
