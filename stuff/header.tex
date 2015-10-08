@@ -9,7 +9,7 @@
   , parskip=half       % Absätze durch einen vergrößerten Zeilenabstand getrennt
 %  , draft              % Entwurfsversion
   ]{scrreprt}          % Dokumentenklasse: KOMA-Script Buch
-  
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Packages
@@ -74,7 +74,7 @@
 \newcommand{\projname}{\authorname~-~\titel~-~\thesisname}
 \newcommand{\untertitel}{}
 %\newcommand{\Datum}{$2^\text{nd}$ of March 2015}
-\newcommand{\Datum}{\today}
+\newcommand{\Datum}{March 2, 2015}
 \newcommand{\chpref}[1]{chapter~\ref{#1}}
 \newcommand{\eqnref}[1]{equation~\ref{#1}}
 \newcommand{\expref}[1]{example~\ref{#1}}
@@ -87,7 +87,7 @@
 \newcommand{\Figref}[1]{Figure~\ref{#1}}
 
 \ifpdf
-  \usepackage{hyperref}
+  \usepackage[hidelinks]{hyperref}
   \definecolor{darkblue}{rgb}{0,0,.5}
   \hypersetup
   	{ colorlinks=true
